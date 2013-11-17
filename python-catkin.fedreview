@@ -1,0 +1,185 @@
+[+] OK
+[-] NA
+[?] Issue
+
+** Mandatory review guidelines: **
+ [?] rpmlint output:
+[ankur@dhcppc1  SRPMS]$ rpmlint /var/lib/mock/fedora-rawhide-x86_64/result/*.rpm ../SPECS/python-catkin.spec ./python-catkin-0.4.5-4.gitd4f1f24.fc18.src.rpm
+
+python-catkin.noarch: W: no-manual-page-for-binary catkin_install_parse
+python-catkin.noarch: W: no-manual-page-for-binary git-catkin
+python-catkin.noarch: W: no-manual-page-for-binary git-catkin-track-all
+python-catkin.noarch: W: no-manual-page-for-binary catkin-version
+python-catkin.noarch: W: no-manual-page-for-binary catkin-parse-stack
+python-catkin.noarch: W: no-manual-page-for-binary catkin-bump-version
+python-catkin.noarch: W: no-manual-page-for-binary
+catkin-build-debs-of-workspace
+python-catkin.noarch: W: no-manual-page-for-binary catkin-topological-order
+python-catkin.src: W: invalid-url Source0: ros-catkin-0.4.5-0-gd4f1f24.tar.gz
+python-catkin-devel.noarch: W: no-documentation
+python-catkin-devel.noarch: E: non-executable-script
+/usr/share/catkin/cmake/templates/setup.sh.installable.in 0644L /bin/sh
+python-catkin-devel.noarch: E: non-executable-script
+/usr/share/catkin/cmake/templates/setup.sh.installable.in.etc 0644L /bin/sh
+python-catkin-devel.noarch: E: non-executable-script
+/usr/share/catkin/cmake/templates/setup.zsh.installable.in 0644L /bin/zsh
+python-catkin-devel.noarch: E: non-executable-script
+/usr/share/catkin/cmake/templates/setup.bash.installable.in 0644L /bin/bash
+python-catkin-devel.noarch: E: non-executable-script
+/usr/share/catkin/cmake/templates/setup.bash.buildspace.in 0644L /bin/bash
+python-catkin-devel.noarch: E: non-executable-script
+/usr/share/catkin/cmake/templates/update_project_index.py.in 0644L /usr/bin/env
+python-catkin-devel.noarch: E: non-executable-script
+/usr/share/catkin/cmake/templates/setup.sh.buildspace.in 0644L /bin/sh
+python-catkin-devel.noarch: E: non-executable-script
+/usr/share/catkin/cmake/templates/setup.zsh.buildspace.in 0644L /bin/zsh
+python-catkin-devel.noarch: E: non-executable-script
+/usr/share/catkin/cmake/interrogate_setup_dot_py.py 0644L /usr/bin/env
+../SPECS/python-catkin.spec: W: invalid-url Source0:
+ros-catkin-0.4.5-0-gd4f1f24.tar.gz
+python-catkin.src: W: invalid-url Source0: ros-catkin-0.4.5-0-gd4f1f24.tar.gz
+4 packages and 1 specfiles checked; 9 errors, 12 warnings.
+[ankur@dhcppc1  SRPMS]$
+
+^^
+Couple of rpmlint errors. Can be easily corrected.
+
+ [+] License is acceptable 
+ [+] License field in spec is correct
+ [?] License files included in package %docs if included in source package
+ [?] License files installed when any subpackage combination is installed
+
+^^ Couldn't find a license file. Please request upstream to include one.
+
+ [+] Spec written in American English
+ [+] Spec is legible
+ [-] Sources match upstream unless altered to fix permissibility issues
+^^ NA: generated from git tag
+
+ [+] Build succeeds on at least one primary arch
+ [+] Build succeeds on all primary arches or has ExcludeArch + bugs filed
+ [+] BuildRequires correct, justified where necessary
+ [-] Locales handled with %find_lang, not %_datadir/locale/*
+ [-] %post, %postun call ldconfig if package contains shared .so files
+ [-] No bundled libs
+ [-] Relocatability is justified
+ [+] Package owns all directories it creates
+ [+] Package requires others for directories it uses but does not own
+ [+] No duplication in %files unless necessary for license files
+ [+] File permissions are sane
+ [+] Package contains permissible code or content
+ [-] Large docs go in -doc subpackage
+ [+] %doc files not required at runtime
+ [-] Static libs go in -static package/virtual Provides
+ [+] Development files go in -devel package
+ [+] -devel packages Require base with fully-versioned dependency, %_isa
+No isa, but it's a noarch
+
+ [+] No .la files
+ [+] GUI app uses .desktop file, installs it with desktop-file-install
+ [+] File list does not conflict with other packages' without justification
+ [+] File names are valid UTF-8
+
+** Optional review guidelines: **
+ [?] Query upstream about including license files
+^^ 
+Required
+
+ [-] Translations of description, summary
+ [+] Builds in mock
+ [+] Builds on all arches
+ [?] Functions as described (e.g. no crashes)
+^^
+Need to check this
+
+ [-] Scriptlets are sane
+ [+] Subpackages require base with fully-versioned dependency if sensible
+ [+] .pc file subpackage placement is sensible
+ [+] No file deps outside of /etc, /bin, /sbin, /usr/bin, /usr/sbin
+ [+] Include man pages if available
+
+Naming guidelines:
+ [+] Package names use only a-zA-Z0-9-._+ subject to restrictions on -._+
+ [+] Package names are sane
+ [+] No naming conflicts
+ [+] Spec file name matches base package name
+ [+] Version is sane
+ [+] Version does not contain ~
+ [+] Release is sane
+ [+] %dist tag
+ [+] Case used only when necessary
+ [-] Renaming handled correctly
+
+Packaging guidelines:
+ [+] Useful without external bits
+ [-] No kmods
+ [-] Pre-built binaries, libs removed in %prep
+ [+] Sources contain only redistributable code or content
+ [+] Spec format is sane
+ [+] Package obeys FHS, except libexecdir, /run, /usr/target
+ [+] No files in /bin, /sbin, /lib* on >= F17
+ [-] Programs run before FS mounting use /run instead of /var/run
+ [-] Binaries in /bin, /sbin do not depend on files in /usr on < F17
+ [-] No files under /srv, /opt, /usr/local
+ [+] Changelog in prescribed format
+ [+] No Packager, Vendor, Copyright, PreReq tags
+ [+] Summary does not end in a period
+ [?] Correct BuildRoot tag on < EL6
+ [?] Correct %clean section on < EL6
+^^ 
+Do we intend to support EPEL for ROS? Could be a good thing.
+
+ [+] Requires correct, justified where necessary
+ [+] Summary, description do not use trademarks incorrectly
+ [+] All relevant documentation is packaged, appropriately marked with %doc
+ [+] Doc files do not drag in extra dependencies (e.g. due to +x)
+ [+] Code compilable with gcc is compiled with gcc
+ [+] Build honors applicable compiler flags or justifies otherwise
+ [-] PIE used for long-running/root daemons, setuid/filecap programs
+ [-] Useful -debuginfo package or disabled and justified
+ [+] Package with .pc files Requires pkgconfig on < EL6
+ [+] No static executables
+ [+] Rpath absent or only used for internal libs
+ [+] Config files marked with %config(noreplace) or justified %config
+ [+] No config files under /usr
+ [-] Third party package manager configs acceptable, in %_docdir
+ [-] .desktop files are sane
+ [+] Spec uses macros consistently
+ [+] Spec uses macros instead of hard-coded names where appropriate
+ [+] Spec uses macros for executables only when configurability is needed
+ [-] %makeinstall used only when alternatives don't work
+ [+] Macros in Summary, description are expandable at srpm build time
+ [+] Spec uses %{SOURCE#} instead of $RPM_SOURCE_DIR and %sourcedir
+ [+] No software collections (scl)
+ [-] Macro files named /etc/rpm/macros.%name
+ [+] Build uses only python/perl/shell+coreutils/lua/BuildRequired langs
+ [+] %global, not %define
+ [-] Package translating with gettext BuildRequires it
+ [-] Package translating with Linguist BuildRequires qt-devel
+ [+] File ops preserve timestamps
+ [+] Parallel make
+ [+] No Requires(pre,post) notation
+ [-] User, group creation handled correctly (See Packaging:UsersAndGroups)
+ [-] Web apps go in /usr/share/%name, not /var/www
+ [-] Conflicts are justified
+ [+] One project per package
+ [+] No bundled fonts
+ [+] Patches have appropriate commentary
+ [-] Available test suites executed in %check
+ [-] tmpfiles.d used for /run, /run/lock on >= F15
+
+
+ ** Python guidelines: **
+ [+] Runtime Requires correct
+ [+] Python macros declared on < EL6
+ [+] All .py files packaged with .pyc, .pyo counterparts
+ [+] Includes .egg-info files/directories when generated
+ [+] Provides/Requires properly filtered
+ [-] Code that invokes gtk.gdk.get_pixels_array() Requires numpy
+
+
+Typo in the -devel package's Requires:
+
+
+It looks okay. A few tiny rpmlint issues and such. Fix those, and it'll be
+approved :D

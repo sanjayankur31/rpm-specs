@@ -1,0 +1,10 @@
+ Not all the spec files included are complete.
+
+- Ones that have passed review are complete and function as per the fedora packaging guidelines
+- Ones that are still in review might change as the reviewer points out issues
+- Ones that are still in progress need more work done. These are paused generally because I'm in dialogue with upstream over some build issue. 
+
+Please refer to http://dodoincfedora.wordpress.com/2011/08/20/fedora-gsoc-report/ for information on the spec status.
+
+
+Only spec files are included here. The srpms would be very large (since they include all the project source codes along with patches and other additions)

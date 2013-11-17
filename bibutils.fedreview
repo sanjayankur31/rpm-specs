@@ -1,0 +1,184 @@
+[+] OK
+[-] NA
+[?] Issue
+
+[+] Package meets naming and packaging guidelines
+[+] Spec file matches base package name.
+[+] Spec has consistant macro usage.
+[+] Meets Packaging Guidelines.
+[+] License
+[?] License field in spec matches
+^^
+The copying file is GPLv2, and I see no mention of the GPL+ license anywhere in
+the source. 
+
+[+] License file included in package
+[+] Spec in American English
+[+] Spec is legible.
+[+] Sources match upstream md5sum:
+[ankur@ankur SPECS]$ review-md5check.sh bibutils.spec
+Getting http://downloads.sourceforge.net/bibutils/bibutils_4.15_src.tgz to
+/tmp/review/bibutils_4.15_src.tgz
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+100  436k  100  436k    0     0   424k      0  0:00:01  0:00:01 --:--:--  424k
+b13a26ae79aabf5fc0007d1bf3a4eeb3  /tmp/review/bibutils_4.15_src.tgz
+b13a26ae79aabf5fc0007d1bf3a4eeb3
+/home/ankur/rpmbuild/SOURCES/bibutils_4.15_src.tgz
+removed `/tmp/review/bibutils_4.15_src.tgz'
+removed directory: `/tmp/review'
+
+[+] BuildRequires correct
+[+] Package has %defattr and permissions on files is good.
+[+] Package is code or permissible content.
+[+] Packages %doc files don't affect runtime.
+
+[+] Headers/static libs in -devel subpackage.
+[+] Spec has needed ldconfig in post and postun
+[+] .pc files in -devel subpackage/requires pkgconfig
+[+] .so files in -devel subpackage.
+[+] -devel package Requires: %{name} = %{version}-%{release}
+^^
+An arch specific provides using the %{?_isa} would be better?
+https://fedoraproject.org/wiki/PackagingDrafts/ArchSpecificRequires
+
+[+] .la files are removed.
+
+
+[+] Package compiles and builds on at least one arch.
+[+] Package has no duplicate files in %files.
+[+] Package doesn't own any directories other packages own.
+[+] Package owns all the directories it creates.
+[+] No rpmlint output.
+^^
+[ankur@ankur SRPMS]$ rpmlint ../SPECS/bibutils.spec ./bibutils-4.15-2.fc17.src.rpm /var/lib/mock/fedora-rawhide-x86_64/result/bibutils-*
+../SPECS/bibutils.spec:42: W: rpm-buildroot-usage %build ./configure
+--install-dir %{buildroot}%{_bindir} --install-lib %{buildroot}%{_libdir}
+--dynamic
+../SPECS/bibutils.spec:42: W: configure-without-libdir-spec
+bibutils.src: W: spelling-error %description -l en_US interconverts -> inter
+converts, inter-converts, interconnects
+bibutils.src:42: W: rpm-buildroot-usage %build ./configure --install-dir
+%{buildroot}%{_bindir} --install-lib %{buildroot}%{_libdir} --dynamic
+bibutils.src:42: W: configure-without-libdir-spec
+bibutils.src: W: spelling-error %description -l en_US interconverts -> inter
+converts, inter-converts, interconnects
+bibutils.src:42: W: rpm-buildroot-usage %build ./configure --install-dir
+%{buildroot}%{_bindir} --install-lib %{buildroot}%{_libdir} --dynamic
+bibutils.src:42: W: configure-without-libdir-spec
+
+-> Not a standard configure file. Looks okay.
+
+
+bibutils.x86_64: W: spelling-error %description -l en_US interconverts -> inter
+converts, inter-converts, interconnects
+bibutils.x86_64: W: no-manual-page-for-binary wordbib2xml
+bibutils.x86_64: W: no-manual-page-for-binary modsclean
+bibutils.x86_64: W: no-manual-page-for-binary biblatex2xml
+bibutils.x86_64: W: no-manual-page-for-binary xml2end
+bibutils.x86_64: W: no-manual-page-for-binary xml2ads
+bibutils.x86_64: W: no-manual-page-for-binary ris2xml
+bibutils.x86_64: W: no-manual-page-for-binary xml2isi
+bibutils.x86_64: W: no-manual-page-for-binary endx2xml
+bibutils.x86_64: W: no-manual-page-for-binary bib2xml
+bibutils.x86_64: W: no-manual-page-for-binary med2xml
+bibutils.x86_64: W: no-manual-page-for-binary xml2ris
+bibutils.x86_64: W: no-manual-page-for-binary end2xml
+bibutils.x86_64: W: no-manual-page-for-binary xml2wordbib
+bibutils.x86_64: W: no-manual-page-for-binary copac2xml
+bibutils.x86_64: W: no-manual-page-for-binary isi2xml
+bibutils.x86_64: W: no-manual-page-for-binary ebi2xml
+bibutils.x86_64: W: no-manual-page-for-binary xml2bib
+
+-> Some man pages would be nice, if upstream can provide them
+
+bibutils-devel.x86_64: W: no-documentation
+bibutils-libs.x86_64: W: shared-lib-calls-exit /usr/lib64/libbibutils.so.4.15
+exit@GLIBC_2.2.5
+
+-> Upstream issue. Please notify upstream
+
+bibutils-libs.x86_64: W: no-documentation
+6 packages and 1 specfiles checked; 0 errors, 29 warnings.
+[ankur@ankur SRPMS]$
+
+-> Look okay. Please correct the spelling errors if applicable.
+
+
+[+] final provides and requires are sane:
+(include output of for i in *rpm; do echo $i; rpm [-]qp --provides $i; echo =; rpm -qp --requires $i; echo; done
+manually indented after checking each line.  I also remove the rpmlib junk and anything provided by glibc.)
+== bibutils-4.15-2.fc19.src.rpm ==
+Provides:
+
+Requires:
+tcsh
+
+== bibutils-4.15-2.fc19.x86_64.rpm ==
+Provides:
+bibutils = 4.15-2.fc19
+bibutils(x86-64) = 4.15-2.fc19
+
+Requires:
+libbibutils.so.4()(64bit)
+libc.so.6()(64bit)
+libc.so.6(GLIBC_2.2.5)(64bit)
+libc.so.6(GLIBC_2.3.4)(64bit)
+rtld(GNU_HASH)
+
+== bibutils-debuginfo-4.15-2.fc19.x86_64.rpm ==
+Provides:
+bibutils-debuginfo = 4.15-2.fc19
+bibutils-debuginfo(x86-64) = 4.15-2.fc19
+
+Requires:
+
+== bibutils-devel-4.15-2.fc19.x86_64.rpm ==
+Provides:
+bibutils-devel = 4.15-2.fc19
+bibutils-devel(x86-64) = 4.15-2.fc19
+pkgconfig(bibutils) = 4.15
+
+Requires:
+/usr/bin/pkg-config
+bibutils-libs = 4.15-2.fc19
+libbibutils.so.4()(64bit)
+
+== bibutils-libs-4.15-2.fc19.x86_64.rpm ==
+Provides:
+bibutils-libs = 4.15-2.fc19
+bibutils-libs(x86-64) = 4.15-2.fc19
+libbibutils.so.4()(64bit)
+
+Requires:
+/sbin/ldconfig
+/sbin/ldconfig
+libc.so.6()(64bit)
+libc.so.6(GLIBC_2.2.5)(64bit)
+libc.so.6(GLIBC_2.3)(64bit)
+libc.so.6(GLIBC_2.3.4)(64bit)
+libc.so.6(GLIBC_2.4)(64bit)
+rtld(GNU_HASH)
+
+[ankur@ankur result]$
+^^
+Looks good
+
+SHOULD Items:
+
+[+] Should build in mock.
+[+] Should build on all supported archs
+[+] Should function as described.
+[+] Should have sane scriptlets.
+[+] Should have subpackages require base package with fully versioned depend.
+[+] Should have dist tag
+[+] Should package latest version
+[+] check for outstanding bugs on package. (For core merge reviews)
+
+Issues:
+
+1. Licence clarification
+2. Cosmetic changes (rpmlint and _isa macro usage)
+
+Everything else looks good. Almost good to go.

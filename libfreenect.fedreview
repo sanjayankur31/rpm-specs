@@ -1,0 +1,271 @@
+[+] OK
+[-] NA
+[?] Issue
+
+[+] Package meets naming and packaging guidelines
+[+] Spec file matches base package name.
+[+] Spec has consistant macro usage.
+[+] Meets Packaging Guidelines.
+[+] License
+[?] License field in spec matches
+[?] License file included in package
+[+] Spec in American English
+[+] Spec is legible.
+[-] Sources match upstream md5sum:
+
+[-] Package needs ExcludeArch
+[+] BuildRequires correct
+[-] Spec handles locales/find_lang
+[-] Package is relocatable and has a reason to be.
+[+] Package is code or permissible content.
+[-] Doc subpackage needed/used.
+[+] Packages %doc files don't affect runtime.
+
+[+] Headers/static libs in -devel subpackage.
+[+] Spec has needed ldconfig in post and postun
+[+] .pc files in -devel subpackage/requires pkgconfig
+[?] .so files in -devel subpackage.
+One .so is in -python
+
+[+] -devel package Requires: %{name} = %{version}-%{release}
+[+] .la files are removed.
+Are the .a files and the static package really necessary?
+
+[-] Package is a GUI app and has a .desktop file
+
+[+] Package compiles and builds on at least one arch.
+Builds on mock for rawhide x86_64
+
+[+] Package has no duplicate files in %files.
+[+] Package doesn't own any directories other packages own.
+[+] Package owns all the directories it creates.
+[?] No rpmlint output.
+[ankur@ankur SRPMS]$ rpmlint libfreenect-0.1.2-1.fc16.src.rpm
+/var/lib/mock/fedora-rawhide-x86_64/result/*.rpm ../SPECS/libfreenect.spec
+libfreenect.src: W: spelling-error %description -l en_US webcam -> web cam, web-cam, became
+libfreenect.src: W: strange-permission freenect_generate_tarball.sh 0775L
+libfreenect.src: W: invalid-url Source0: libfreenect-v0.1.2.tar.bz2
+libfreenect.src: W: spelling-error %description -l en_US webcam -> web cam, web-cam, became 
+libfreenect.src: W: strange-permission freenect_generate_tarball.sh 0775L
+libfreenect.src: W: invalid-url Source0: libfreenect-v0.1.2.tar.bz2
+libfreenect.x86_64: W: spelling-error %description -l en_US webcam -> web cam, web-cam, became
+libfreenect.x86_64: W: non-etc-or-var-file-marked-as-conffile /lib/udev/rules.d/51-kinect.rules
+libfreenect.x86_64: E: non-executable-script /usr/share/libfreenect/fwfetcher.py 0644L /usr/bin/env
+libfreenect.x86_64: W: no-manual-page-for-binary freenect-glpclview
+libfreenect.x86_64: W: no-manual-page-for-binary freenect-glview
+libfreenect.x86_64: W: no-manual-page-for-binary freenect-hiview
+libfreenect.x86_64: W: no-manual-page-for-binary freenect-regview
+libfreenect.x86_64: W: no-manual-page-for-binary freenect-wavrecord
+libfreenect.x86_64: W: no-manual-page-for-binary freenect-record
+libfreenect.x86_64: W: no-manual-page-for-binary freenect-cppview
+libfreenect.x86_64: W: no-manual-page-for-binary freenect-micview
+libfreenect.x86_64: W: no-manual-page-for-binary freenect-tiltdemo
+libfreenect-fakenect.x86_64: W: spelling-error %description -l en_US kinect -> kine ct, kine-ct, kinetic
+libfreenect-fakenect.x86_64: W: spelling-error %description -l en_US freenect -> frenetic
+libfreenect-fakenect.x86_64: W: spelling-error %description -l en_US datasets -> data sets, data-sets, databases
+libfreenect-fakenect.x86_64: W: no-documentation
+libfreenect-fakenect.x86_64: W: no-manual-page-for-binary fakenect
+libfreenect-opencv.x86_64: W: no-documentation
+libfreenect-opencv.x86_64: W: no-manual-page-for-binary freenect-cvdemo
+libfreenect-python.x86_64: W: private-shared-object-provides /usr/lib64/python2.7/site-packages/freenect.so freenect.so()(64bit)
+libfreenect-python.x86_64: W: no-documentation
+libfreenect-static.x86_64: W: no-documentation
+../SPECS/libfreenect.spec: W: invalid-url Source0: libfreenect-v0.1.2.tar.bz2
+9 packages and 1 specfiles checked; 1 errors, 28 warnings.
+[ankur@ankur SRPMS]$
+
+The non executable script needs to be corrected.
+
+You also need to handle the private shared object provides:
+libfreenect-python.x86_64: W: private-shared-object-provides
+/usr/lib64/python2.7/site-packages/freenect.so freenect.so()(64bit)
+A shared object soname provides is provided by a file in a path from which
+other packages should not directly load shared objects from.  Such shared
+objects should thus not be depended on and they should not result in provides
+in the containing package.  Get rid of the provides if appropriate, for
+example by filtering it out during build.  Note that in some cases this may
+require disabling rpmbuild's internal dependency generator.
+
+[?] final provides and requires are sane:
+(include output of for i in *rpm; do echo $i; rpm [-]qp --provides $i; echo =; rpm -qp --requires $i; echo; done
+manually indented after checking each line.  I also remove the rpmlib junk and anything provided by glibc.)
+
+Looks okay, other than the one shared object I've mentioned above. 
+
+== libfreenect-0.1.2-1.fc18.src.rpm ==
+Provides:
+
+Requires:
+cmake
+Cython
+doxygen
+freeglut-devel
+libusb1-devel
+libGL-devel
+libXi-devel
+libXmu-devel
+numpy
+opencv-devel
+python-devel
+
+== libfreenect-0.1.2-1.fc18.x86_64.rpm ==
+Provides:
+config(libfreenect) = 0.1.2-1.fc18
+libfreenect = 0.1.2-1.fc18
+libfreenect(x86-64) = 0.1.2-1.fc18
+libfreenect.so.0.1()(64bit)
+libfreenect_sync.so.0.1()(64bit)
+
+Requires:
+/sbin/ldconfig
+/sbin/ldconfig
+config(libfreenect) = 0.1.2-1.fc18
+libGL.so.1()(64bit)
+libGLU.so.1()(64bit)
+libICE.so.6()(64bit)
+libSM.so.6()(64bit)
+libX11.so.6()(64bit)
+libXext.so.6()(64bit)
+libXi.so.6()(64bit)
+libXmu.so.6()(64bit)
+libc.so.6()(64bit)
+libc.so.6(GLIBC_2.14)(64bit)
+libc.so.6(GLIBC_2.2.5)(64bit)
+libc.so.6(GLIBC_2.3.2)(64bit)
+libc.so.6(GLIBC_2.3.4)(64bit)
+libc.so.6(GLIBC_2.4)(64bit)
+libfreenect.so.0.1()(64bit)
+libfreenect_sync.so.0.1()(64bit)
+libgcc_s.so.1()(64bit)
+libgcc_s.so.1(GCC_3.0)(64bit)
+libglut.so.3()(64bit)
+libm.so.6()(64bit)
+libm.so.6(GLIBC_2.2.5)(64bit)
+libpthread.so.0()(64bit)
+libpthread.so.0(GLIBC_2.2.5)(64bit)
+libpthread.so.0(GLIBC_2.3.2)(64bit)
+libstdc++.so.6()(64bit)
+libstdc++.so.6(CXXABI_1.3)(64bit)
+libstdc++.so.6(GLIBCXX_3.4)(64bit)
+libusb-1.0.so.0()(64bit)
+rtld(GNU_HASH)
+udev
+
+== libfreenect-debuginfo-0.1.2-1.fc18.x86_64.rpm ==
+Provides:
+libfreenect-debuginfo = 0.1.2-1.fc18
+libfreenect-debuginfo(x86-64) = 0.1.2-1.fc18
+
+Requires:
+
+== libfreenect-devel-0.1.2-1.fc18.x86_64.rpm ==
+Provides:
+libfreenect-devel = 0.1.2-1.fc18
+libfreenect-devel(x86-64) = 0.1.2-1.fc18
+pkgconfig(libfreenect) = 0.1
+
+Requires:
+/usr/bin/pkg-config
+libfreenect(x86-64) = 0.1.2-1.fc18
+libfreenect.so.0.1()(64bit)
+libfreenect_cv.so.0.1()(64bit)
+libfreenect_sync.so.0.1()(64bit)
+pkgconfig(libusb-1.0)
+
+== libfreenect-fakenect-0.1.2-1.fc18.x86_64.rpm ==
+Provides:
+libfreenect-fakenect = 0.1.2-1.fc18
+libfreenect-fakenect(x86-64) = 0.1.2-1.fc18
+libfreenect.so.0.1()(64bit)
+
+Requires:
+/bin/bash
+libc.so.6()(64bit)
+libc.so.6(GLIBC_2.14)(64bit)
+libc.so.6(GLIBC_2.2.5)(64bit)
+libc.so.6(GLIBC_2.3.4)(64bit)
+libc.so.6(GLIBC_2.7)(64bit)
+libfreenect(x86-64) = 0.1.2-1.fc18
+rtld(GNU_HASH)
+
+== libfreenect-opencv-0.1.2-1.fc18.x86_64.rpm ==
+Provides:
+libfreenect-opencv = 0.1.2-1.fc18
+libfreenect-opencv(x86-64) = 0.1.2-1.fc18
+libfreenect_cv.so.0.1()(64bit)
+
+Requires:
+/sbin/ldconfig
+/sbin/ldconfig
+libc.so.6()(64bit)
+libc.so.6(GLIBC_2.2.5)(64bit)
+libfreenect(x86-64) = 0.1.2-1.fc18
+libfreenect.so.0.1()(64bit)
+libfreenect_cv.so.0.1()(64bit)
+libfreenect_sync.so.0.1()(64bit)
+libopencv_calib3d.so.2.4()(64bit)
+libopencv_contrib.so.2.4()(64bit)
+libopencv_core.so.2.4()(64bit)
+libopencv_features2d.so.2.4()(64bit)
+libopencv_flann.so.2.4()(64bit)
+libopencv_gpu.so.2.4()(64bit)
+libopencv_highgui.so.2.4()(64bit)
+libopencv_imgproc.so.2.4()(64bit)
+libopencv_legacy.so.2.4()(64bit)
+libopencv_ml.so.2.4()(64bit)
+libopencv_nonfree.so.2.4()(64bit)
+libopencv_objdetect.so.2.4()(64bit)
+libopencv_photo.so.2.4()(64bit)
+libopencv_stitching.so.2.4()(64bit)
+libopencv_ts.so.2.4()(64bit)
+libopencv_video.so.2.4()(64bit)
+libopencv_videostab.so.2.4()(64bit)
+libusb-1.0.so.0()(64bit)
+rtld(GNU_HASH)
+
+== libfreenect-python-0.1.2-1.fc18.x86_64.rpm ==
+Provides:
+freenect.so()(64bit)
+libfreenect-python = 0.1.2-1.fc18
+libfreenect-python(x86-64) = 0.1.2-1.fc18
+
+Requires:
+libc.so.6()(64bit)
+libc.so.6(GLIBC_2.2.5)(64bit)
+libc.so.6(GLIBC_2.4)(64bit)
+libfreenect(x86-64) = 0.1.2-1.fc18
+libfreenect.so.0.1()(64bit)
+libfreenect_sync.so.0.1()(64bit)
+libusb-1.0.so.0()(64bit)
+python(abi) = 2.7
+rtld(GNU_HASH)
+
+== libfreenect-static-0.1.2-1.fc18.x86_64.rpm ==
+Provides:
+libfreenect-static = 0.1.2-1.fc18
+libfreenect-static(x86-64) = 0.1.2-1.fc18
+
+Requires:
+libfreenect-devel(x86-64) = 0.1.2-1.fc18
+
+[ankur@ankur result]$
+
+SHOULD Items:
+
+[+] Should build in mock.
+[-] Should build on all supported archs
+[-] Should function as described.
+[+] Should have sane scriptlets.
+[+] Should have subpackages require base package with fully versioned depend.
+[+] Should have dist tag
+[+] Should package latest version
+[-] check for outstanding bugs on package. (For core merge reviews)
+
+Issues:
+
+Not too many:
+
+You can look at the spelling suggestions, for instance webcam can be changed to
+reduce rpmlint output. 
+
+
