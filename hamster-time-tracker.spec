@@ -1,6 +1,6 @@
 Name:        hamster-time-tracker
 Version:    1.03.3
-Release:    1%{?dist}
+Release:    2%{?dist}
 Summary:    The Linux time tracker
 
 License:    GPLv3+
@@ -10,13 +10,18 @@ Source0:    hamster-%{name}-%{version}.tar.gz
 Source1:    %{name}.appdata.xml
 
 # Move service files to bindir rather than libdir
-# Stop gschema building etc.
+# Stop gschema installation etc.
 # http://fedoraproject.org/wiki/Packaging:ScriptletSnippets#GConf
 Patch0:     %{name}-1.03.3-file-locations.patch
 
+# Not required. Packaging SIG cleared this up:
+# https://lists.fedoraproject.org/pipermail/packaging/2013-December/009836.html
+# Only the gconf registration is to be done via scriptlets
+#Patch1:     %{name}-1.03.3-no-install-schemas.patch
+
 # Correct service files to point to BINDIR rather than LIBDIR
-Patch1:     %{name}-1.03.3-service-dbus1.patch
-Patch2:     %{name}-1.03.3-service-dbus2.patch
+Patch2:     %{name}-1.03.3-service-dbus1.patch
+Patch3:     %{name}-1.03.3-service-dbus2.patch
 
 BuildArch:  noarch
 BuildRequires:    desktop-file-utils
@@ -44,9 +49,10 @@ is a request of your employee.
 
 %prep
 %setup -q -n hamster-%{name}-%{version}
-%patch0 
-%patch1 
-%patch2 
+%patch0
+#%patch1
+%patch2
+%patch3
 
 # remove shebang
 sed -ibackup '1d' src/hamster/today.py
@@ -96,15 +102,30 @@ fi
 %{python_sitelib}/hamster
 %{_datadir}/%{name}/
 %{_datadir}/dbus-1/services/*hamster*.service
+
+%dir %{_sysconfdir}/bash_completion.d
 %{_sysconfdir}/bash_completion.d/hamster.bash
+
 %{_sysconfdir}/gconf/schemas/hamster-time-tracker.schemas
+
 %{_datadir}/applications/hamster*desktop
 %{_datadir}/icons/hicolor/*/apps/%{name}.*
+
+%dir %{_datadir}/gnome/help
+
+%{_datadir}/appdata/
 %{_datadir}/appdata/%{name}.appdata.xml
 
 
-
 %changelog
+* Mon Dec 02 2013 Ankur Sinha <ankursinha AT fedoraproject DOT org> 1.03.3-2
+- Fixes as per https://bugzilla.redhat.com/show_bug.cgi?id=1036254
+- Correct schame functions
+- Own gnome help dir
+- Own bash completion dir
+- schema and bash completion files do not need to be %config
+- https://lists.fedoraproject.org/pipermail/packaging/2013-December/009834.html
+
 * Sat Nov 30 2013 Ankur Sinha <ankursinha AT fedoraproject DOT org> 1.03.3-1
 - Initial rpm build
 
