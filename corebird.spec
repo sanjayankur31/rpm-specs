@@ -1,29 +1,31 @@
-Name:			corebird
-Version:		0.4
-Release:		0%{?dist}
-Summary:		Native GTK Twitter client
-License:		GPLv3+
-URL:			http://corebird.baedert.org/
-Source0:		https://github.com/baedert/corebird/archive/corebird-0.4.tar.gz
-BuildRequires:		gtk3-devel >= 3.9
-BuildRequires:		glib2-devel >= 2.38
-BuildRequires:		rest-devel
-BuildRequires:		json-glib-devel
-BuildRequires:		libnotify-devel
-BuildRequires:		sqlite-devel
-BuildRequires:		libsoup-devel
-BuildRequires:		vala-devel
-BuildRequires:		cmake
-BuildRequires:		librsvg2-tools
-BuildRequires:		desktop-file-utils
-BuildRequires:		libgee-devel
-Requires:		fontawesome-fonts
+Name:            corebird
+Version:        0.5
+Release:        1%{?dist}
+Summary:        Native GTK Twitter client
+License:        GPLv3+
+URL:            http://corebird.baedert.org/
+Source0:        https://github.com/baedert/corebird/archive/%{name}-%{version}.tar.gz
+BuildRequires:        gtk3-devel >= 3.9
+BuildRequires:        glib2-devel >= 2.38
+BuildRequires:        rest-devel
+BuildRequires:        json-glib-devel
+BuildRequires:        libnotify-devel
+BuildRequires:        sqlite-devel
+BuildRequires:        libsoup-devel
+BuildRequires:        vala-devel
+BuildRequires:        cmake
+BuildRequires:        librsvg2-tools
+BuildRequires:        desktop-file-utils
+BuildRequires:        libgee-devel
+
+# For icon directories
+Requires:           hicolor-icon-theme
 
 %description
 Native GTK Twitter client for the Linux desktop.
 
 %prep
-%setup
+%setup -q
 
 %build
 %{cmake} .
@@ -58,7 +60,11 @@ fi
 %{_datadir}/%{name}/
 %{_datadir}/glib-2.0/schemas/org.baedert.%{name}.gschema.xml
 %{_datadir}/icons/hicolor/*/apps/%{name}.png
+%{_datadir}/appdata/%{name}.appdata.xml
 
 %changelog
+* Fri Nov 29 2013 Ankur Sinha <ankursinha AT fedoraproject DOT org> 0.5-1
+- Update to 0.5
+
 * Mon Nov 04 2013 Ryan Lerch <ryanlerch@fedoraproject.org> - 0.4-0
 - initial package
