@@ -8,12 +8,13 @@ URL:            http://www.unrealvoodoo.org/hiteck/projects/%{name}/
 Source0:        http://www.unrealvoodoo.org/hiteck/projects/%{name}/dist/%{name}-%{version}.tar.gz
 
 # Some desktop file fixes
-# Fixes for the binary file. Some paths are hardcoded :(
 Patch0:         albumart-desktop-file-binary.patch
+Patch1:         albumart-1.6.6-PIL.patch
 
 BuildArch:      noarch
 BuildRequires:  python2-devel PyQt desktop-file-utils
 Requires:       PyQt
+Requires:       python-urllib3
 
 %description
 A program that will semi-automatically download album cover images for your
@@ -31,7 +32,7 @@ being.
 %package konqueror
 Requires:   %{name}%{?_isa} = %{version}-%{release}
 Requires:   kde-baseapps
-Summary:    Service menu additon for %{name}
+Summary:    Service menu addition for %{name}
 
 %description konqueror
 Konqueror service menu for %{name}
@@ -40,6 +41,7 @@ Konqueror service menu for %{name}
 %prep
 %setup -q
 %patch0 -p2
+%patch1
 
 
 %build
@@ -47,7 +49,6 @@ Konqueror service menu for %{name}
 
 
 %install
-rm -rf $RPM_BUILD_ROOT
 %{__python2} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT 
 
 # The build system always installs to lib for some reason.
@@ -57,8 +58,8 @@ mv $RPM_BUILD_ROOT/usr/lib/%{name}/* $RPM_BUILD_ROOT/%{python2_sitelib}/%{name}/
 
 desktop-file-validate --warn-kde $RPM_BUILD_ROOT/%{_datadir}/applnk/Multimedia/%{name}.desktop
 
-# Unable to fix this. Will ask a kde person :)
-# desktop-file-validate --warn-kde $RPM_BUILD_ROOT/%{_datadir}/apps/konqueror/servicemenus/albumart_set_cover_image.desktop
+# Do not follow freedesktop guidelines and do not need to be validated
+# desktop-file-validate --warn-kde $RPM_BUILD_ROOT/%%{_datadir}/apps/konqueror/servicemenus/albumart_set_cover_image.desktop
 
 chmod -x $RPM_BUILD_ROOT/%{python2_sitelib}/albumart/yahoo/search/webservices.py
 chmod -x $RPM_BUILD_ROOT/%{python2_sitelib}/albumart/yahoo/search/domparsers.py
@@ -93,6 +94,10 @@ cp debian/albumart-qt.1 $RPM_BUILD_ROOT/%{_mandir}/man1/
 
 
 %changelog
+* Sun Jan 05 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> 1.6.6-1
+- Update as per review comments
+- Patch for PIL support
+
 * Fri Nov 22 2013 Ankur Sinha <ankursinha AT fedoraproject DOT org> 1.6.6-1
 - python -> python2
 - Add man page
