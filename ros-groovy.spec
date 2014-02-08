@@ -8,8 +8,8 @@
 %global scl_python_sitelib %{_prefix}/lib/python%{pybasever}/site-packages
 
 Name:       %scl_name
-Version:    1
-Release:    1%{?dist}
+Version:    0
+Release:    0.1%{?dist}
 Summary:    Package that installs %scl
 #BuildArch:  noarch
 License:    GPLv2+
@@ -104,6 +104,5 @@ EOF
 %{_root_sysconfdir}/rpm/macros.%{scl}-config
 
 %changelog
-* Tue Aug 27 2013 Ankur Sinha <ankursinha AT fedoraproject DOT org> 1-1
-- Initial version of metadata
-
+* Sat Feb 08 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> 0-0.1
+- Initial build
