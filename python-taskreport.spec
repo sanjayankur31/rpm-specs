@@ -1,6 +1,4 @@
-# sitelib for noarch packages, sitearch for others (remove the unneeded one)
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
-%{!?python_sitearch: %global python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")}
 
 %global module_name taskreport
 Name:           python-%{module_name}
@@ -19,7 +17,7 @@ Patch0:         %{module_name}-%{version}-setup-py.patch
 
 BuildArch:      noarch
 BuildRequires:  python2-devel
-Requires:       task python-inlinestyler python-jinja
+Requires:       task python-inlinestyler python-jinja2
 
 %description
 Taskreport is a simple tool to generate HTML reports from your Taskwarrior task
@@ -54,9 +52,11 @@ The list of features includes:
 %files
 %{_bindir}/%{module_name}
 %doc data/* CHANGES.txt LICENSE.txt README.txt
-%{python_sitelib}/%{module_name}-%{version}-py?.?.egg-info
+%{python2_sitelib}/%{module_name}-%{version}-py?.?.egg-info
 
 
 %changelog
-* Mon May 05 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> 1.2.1-1
+* Tue May 06 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> 1.2.1-1
+- Corrected python directory macros
+- Corrected requires to python-jinna2
 - Initial rpm build
