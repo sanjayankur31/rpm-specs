@@ -1,5 +1,3 @@
-%{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
-
 %global module_name inlinestyler
 Name:           python-%{module_name}
 Version:        0.1.7
@@ -37,7 +35,8 @@ rm -rf %{module_name}.egg-info
 
 
 %changelog
-* Tue May 06 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> 0.1.7-1
+* Sat May 10 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> 0.1.7-1
+- Removed macro definition
 - Updated description
 - Corrected python directory macros
 - Initial rpm build
