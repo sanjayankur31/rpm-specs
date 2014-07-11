@@ -17,7 +17,7 @@ Patch0:         vit-1.2-Makefile.patch
 Patch1:         vit-1.2-manpage5.patch
 
 BuildArch:      noarch
-BuildRequires:  task perl-Curses
+BuildRequires:  task perl(Curses)
 Requires:       task
 
 %description
@@ -42,12 +42,11 @@ make %{?_smp_mflags}
 
 
 %install
-rm -rf $RPM_BUILD_ROOT
 %make_install
 
 
 %files
-%doc VERSION AUTHORS CHANGES LICENSE README TODO
+%doc AUTHORS CHANGES LICENSE README TODO
 %{_bindir}/%{name}
 %config(noreplace)%{_sysconfdir}/%{name}-commands
 %{_mandir}/man1/%{name}*
@@ -55,6 +54,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Fri Jul 11 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> 1.2-1
+- Update as per reviewer comments - rhbz1112072
+
 * Tue Jun 24 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> 1.2-1
 - Update to new 1.2 stable version
 
