@@ -1,4 +1,4 @@
-%global svn_release 475
+%global svn_release 484
 %global actual_name libmpc
 
 # Since %{actual_name} refers to another package already
@@ -11,11 +11,15 @@ Summary:        Living audio compression
 License:        BSD and LGPLv2+
 URL:            http://www.musepack.net/
 # Generated from the svn checkout
-# svn export -r 475 http://svn.musepack.net/libmpc/trunk/ libmpc_r475
-# tar -cvzf libmpc_r475.tar.gz libmpc_r475/
+# svn export -r 484 http://svn.musepack.net/libmpc/trunk/ libmpc_r84
+# tar -cvzf libmpc_r484.tar.gz libmpc_r484/
 Source0:        %{actual_name}_r%{svn_release}.tar.gz
 
-BuildRequires:  cmake libreplaygain-devel libcuefile-devel
+# use libcuefile
+# Adapted from http://anonscm.debian.org/gitweb/?p=pkg-multimedia/libmpc.git;a=tree;f=debian/patches;h=37c53c4ec00439acdc7bb69d4396d070ba2fd28d;hb=8f921bb65eaebdd55fcd99064c193e7c94297b50
+Patch0:         0001-%{actual_name}-mpcchap.patch
+
+BuildRequires:  libreplaygain-devel libcue-devel autoconf automake libtool
 
 
 %description
@@ -39,7 +43,6 @@ developing applications that use %{name}.
 
 %package -n libmpcdec
 Summary:    Musepack audio decoding library
-Obsoletes:      libmpcdec < 1.2.6-13
 
 %description -n libmpcdec
 Musepack audio decoding library
@@ -47,7 +50,6 @@ Musepack audio decoding library
 
 %package -n libmpcdec-devel
 Summary:    Musepack audio decoding library
-Obsoletes:      libmpcdec-devel < 1.2.6-13
 Requires:       %{name}-devel%{?_isa} = %{version}-%{release}
 Requires:       libmpcdec%{?_isa} = %{version}-%{release}
 
@@ -58,21 +60,11 @@ developing applications that use libmpcdec
 
 %prep
 %setup -q -n %{actual_name}_r%{svn_release}
-# The headers are in the libcuefile dir, not cuetools since the musepack
-# version of the libs are kind of a fork and I didn't want them to clash
-sed -ibackup "s/cuetools/libcuefile/" mpcchap/CMakeLists.txt
-sed -ibackup "s/cuetools/libcuefile/" mpcchap/mpcchap.c
-
-# Some cmake configuration changes
-# Remove quiet build
-sed -ibackup '7d' CMakeLists.txt
-# Don't let it override our standard flags
-# It's like 18,20, but since I've deleted a line above, it becomes 17-19
-sed -ibackup '17,19d' CMakeLists.txt
-
+%patch0 -p1
 
 %build
-%cmake -DWIN32:BOOL=OFF .
+autoreconf -v -i .
+%configure --disable-static
 make %{?_smp_mflags}
 
 %install
@@ -80,21 +72,14 @@ rm -rf $RPM_BUILD_ROOT
 make DESTDIR=$RPM_BUILD_ROOT install
 find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 
-# Versioning not clear. Should it be .7.0.1 as in libmpcdec/Makefile.am?
-#pushd libmpcdec
-#    ln -svf libmpcdec.so libmpcdec.so.0
-#popd
-
-mkdir -p $RPM_BUILD_ROOT/%{_libdir}/
-cp -v libmpcdec/libmpcdec.so* $RPM_BUILD_ROOT/%{_libdir}/
-
 %post -p /sbin/ldconfig
-
 %postun -p /sbin/ldconfig
+
+%post -n libmpcdec -p /sbin/ldconfig
+%postun -n libmpcdec -p /sbin/ldconfig
 
 %files
 %{_bindir}/mpc2sv8
-%{_bindir}/mpcchap
 %{_bindir}/mpccut
 %{_bindir}/mpcenc
 %{_bindir}/mpcgain
@@ -110,9 +95,9 @@ cp -v libmpcdec/libmpcdec.so* $RPM_BUILD_ROOT/%{_libdir}/
 %{_includedir}/mpc/streaminfo.h
 
 %files -n libmpcdec
-# README just has wrong information
+## README just has wrong information
 %doc %{actual_name}dec/{AUTHORS,COPYING,ChangeLog}
-#%{_libdir}/*.so.*
+%{_libdir}/*.so.*
 %{_bindir}/mpcdec
 
 %files -n libmpcdec-devel
@@ -120,6 +105,12 @@ cp -v libmpcdec/libmpcdec.so* $RPM_BUILD_ROOT/%{_libdir}/
 %{_libdir}/*.so
 
 %changelog
+* Thu Jul 17 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 1.3.0-0.1.svn484
+- Update to svn 484
+- use autotools build system instead of cmake
+- remove obsoletes
+- builds with libcue now
+
 * Sun Oct 13 2013 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 1.3.0-0.1.svn475
 - Initial rpm build
 
