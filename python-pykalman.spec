@@ -15,7 +15,7 @@ Summary:        Kalman Filter, Smoother, and EM algorithm
 
 License:        BSD
 URL:            http://%{module_name}.github.com/
-Source0:        https://github.com/%{module_name}/%{module_name}/archive/%{module_name}-%{commit}.tar.gz
+Source0:        https://github.com/%{module_name}/%{module_name}/archive/%{commit}/%{module_name}-%{commit}.tar.gz
 
 # https://github.com/pykalman/pykalman/issues/33
 # https://github.com/pykalman/pykalman/issues/32
@@ -122,25 +122,30 @@ popd
 %endif # with_python3
  
 %files
+%doc COPYING
 %{python_sitelib}/%{module_name}/
 %{python_sitelib}/%{module_name}-%{version}-py?.?.egg-info
 
 %files doc
-%doc COPYING doc/build/html examples
+%doc doc/build/html examples
 
 %if 0%{?with_python3}
 %files -n python3-%{module_name}
+%doc COPYING
 %{python3_sitelib}/%{module_name}/
 %{python3_sitelib}/%{module_name}-%{version}-py?.?.egg-info
 
 %files -n python3-%{module_name}-doc
-%doc COPYING
 %{_docdir}/python3-%{module_name}/examples
 %{_docdir}/python3-%{module_name}/html
 %endif
 
 %changelog
-* Sat Aug 30 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> 0.9.5-1.20140827git2aeb4ad
+* Sat Aug 30 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.9.5-1.20140827git2aeb4ad
+- Correct SOURCE0
+- Move COPYING file to main package from doc subpackage
+
+* Sat Aug 30 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.9.5-1.20140827git2aeb4ad
 - Updated description
 
 * Fri Aug 29 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.9.5-1.20140827git2aeb4ad
