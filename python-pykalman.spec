@@ -1,25 +1,47 @@
+# Turn off byte compilation because I don't want it to byte compile the
+# examples in docs
+%global __os_install_post %(echo '%{__os_install_post}' | sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g')
 %global module_name pykalman
 %global with_python3    1
 
+%global commit  2aeb4ad80f9dcc4ea182331e33bda7ea4866548e
+%global shortcommit %(c=%{commit}; echo ${c:0:7})
+
 Name:           python-%{module_name}
 Version:        0.9.5
-Release:        1%{?dist}
+Release:        1.20140827git%{shortcommit}%{?dist}
+
 Summary:        Kalman Filter, Smoother, and EM algorithm
 
 License:        BSD
 URL:            http://%{module_name}.github.com/
-Source0:        https://pypi.python.org/packages/source/p/%{module_name}/%{module_name}-0.9.5.tar.gz
+Source0:        https://github.com/%{module_name}/%{module_name}/archive/%{module_name}-%{commit}.tar.gz
+
+# https://github.com/pykalman/pykalman/issues/33
+# https://github.com/pykalman/pykalman/issues/32
 
 BuildArch:      noarch
-BuildRequires:  python2-devel python-nose numpy python-sphinx scipy
+BuildRequires:  python2-devel python-nose numpy scipy
+BuildRequires:  python-numpydoc python-sphinx 
 
 %if 0%{?with_python3}
-BuildRequires:  python3-devel python3-nose python3-numpy python3-sphinx
+BuildRequires:  python3-devel python3-nose python3-numpy
 BuildRequires:  python3-scipy
+
+# py3-numpydoc not in Fedora yet. Bug filed:
+# https://bugzilla.redhat.com/show_bug.cgi?id=1134171
+#BuildRequires:  python3-numpydoc python3-sphinx
 %endif
 
 %description
 Kalman Filter, Smoother, and EM Algorithm for Python
+
+%package doc
+Summary:    Documentation for %{name}
+Requires:   %{name}
+
+%description doc
+Documentation for %{name}
 
 %if 0%{?with_python3}
 %package -n python3-%{module_name}
@@ -27,10 +49,17 @@ Summary:    Kalman Filter, Smoother, and EM Algorithm
 
 %description -n python3-%{module_name}
 Kalman Filter, Smoother, and EM Algorithm for Python
+
+%package -n python3-%{module_name}-doc
+Summary:    Documentation for python3-%{module_name}
+Requires:   python3-%{module_name}
+
+%description -n python3-%{module_name}-doc
+Documentation for python3-%{module_name}
 %endif
 
 %prep
-%setup -q -n %{module_name}-%{version}
+%setup -q -n %{module_name}-%{commit}
 
 %if 0%{?with_python3}
 rm -rf %{py3dir}
@@ -40,10 +69,23 @@ find %{py3dir} -name '*.py' | xargs sed -i '1s|^#!python|#!%{__python3}|'
 
 %build
 %{__python2} setup.py build
+pushd doc
+    make html
+    sed -i 's/\r$//' build/html/_static/jquery.js
+    rm -fv build/html/.buildinfo
+popd
 
 %if 0%{?with_python3}
 pushd %{py3dir}
 %{__python3} setup.py build
+#documentation
+    pushd doc
+        #use py2 at the moment until python3-numpydoc is available
+        #sed -ibackup 's/sphinx-build/sphinx-build-3/' Makefile
+        make html
+        sed -i 's/\r$//' build/html/_static/jquery.js
+        rm -fv build/html/.buildinfo
+    popd
 popd
 %endif
 
@@ -52,10 +94,17 @@ popd
 %if 0%{?with_python3}
 pushd %{py3dir}
 %{__python3} setup.py install --skip-build --root $RPM_BUILD_ROOT
+
+%py_byte_compile %{__python3} $RPM_BUILD_ROOT/%{python3_sitelib}/%{module_name}/
+
+mkdir -p $RPM_BUILD_ROOT/%{_docdir}/python3-%{module_name}
+cp -pr doc/build/html $RPM_BUILD_ROOT/%{_docdir}/python3-%{module_name}
+cp -pr examples $RPM_BUILD_ROOT/%{_docdir}/python3-%{module_name}
 popd
 %endif
 
 %{__python2} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT
+%py_byte_compile %{__python2} $RPM_BUILD_ROOT/%{python_sitelib}/%{module_name}/
 
 %check
 nosetests %{module_name}/tests/
@@ -70,12 +119,30 @@ popd
 %{python_sitelib}/%{module_name}/
 %{python_sitelib}/%{module_name}-%{version}-py?.?.egg-info
 
+%files doc
+%doc COPYING doc/build/html examples
+
 %if 0%{?with_python3}
 %files -n python3-%{module_name}
 %{python3_sitelib}/%{module_name}/
 %{python3_sitelib}/%{module_name}-%{version}-py?.?.egg-info
+
+%files -n python3-%{module_name}-doc
+%doc COPYING
+%{_docdir}/python3-%{module_name}/examples
+%{_docdir}/python3-%{module_name}/html
 %endif
 
 %changelog
+* Fri Aug 29 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.9.5-1.20140827git2aeb4ad
+- Updated as per reviewer comments
+- Split to different doc sub packages
+- Added changelogs
+
+* Tue Aug 26 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.9.5-1.20140827git2aeb4ad
+- update to git code that includes documentation and license
+
 * Tue Aug 26 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> 0.9.5-1
 - Initial rpm build
+
+
