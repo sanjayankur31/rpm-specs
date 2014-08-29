@@ -34,7 +34,10 @@ BuildRequires:  python3-scipy
 %endif
 
 %description
-Kalman Filter, Smoother, and EM Algorithm for Python
+This module implements two algorithms for tracking: the Kalman Filter and
+Kalman Smoother. In addition, model parameters which are traditionally
+specified by hand can also be learned by the implemented EM algorithm without
+any labeled training data.
 
 %package doc
 Summary:    Documentation for %{name}
@@ -48,7 +51,10 @@ Documentation for %{name}
 Summary:    Kalman Filter, Smoother, and EM Algorithm
 
 %description -n python3-%{module_name}
-Kalman Filter, Smoother, and EM Algorithm for Python
+This module implements two algorithms for tracking: the Kalman Filter and
+Kalman Smoother. In addition, model parameters which are traditionally
+specified by hand can also be learned by the implemented EM algorithm without
+any labeled training data.
 
 %package -n python3-%{module_name}-doc
 Summary:    Documentation for python3-%{module_name}
@@ -134,6 +140,9 @@ popd
 %endif
 
 %changelog
+* Sat Aug 30 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> 0.9.5-1.20140827git2aeb4ad
+- Updated description
+
 * Fri Aug 29 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.9.5-1.20140827git2aeb4ad
 - Updated as per reviewer comments
 - Split to different doc sub packages
