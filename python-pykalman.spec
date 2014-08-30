@@ -41,7 +41,7 @@ any labeled training data.
 
 %package doc
 Summary:    Documentation for %{name}
-Requires:   %{name}
+Requires:   %{name}%{?_isa} = %{version}-%{release}
 
 %description doc
 Documentation for %{name}
@@ -58,7 +58,7 @@ any labeled training data.
 
 %package -n python3-%{module_name}-doc
 Summary:    Documentation for python3-%{module_name}
-Requires:   python3-%{module_name}
+Requires:   python3-%{module_name}%{?_isa} = %{version}-%{release}
 
 %description -n python3-%{module_name}-doc
 Documentation for python3-%{module_name}
