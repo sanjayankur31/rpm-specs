@@ -11,10 +11,12 @@ URL:        http://bitbucket.org/apdavison/lazyarray/
 Source0:    https://pypi.python.org/packages/source/l/%{module_name}/%{module_name}-%{version}.tar.gz
 
 BuildRequires:  python2-devel python-setuptools numpy
+Requires:       numpy
 BuildArch:      noarch
 
 %if 0%{?with_python3}
 BuildRequires:  python3-devel python3-setuptools python3-numpy python3-docutils
+Requires:       python3-numpy
 %endif # if with_python3
 
 %description
