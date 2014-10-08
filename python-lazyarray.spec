@@ -9,14 +9,19 @@ Summary:    A lazily-evaluated numerical array class
 License:    BSD
 URL:        http://bitbucket.org/apdavison/lazyarray/
 Source0:    https://pypi.python.org/packages/source/l/%{module_name}/%{module_name}-%{version}.tar.gz
+# https://bitbucket.org/apdavison/lazyarray/raw/01cee2e7334b61519365be6325f1d832bcf66cfc/doc/conf.py
+# Not included in the pypi release for some reason
+Source1:    lazyarray-doc-conf.py
+Source2:    Makefile.lazyarray
 
-BuildRequires:  python2-devel python-setuptools numpy
+BuildRequires:  python2-devel python-setuptools numpy python-nose
+BuildRequires:  python-sphinx
 Requires:       numpy
 BuildArch:      noarch
 
 %if 0%{?with_python3}
-BuildRequires:  python3-devel python3-setuptools python3-numpy python3-docutils
-Requires:       python3-numpy
+BuildRequires:  python3-devel python3-setuptools python3-numpy
+BuildRequires:  python3-nose
 %endif # if with_python3
 
 %description
@@ -42,6 +47,7 @@ Documentation: http://lazyarray.readthedocs.org/
 %if 0%{?with_python3}
 %package -n python3-%{module_name}
 Summary:    A lazily-evaluated numerical array class
+Requires:   python3-numpy
 
 %description -n python3-%{module_name}
 lazyarray is a Python package that provides a lazily-evaluated numerical array
@@ -65,6 +71,8 @@ Documentation: http://lazyarray.readthedocs.org/
 
 %prep
 %setup -q -n %{module_name}-%{version}
+cp %{SOURCE1} doc/conf.py
+cp %{SOURCE2} doc/Makefile
 
 %if 0%{?with_python3}
 rm -rf %{py3dir}
@@ -74,11 +82,26 @@ cp -a . %{py3dir}
 %build
 %{__python2} setup.py build
 
+# only needs to be built once
+pushd doc
+make html
+rm _build/html/.buildinfo
+
+pushd _build/html/
+iconv -f iso8859-1 -t utf-8 objects.inv > objects.inv.conv && mv -f objects.inv.conv objects.inv
+popd
+
+popd
+
+sed -i 's/\r$//' doc/_build/html/_static/jquery.js
+
 %if 0%{?with_python3}
 pushd %{py3dir}
 %{__python3} setup.py build
 popd
 %endif # with_python3
+
+
 
 %install
 %{__python2} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT
@@ -89,21 +112,35 @@ pushd %{py3dir}
 popd
 %endif # with_python3 
 
+%check
+nosetests test
+
+%if 0%{?with_python3}
+pushd %{py3dir}
+nosetests-3.4 test
+popd
+%endif
+
 %files
-%doc LICENSE changelog.txt README
+%doc LICENSE changelog.txt README doc/_build/html
 %{python2_sitelib}/%{module_name}-%{version}-py?.?.egg-info
-%{python2_sitelib}/%{module_name}*
+%{python2_sitelib}/%{module_name}.py*
 
 %if 0%{?with_python3}
 %files -n python3-%{module_name}
-%doc LICENSE changelog.txt README
+%doc LICENSE changelog.txt README doc/_build/html
 %{python3_sitelib}/%{module_name}-%{version}-py?.?.egg-info
 %{python3_sitelib}/__pycache__/%{module_name}*
-%{python3_sitelib}/%{module_name}*
+%{python3_sitelib}/%{module_name}*.py
 
 %endif
 
 %changelog
+* Tue Oct 07 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> 0.2.7-1
+- Added tests
+- Corrected file lists
+- Added docs
+
 * Tue Oct 07 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> 0.2.7-1
 - Initial rpm build
 
