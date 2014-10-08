@@ -11,7 +11,6 @@ Source0:    http://www.neuron.yale.edu/ftp/neuron/versions/v7.3/%{name}-18.tar.g
 Patch0:     %{name}-18-format-security.patch
 
 BuildRequires:  xorg-x11-server-devel chrpath libtiff-devel imake
-#Requires:    
 
 %description
 InterViews is a native C++ toolkit for X Windows developed by Mark Linton and
@@ -92,5 +91,8 @@ chrpath --delete $RPM_BUILD_ROOT%{_bindir}/i*
 %{_libdir}/*.la
 
 %changelog
+* Wed Oct 08 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> 3.2b.hines18-1
+- New build
+
 * Tue Feb 18 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> 3.2b.hines18-1
 - Initial rpm build
