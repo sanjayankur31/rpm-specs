@@ -18,7 +18,6 @@ BuildArch:      noarch
 %if 0%{?with_python3}
 BuildRequires:  python3-devel python3-setuptools python3-numpy 
 BuildRequires:  python3-quantities
-Requires:       python3-numpy python3-quantities
 %endif # if with_python3
 
 %description
@@ -45,6 +44,7 @@ checks for dimensional consistency and automatic unit conversion.%if
 0%{?with_python3}
 %package -n python3-%{module_name}
 Summary:    A lazily-evaluated numerical array class
+Requires:   python3-numpy python3-quantities
 
 %description -n python3-%{module_name}
 Neo is a package for representing electrophysiology data in Python, together
