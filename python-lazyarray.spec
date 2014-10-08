@@ -43,6 +43,13 @@ memory in cases where:
       
 Documentation: http://lazyarray.readthedocs.org/
 
+%package docs
+Summary:    Documentation for %{name}
+BuildArch:  noarch
+
+%description docs
+This package contains generated HTML documentation for %{name}.
+
 
 %if 0%{?with_python3}
 %package -n python3-%{module_name}
@@ -67,6 +74,13 @@ memory in cases where:
       in which each MPI node operates on a subset of the elements of the array)
       
 Documentation: http://lazyarray.readthedocs.org/
+
+%package -n python3-%{module_name}-docs
+Summary:    Documentation for python3-%{module_name}
+BuildArch:  noarch
+
+%description -n python3-%{module_name}-docs
+This package contains generated HTML documentation for python3-%{module_name}.
 %endif
 
 %prep
@@ -122,20 +136,29 @@ popd
 %endif
 
 %files
-%doc LICENSE changelog.txt README doc/_build/html
+%doc LICENSE changelog.txt README 
 %{python2_sitelib}/%{module_name}-%{version}-py?.?.egg-info
 %{python2_sitelib}/%{module_name}.py*
 
+%files docs
+%doc doc/_build/html
+
 %if 0%{?with_python3}
 %files -n python3-%{module_name}
-%doc LICENSE changelog.txt README doc/_build/html
+%doc LICENSE changelog.txt README
 %{python3_sitelib}/%{module_name}-%{version}-py?.?.egg-info
 %{python3_sitelib}/__pycache__/%{module_name}*
 %{python3_sitelib}/%{module_name}*.py
 
+%files -n python3-%{module_name}-docs
+%doc doc/_build/html
+
 %endif
 
 %changelog
+* Wed Oct 08 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> 0.2.7-1
+- Split documentation to separate sub package
+
 * Tue Oct 07 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> 0.2.7-1
 - Added tests
 - Corrected file lists
