@@ -6,7 +6,7 @@
 
 Name:           python-%{module_name}
 Version:        0.8
-Release:        0.1.git%{short_commit}%{?dist}
+Release:        0.2.git%{short_commit}%{?dist}
 Summary:        Simulator-independent specification of neuronal network models
 
 License:        CeCILL 
@@ -26,14 +26,16 @@ Patch2:         0003-Corrected-some-print-statements-for-py3.patch
 Patch3:         0004-Convert-tabs-to-spaces.patch
 Patch4:         0005-Fixed-tab-messed-up-indentation.-Corrected.patch
 
-BuildArch:      noarch
 BuildRequires:  python2-devel python-setuptools python-nose numpy
 BuildRequires:  python-mock python-lazyarray python-neo
+BuildRequires:  nrn-devel
 Requires:       python-mock python-lazyarray python-neo numpy
+Requires:       python-nrn
 
 %if 0%{?with_python3}
 BuildRequires:  python3-devel python3-setuptools python3-nose python3-numpy
 BuildRequires:  python3-mock python3-lazyarray python3-neo
+BuildRequires:  nrn-devel
 %endif # if with_python3
 
 %description
@@ -122,11 +124,11 @@ cp -a . %{py3dir}
 %endif # with_python3
 
 %build
-%{__python2} setup.py build
+CFLAGS="$RPM_OPT_FLAGS" %{__python2} setup.py build
 
 %if 0%{?with_python3}
 pushd %{py3dir}
-%{__python3} setup.py build
+CFLAGS="$RPM_OPT_FLAGS" %{__python3} setup.py build
 popd
 %endif # with_python3
 
@@ -159,6 +161,9 @@ popd
 %endif
 
 %changelog
+* Thu Oct 09 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.8-0.2.git435db1
+- Add NEURON as BR to build it's extensions
+
 * Tue Oct 07 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.8-0.1.gitc435db1
 - Adds py3 support
 
