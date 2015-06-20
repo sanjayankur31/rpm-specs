@@ -4,12 +4,16 @@
 
 Name:           pyode
 Version:        1.2.0
-Release:        4%{?dist}
+Release:        9%{?dist}
 Summary:        Open-source Python bindings for The Open Dynamics Engine
 Group:          Development/Libraries
 
 License:        BSD or LGPLv2+
 URL:            http://pyode.sourceforge.net/
+
+# Checks fail on ARM arch; see issue tracker
+# https://bugzilla.redhat.com/show_bug.cgi?id=992850
+ExcludeArch:    armv7hl
 
 # https://downloads.sourceforge.net/project/pyode/pyode/snapshot-2010-03-22/PyODE-snapshot-2010-03-22.tar.gz
 Source0:        http://downloads.sourceforge.net/%{name}/%{name}/snapshot-%{snapdate}/%{tarname}.tar.gz 
@@ -105,6 +109,21 @@ export PYTHONPATH=build/lib.linux-%{_target_cpu}-%{python_version}
 %endif # with_python3
 
 %changelog
+* Sun Nov 02 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 1.2.0-9
+- Rebuilt for ode update.
+
+* Sun Aug 17 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.2.0-8
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_21_22_Mass_Rebuild
+
+* Sat Jun 07 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.2.0-7
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_21_Mass_Rebuild
+
+* Mon Aug  5 2013 John Morris <john@zultron.com> - 1.2.0-6
+- ExcludeArch ARM; checks not passing
+
+* Sun Aug 04 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.2.0-5
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild
+
 * Fri Apr 26 2013 Ankur Sinha <ankursinha AT fedoraproject DOT org> 1.2.0-4
 - Add another patch to use almost equal assertion
 - Fix wrong end of line file encoding rpmlint error

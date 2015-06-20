@@ -1,19 +1,16 @@
 # Does not support py3 yet
 %global with_python3 0
-%global commit_id 87c7ac3
+%global commit_id g68e0c17
 
 Name:           pybrain
-Version:        0.3.1
-Release:        2%{?dist}
+Version:        0.3.2
+Release:        1%{?dist}
 Summary:        The python machine learning library
 
 License:        BSD
 URL:            http://%{name}.org/pages/home
 
-# wget --content-disposition https://github.com/pybrain/pybrain/tarball/0.3.1
-# pybrain-pybrain-0.3.1-0-g87c7ac3.tar.gz
-# O.3.2 tarball seems unavailable. Issue filed
-# https://github.com/pybrain/pybrain/issues/88
+# wget --content-disposition https://github.com/pybrain/pybrain/tarball/0.3.2
 Source0:        %{name}-%{name}-%{version}-0-g%{commit_id}.tar.gz
 Patch0:         %{name}-Pillow.patch
 # http://github.com/pybrain/pybrain/pull/84
@@ -30,11 +27,7 @@ Requires:       python-matplotlib
 Requires:       libsvm
 Requires:       python-imaging
 Requires:       python-rlglue
-Requires:       PyOpenGL PyOpenGL-Tk
-Requires:       tkinter
 Requires:       scons
-Requires:       pycdf
-Requires:       pyODE
 
 %if 0%{?with_python3}
 BuildRequires:  python3-devel python3-scipy
@@ -67,6 +60,17 @@ Intelligence and Neural Network Library. In fact, we came up with the name
 first and later reverse-engineered this quite descriptive "Backronym". 
 
 %endif # with_python3
+
+%package optional
+Summary:        %{name} bits required to for specific purposes by %{name}
+BuildArch:      noarch
+Requires:       pyODE
+Requires:       PyOpenGL PyOpenGL-Tk
+Requires:       tkinter
+
+%description optional
+This package pulls in dependencies required by for additional purposes by
+%{name}.
 
 %package doc
 Summary:        Documentation for %{name}
@@ -150,6 +154,10 @@ popd
 %doc acknowledgements.txt LICENSE docs/ examples/
 
 %changelog
+* Sun Feb 09 2014 Ankur Sinha <ankursinha AT fedoraproject DOT org> 0.3.2-1
+- Update spec
+- Drop pycdf dep since upstream is dead
+
 * Mon Mar 25 2013 Ankur Sinha <ankursinha AT fedoraproject DOT org> 0.3.1-2
 - Correct issues in rhbz# 923035
 - run tests

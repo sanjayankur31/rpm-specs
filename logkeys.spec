@@ -9,7 +9,6 @@ Source0:        http://%{name}.googlecode.com/files/%{name}-%{version}.tar.gz
 
 # Requires ps and dumpkeys for somereason
 BuildRequires:  procps kbd
-#Requires:       
 
 %description
 logkeys is a linux keylogger (GNU/Linux systems only). It is no more advanced
@@ -50,6 +49,10 @@ rm -vf $RPM_BUILD_ROOT/%{_sysconfdir}/logkeys-*.sh
 %{_mandir}/man8/logkeys*
 
 %changelog
+* Fri Nov 22 2013 Ankur Sinha <ankursinha AT fedoraproject DOT org> 0.1.1a-2
+- Update sourceurl
+- Update source0 permissions
+
 * Mon Jan 14 2013 Ankur Sinha <ankursinha AT fedoraproject DOT org> 0.1.1a-2
 - Update package as per suggestions in rhbz#799701
 
