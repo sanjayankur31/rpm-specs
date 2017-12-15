@@ -1,42 +1,38 @@
+%global commit0 e65c0dd8a7ed5c1955361ff8336036422b954d3f
+%global shortcommit0 %(c=%{commit0}; echo ${c:0:7})
 %global srcname qutebrowser
-%global commit0 0d8edd54fbb0bfa4b846ec8da1b57bd1132ca30e
-%global shortcommit0 %(c=%{commit0}; echo ${c:0:7}) 
 
-Name:		%{srcname}
-Version:	0.11.0
-Release:	20171007git%{shortcommit0}%{?dist}
-Summary:	A keyboard-driven, vim-like browser based on PyQt5 and QtWebKit
+Name:       %{srcname}
+Version:    1.0.4
+Release:    20171215git%{shortcommit0}%{?dist}
+Summary:    A keyboard-driven, vim-like browser based on PyQt5 and QtWebEngine
 
-Group:		Applications/Internet
-License:	GPLv3
-URL:		http://www.qutebrowser.org
+License:    GPLv3
+URL:        http://www.qutebrowser.org
 Source0:    https://github.com/qutebrowser/%{name}/archive/%{commit0}.tar.gz#/%{name}-%{shortcommit0}.tar.gz
-
-BuildArch:	noarch
-BuildRequires:	python3-devel
-BuildRequires:	asciidoc
-BuildRequires:	desktop-file-utils
-Requires:	qt5-qtbase
-Requires:	qt5-qtwebkit
-Requires:	qt5-qtdeclarative
-Requires:	python3-setuptools
-Requires:	python3-qt5
-Requires:	python3-jinja2
-Requires:	python3-pygments
-Requires:	python3-PyYAML
-Requires:	python3-pyPEG2
-Requires:   python3-pyopengl
+BuildArch:  noarch
+BuildRequires:  python3-devel
+BuildRequires:  asciidoc
+BuildRequires:  desktop-file-utils
+Requires:   qt5-qtbase
+Requires:   qt5-qtdeclarative
+Requires:   python3-setuptools
+Requires:   python3-qt5
+Requires:   python3-qt5-webengine
+Requires:   python3-jinja2
+Requires:   python3-pygments
+Requires:   python3-PyYAML
+Requires:   python3-pyPEG2
 Requires:   python3-attrs
-Recommends:	python3-cssutils
-
-%if 0%{?fedora} >= 24
-Requires:	python3-qt5-webkit
-%endif
+Requires:   ((qt5-qtwebengine and python3-qt5-webengine) or (qt5-qtwebkit and python3-qt5-webkit))
+Recommends: (qt5-qtwebengine and python3-qt5-webengine)
+Recommends: (qt5-qtwebkit and python3-qt5-webkit)
+Recommends: python3-cssutils
 
 
 %description
 qutebrowser is a keyboard-focused browser with a minimal GUI. It’s based on
-Python, PyQt5 and QtWebKit and free software, licensed under the GPL.
+Python, PyQt5 and QtWebEngine and free software, licensed under the GPL.
 It was inspired by other browsers/addons like dwb and Vimperator/Pentadactyl.
 
 
@@ -47,7 +43,7 @@ It was inspired by other browsers/addons like dwb and Vimperator/Pentadactyl.
 %build
 # Compile the man page
 a2x -f manpage doc/qutebrowser.1.asciidoc
-# Compile docs
+# Compile docs, only release tars have them
 # temporary fix
 sed -i '82,86 d' doc/contributing.asciidoc
 python3 scripts/asciidoc2html.py
@@ -64,20 +60,20 @@ find . -type f -iname "*.py" -exec sed -i '1s_^#!/usr/bin/env python3$_#!/usr/bi
 
 # install .desktop file
 desktop-file-install \
-	--add-category="Network" \
-	--delete-original \
-	--dir=%{buildroot}%{_datadir}/applications \
-	misc/%{srcname}.desktop
+    --add-category="Network" \
+    --delete-original \
+    --dir=%{buildroot}%{_datadir}/applications \
+    misc/%{srcname}.desktop
 
 # Install man page
 install -Dm644 doc/%{srcname}.1 -t %{buildroot}%{_mandir}/man1
 
 # Install icons
 install -Dm644 icons/qutebrowser.svg \
-	-t "%{buildroot}%{_datadir}/icons/hicolor/scalable/apps"
+    -t "%{buildroot}%{_datadir}/icons/hicolor/scalable/apps"
 for i in 16 24 32 48 64 128 256 512; do
-	install -Dm644 "icons/qutebrowser-${i}x${i}.png" \
-		"%{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps/qutebrowser.png"
+    install -Dm644 "icons/qutebrowser-${i}x${i}.png" \
+        "%{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps/qutebrowser.png"
 done
 
 # Set __main__.py as executable
@@ -101,8 +97,8 @@ find %{buildroot} -size 0 -delete
 %postun
 # http://fedoraproject.org/wiki/Packaging:ScriptletSnippets#Icon_Cache
 if [ $1 -eq 0 ] ; then
-	/bin/touch --no-create %{_datadir}/icons/hicolor &>/dev/null
-	/usr/bin/gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
+    /bin/touch --no-create %{_datadir}/icons/hicolor &>/dev/null
+    /usr/bin/gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 fi
 
 # http://fedoraproject.org/wiki/Packaging:ScriptletSnippets#desktop-database
@@ -116,8 +112,7 @@ fi
 
 %files
 %license LICENSE
-#%doc CHANGELOG.asciidoc FAQ.asciidoc
-#%doc INSTALL.asciidoc README.asciidoc
+%doc README.asciidoc doc/changelog.asciidoc qutebrowser/html/doc
 %{python3_sitelib}/%{srcname}-%{version}-py?.?.egg-info
 %{python3_sitelib}/%{srcname}
 %{_bindir}/%{srcname}
@@ -135,23 +130,29 @@ fi
 
 
 %changelog
-* Sat Oct 07 2017 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.11.0-20171007git0d8edd54
-- Build new commit
+* Fri Dec 15 2017 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 1.0.4-20171215gite65c0dd8
+- Build new git commit
 
-* Thu Sep 28 2017 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.11.0-20170928git02bcec37
-- Update to latest git commit
+* Tue Nov 28 2017 Timothée Floure <timothee.floure@fnux.ch> - 1.0.4-1
+- Rebase to 1.0.4
 
-* Mon Sep 11 2017 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.11.0-20170911gitbcb48637
-- Update to latest git commit
+* Tue Nov 14 2017 Timothée Floure <timothee.floure@fnux.ch> - 1.0.3-2
+- Fix typos in some (weak) Qt dependencies
 
-* Wed Aug 23 2017 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.10.1-20170823git173688c
-- Update to new git snapshot
+* Tue Nov 07 2017 Timothée Floure <timothee.floure@fnux.ch> - 1.0.3-1
+- Rebase to 1.0.3
+- Fix dependency issue for architectures unsupported by qt5-qtwebengine
 
-* Thu Jul 06 2017 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.10.1-20170706git338d6220
-- Update to new git
+* Fri Oct 20 2017 Timothée Floure <timothee.floure@fnux.ch> - 1.0.2-1
+- Rebase to 1.0.2
+- Remove the deprecated Group tag
+- Add the python3-attrs dependency
+- Adapt the descriptions and dependencies to the QtWebEngine backend (new default)
+- Doc tag: do not package the PKG-INFO file anymore
+- Doc tag: package the full HTML documentation instead of sparse asciidoc files
 
-* Mon Jul 03 2017 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.10.1-20170703git62903863
-- Update to new git
+* Thu Jul 27 2017 Fedora Release Engineering <releng@fedoraproject.org> - 0.10.1-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Mass_Rebuild
 
 * Tue Mar 14 2017 Tomas Orsava <torsava@redhat.com> - 0.10.1-1
 - Rebased to 0.10.1
