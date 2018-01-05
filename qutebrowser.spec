@@ -1,10 +1,10 @@
-%global commit0 e65c0dd8a7ed5c1955361ff8336036422b954d3f
+%global commit0 c3bcb1d9ba6ab244c2004e2b73fad3de40b77b2d
 %global shortcommit0 %(c=%{commit0}; echo ${c:0:7})
 %global srcname qutebrowser
 
 Name:       %{srcname}
 Version:    1.0.4
-Release:    20171215git%{shortcommit0}%{?dist}
+Release:    20180105git%{shortcommit0}%{?dist}
 Summary:    A keyboard-driven, vim-like browser based on PyQt5 and QtWebEngine
 
 License:    GPLv3
@@ -130,6 +130,9 @@ fi
 
 
 %changelog
+* Fri Jan 05 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 1.0.4-20180105gitc3bcb1d9
+- Build latest git commit
+
 * Fri Dec 15 2017 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 1.0.4-20171215gite65c0dd8
 - Build new git commit
 
