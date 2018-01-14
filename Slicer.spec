@@ -13,7 +13,7 @@ Source0:    https://github.com/%{name}/%{name}/archive/%{gittag}/%{name}-%{versi
 BuildRequires: cmake qt5-devel gcc-c++ vtk-devel doxygen xorg-x11-server-devel
 BuildRequires: libXt-devel mesa-libGL-devel libXrender-devel ncurses-devel
 # For their build, but we won't use them.
-BuildRequires: subversion git-core
+BuildRequires: subversion git-core bison-devel
 # Everything under the Superbuild directory.
 BuildRequires: vtk-devel InsightToolkit-devel dcmtk-devel
 BuildRequires: curl-devel zlib-devel jsoncpp-devel libarchive-devel
@@ -45,6 +45,7 @@ tools to physicians, researchers, and the general public.
 %autosetup -n %{name}-%{version}
 # Remove useless cmake https check
 rm CMake/SlicerCheckCMakeHTTPS.cmake -fv
+sed -i '/SlicerCheckCMakeHTTPS/d' SuperBuild.cmake
 
 # Convert fatal errors to warnings where they say system versions are not supported
 # Warnings dont kill the build
