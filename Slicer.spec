@@ -8,6 +8,7 @@ Summary:    Multi-platform, free open source software for visualization and imag
 License:    BSD and Apache and LGPL2
 URL:        https://www.slicer.org/
 Source0:    https://github.com/%{name}/%{name}/archive/%{gittag}/%{name}-%{version}.tar.gz
+Patch0:     %{name}-cmake-remove-qt-ssl-check.patch
 
 # https://www.slicer.org/wiki/Documentation/Nightly/Developers/Build_Instructions#Linux
 BuildRequires: cmake qt5-devel gcc-c++ vtk-devel doxygen xorg-x11-server-devel
@@ -43,6 +44,15 @@ tools to physicians, researchers, and the general public.
 
 %prep
 %autosetup -n %{name}-%{version}
+
+# Convert fatal errors to warnings where they say system versions are not supported
+# Warnings dont kill the build
+# https://cmake.org/cmake/help/v3.0/command/message.html
+pushd SuperBuild
+    for i in *.cmake; do
+        sed -i 's/message(FATAL_ERROR\(.*USE_SYSTEM.*is not supported.*$\)/message(WARNING\1/' $i
+    done
+popd
 
 %build
 
