@@ -5,14 +5,14 @@
 Name:       ParameterSerializer
 Version:    0
 Release:    20171014git%{shortcommit}%{?dist}
-Summary:    An open-source library for serialization and deserialization of Insight Segmentation and Registration Toolkit (ITK) classes.
+Summary:    An open-source library for serialization and deserialization of Insight Segmentation and Registration Toolkit (ITK) classes
 
 License:    Apache
 URL:        https://github.com/Slicer/%{name}
-Source0:  https://github.com/Slicer/%{name}/archive/%{commit}/%{name}-%{shortcommit}.tar.gz
+Source0:    https://github.com/Slicer/%{name}/archive/%{commit}/%{name}-%{shortcommit}.tar.gz
 
 
-BuildRequires:  cmake jsoncpp-devel gcc-c++
+BuildRequires:  cmake jsoncpp-devel gcc-c++ InsightToolkit-devel
 
 %description
 Serialization is an important technique when exploring an analysis parameter
@@ -30,7 +30,7 @@ The project is currently used by TubeTK and the SlicerExecutionModel.
 The development of this project is supported by TubeTK.
 
 %prep
-%autosetup -n %{name}-%{shortcommit}
+%autosetup -n %{name}-%{commit}
 
 
 %build
@@ -51,5 +51,3 @@ make %{?_smp_mflags}
 %changelog
 * Sun Jan 14 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0-20171014git0b30a666
 - Initial package
-
-
