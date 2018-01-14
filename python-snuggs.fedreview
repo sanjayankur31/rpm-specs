@@ -1,0 +1,202 @@
+Looks good. XXX APPROVED XXX
+
+Before the SCM request, though, here are one or two suggestions:
+
+- In the description, do you think it'd be better to use "s-expressions" instead of "sexpressions" as is done in the summary?
+- Please use the python macros as described here to specify BR and R:
+https://fedoraproject.org/wiki/Packaging:Python#Requires_and_BuildRequires_with_standardized_names
+
+
+Package Review
+==============
+
+Legend:
+[x] = Pass, [!] = Fail, [-] = Not applicable, [?] = Not evaluated
+[ ] = Manual review needed
+
+
+
+===== MUST items =====
+
+Generic:
+[x]: Package is licensed with an open-source compatible license and meets
+     other legal requirements as defined in the legal section of Packaging
+     Guidelines.
+[x]: License field in the package spec file matches the actual license.
+     Note: Checking patched sources after %prep for licenses. Licenses
+     found: "MIT/X11 (BSD like)", "Unknown or generated". 8 files have
+     unknown license. Detailed output of licensecheck in
+     /home/asinha/1534113-python-snuggs/licensecheck.txt
+[x]: License file installed when any subpackage combination is installed.
+[x]: Package contains no bundled libraries without FPC exception.
+[x]: Changelog in prescribed format.
+[x]: Sources contain only permissible code or content.
+[-]: Package contains desktop file if it is a GUI application.
+[-]: Development files must be in a -devel package
+[x]: Package uses nothing in %doc for runtime.
+[x]: Package consistently uses macros (instead of hard-coded directory
+     names).
+[x]: Package is named according to the Package Naming Guidelines.
+[x]: Package does not generate any conflict.
+[x]: Package obeys FHS, except libexecdir and /usr/target.
+[-]: If the package is a rename of another package, proper Obsoletes and
+     Provides are present.
+[x]: Requires correct, justified where necessary.
+[x]: Spec file is legible and written in American English.
+[-]: Package contains systemd file(s) if in need.
+[x]: Package is not known to require an ExcludeArch tag.
+[-]: Large documentation must go in a -doc subpackage. Large could be size
+     (~1MB) or number of files.
+     Note: Documentation size is 20480 bytes in 6 files.
+[x]: Package complies to the Packaging Guidelines
+[x]: Package successfully compiles and builds into binary rpms on at least
+     one supported primary architecture.
+[x]: Package installs properly.
+[x]: Rpmlint is run on all rpms the build produces.
+     Note: There are rpmlint messages (see attachment).
+[x]: If (and only if) the source package includes the text of the
+     license(s) in its own file, then that file, containing the text of the
+     license(s) for the package is included in %license.
+[x]: Package requires other packages for directories it uses.
+[x]: Package must own all directories that it creates.
+[x]: Package does not own files or directories owned by other packages.
+[x]: All build dependencies are listed in BuildRequires, except for any
+     that are listed in the exceptions section of Packaging Guidelines.
+[x]: Package uses either %{buildroot} or $RPM_BUILD_ROOT
+[x]: Package does not run rm -rf %{buildroot} (or $RPM_BUILD_ROOT) at the
+     beginning of %install.
+[x]: Macros in Summary, %description expandable at SRPM build time.
+[x]: Dist tag is present.
+[x]: Package does not contain duplicates in %files.
+[x]: Permissions on files are set properly.
+[x]: Package use %makeinstall only when make install DESTDIR=... doesn't
+     work.
+[x]: Package is named using only allowed ASCII characters.
+[x]: Package does not use a name that already exists.
+[x]: Package is not relocatable.
+[x]: Sources used to build the package match the upstream source, as
+     provided in the spec URL.
+[x]: Spec file name must match the spec package %{name}, in the format
+     %{name}.spec.
+[x]: File names are valid UTF-8.
+[x]: Packages must not store files under /srv, /opt or /usr/local
+
+Python:
+[x]: Python eggs must not download any dependencies during the build
+     process.
+[x]: A package which is used by another package via an egg interface should
+     provide egg info.
+[x]: Package meets the Packaging Guidelines::Python
+[x]: Package contains BR: python2-devel or python3-devel
+[x]: Binary eggs must be removed in %prep
+
+===== SHOULD items =====
+
+Generic:
+[-]: If the source package does not include license text(s) as a separate
+     file from upstream, the packager SHOULD query upstream to include it.
+[x]: Final provides and requires are sane (see attachments).
+[-]: Fully versioned dependency in subpackages if applicable.
+     Note: No Requires: %{name}%{?_isa} = %{version}-%{release} in
+     python2-snuggs , python3-snuggs
+[?]: Package functions as described.
+^^
+Haven't checked this bit. Please do so.
+
+[x]: Latest version is packaged.
+[x]: Package does not include license text files separate from upstream.
+[x]: Description and summary sections in the package spec file contains
+     translations for supported Non-English languages, if available.
+[x]: Package should compile and build into binary rpms on all supported
+     architectures.
+[x]: %check is present and all tests pass.
+[x]: Packages should try to preserve timestamps of original installed
+     files.
+[x]: Reviewer should test that the package builds in mock.
+[x]: Buildroot is not present
+[x]: Package has no %clean section with rm -rf %{buildroot} (or
+     $RPM_BUILD_ROOT)
+[x]: No file requires outside of /etc, /bin, /sbin, /usr/bin, /usr/sbin.
+[x]: Packager, Vendor, PreReq, Copyright tags should not be in spec file
+[x]: Sources can be downloaded from URI in Source: tag
+[x]: SourceX is a working URL.
+[x]: Spec use %global instead of %define unless justified.
+
+===== EXTRA items =====
+
+Generic:
+[x]: Rpmlint is run on all installed packages.
+     Note: There are rpmlint messages (see attachment).
+[x]: Spec file according to URL is the same as in SRPM.
+
+
+Rpmlint
+-------
+Checking: python2-snuggs-1.4.1-1.fc28.noarch.rpm
+          python3-snuggs-1.4.1-1.fc28.noarch.rpm
+          python-snuggs-1.4.1-1.fc28.src.rpm
+python2-snuggs.noarch: W: spelling-error %description -l en_US sexpressions -> expressions, s expressions, expressionless
+python2-snuggs.noarch: W: spelling-error %description -l en_US arg -> rag, gar, are
+python3-snuggs.noarch: W: spelling-error %description -l en_US sexpressions -> expressions, s expressions, expressionless
+python3-snuggs.noarch: W: spelling-error %description -l en_US arg -> rag, gar, are
+python-snuggs.src: W: spelling-error %description -l en_US sexpressions -> expressions, s expressions, expressionless
+python-snuggs.src: W: spelling-error %description -l en_US arg -> rag, gar, are
+3 packages and 0 specfiles checked; 0 errors, 6 warnings.
+
+
+Rpmlint (installed packages)
+----------------------------
+python3-snuggs.noarch: W: spelling-error %description -l en_US sexpressions -> expressions, s expressions, expressionless
+python3-snuggs.noarch: W: spelling-error %description -l en_US arg -> rag, gar, are
+python3-snuggs.noarch: W: invalid-url URL: https://github.com/mapbox/snuggs <urlopen error [Errno -2] Name or service not known>
+python2-snuggs.noarch: W: spelling-error %description -l en_US sexpressions -> expressions, s expressions, expressionless
+python2-snuggs.noarch: W: spelling-error %description -l en_US arg -> rag, gar, are
+python2-snuggs.noarch: W: invalid-url URL: https://github.com/mapbox/snuggs <urlopen error [Errno -2] Name or service not known>
+2 packages and 0 specfiles checked; 0 errors, 6 warnings.
+
+
+
+Requires
+--------
+python3-snuggs (rpmlib, GLIBC filtered):
+    python(abi)
+    python3-click
+    python3-numpy
+    python3-pyparsing
+
+python2-snuggs (rpmlib, GLIBC filtered):
+    python(abi)
+    python2-click
+    python2-numpy
+    python2-pyparsing
+
+
+
+Provides
+--------
+python3-snuggs:
+    python3-snuggs
+    python3.6dist(snuggs)
+    python3dist(snuggs)
+
+python2-snuggs:
+    python-snuggs
+    python2-snuggs
+    python2.7dist(snuggs)
+    python2dist(snuggs)
+
+
+
+Source checksums
+----------------
+https://github.com/mapbox/snuggs/archive/1.4.1/snuggs-1.4.1.tar.gz :
+  CHECKSUM(SHA256) this package     : 1e9cd2cb20613f923b38f511e6034ee8bf418a3ab3471517dd1711232f06e97e
+  CHECKSUM(SHA256) upstream package : 1e9cd2cb20613f923b38f511e6034ee8bf418a3ab3471517dd1711232f06e97e
+
+
+Generated by fedora-review 0.6.1 (f03e4e7) last change: 2016-05-02
+Command line :/usr/bin/fedora-review -b 1534113
+Buildroot used: fedora-rawhide-x86_64
+Active plugins: Python, Generic, Shell-api
+Disabled plugins: Java, C/C++, fonts, SugarActivity, Ocaml, Perl, Haskell, R, PHP
+Disabled flags: EXARCH, DISTTAG, EPEL5, BATCH, EPEL6
