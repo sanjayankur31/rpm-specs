@@ -1,8 +1,8 @@
 %global srcname     pybids
 
 Name:       python-%{srcname}
-Version:    0.4.2
-Release:    2%{?dist}
+Version:    0.6.3
+Release:    1%{?dist}
 Summary:    Interface with datasets conforming to BIDS
 
 License:    MIT
@@ -23,9 +23,17 @@ BuildRequires:  %{py2_dist sphinx}
 BuildRequires:  %{py2_dist pytest}
 BuildRequires:  %{py2_dist matplotlib}
 BuildRequires:  %{py2_dist grabbit}
+BuildRequires:  %{py2_dist num2words}
+# BuildRequires:  %{py2_dist nibabel}
+# In review
+# https://bugzilla.redhat.com/show_bug.cgi?id=1280480
+# BuildRequires:  %{py2_dist duecredit}
 Requires:       %{py2_dist grabbit}
 Requires:       %{py2_dist pandas}
 Requires:       %{py2_dist six}
+Requires:       %{py2_dist num2words}
+# Requires:       %{py2_dist duecredit}
+# Requires:       %{py2_dist nibabel}
 
 %{?python_provide:%python_provide python2-%{srcname}}
 
@@ -41,9 +49,15 @@ BuildRequires:  %{py3_dist sphinx}
 BuildRequires:  %{py3_dist pytest}
 BuildRequires:  %{py3_dist matplotlib}
 BuildRequires:  %{py3_dist grabbit}
-Requires:  %{py3_dist grabbit}
+BuildRequires:  %{py3_dist num2words}
+# BuildRequires:  %{py3_dist duecredit}
+# BuildRequires:  %{py3_dist nibabel}
+Requires:       %{py3_dist grabbit}
 Requires:       %{py3_dist pandas}
 Requires:       %{py3_dist six}
+Requires:       %{py3_dist num2words}
+# Requires:       %{py3_dist duecredit}
+# Requires:       %{py3_dist nibabel}
 %{?python_provide:%python_provide python3-%{srcname}}
 
 %description -n python3-%{srcname}
@@ -65,8 +79,9 @@ rm -rf *.egg-info
 %py3_install
 
 %check
-%{__python2} setup.py test
-%{__python3} setup.py test
+# Needs duecredit, which is under review
+# PYTHONPATH=. py.test
+# PYTHONPATH=. py.test-3
 
 %files -n python2-%{srcname}
 %doc README.md
@@ -81,6 +96,11 @@ rm -rf *.egg-info
 %{python3_sitelib}/bids/
 
 %changelog
+* Fri Jul 20 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.6.3-1
+- Update to latest release
+- Use py.test
+- Disable tests until nibabel is fixed
+
 * Mon Jan 15 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.4.2-2
 - Use github source for license and test suite
 - Fix requires and build requires
