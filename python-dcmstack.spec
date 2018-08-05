@@ -1,10 +1,13 @@
-%global srcname example
+%global srcname dcmstack
 
 %global desc \
-Add a description here.
+This package provides DICOM to Nifti conversion with the added ability to \
+extract and summarize meta data from the source DICOMs. The meta data can be \
+injected it into a Nifti header extension or written out as a JSON formatted \
+text file.
 
 Name:           python-%{srcname}
-Version:        1.2.3
+Version:        
 Release:        1%{?dist}
 Summary:        An example python module
 
