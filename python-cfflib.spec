@@ -1,12 +1,12 @@
-%global srcname example
+%global srcname cfflib
 
 %global desc \
-Add a description here.
+The Connectome File Format library supports handling of multi-modal neuroimaging datasets and metadata.
 
 Name:           python-%{srcname}
-Version:        1.2.3
+Version:        2.0.5
 Release:        1%{?dist}
-Summary:        An example python module
+Summary:        Connectome File Format Library
 
 License:        MIT
 URL:            https://pypi.python.org/pypi/%{srcname}
@@ -66,3 +66,6 @@ Summary:        %{summary}
 %{_bindir}/sample-exec
 
 %changelog
+* Sun Aug 05 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 2.0.5-1
+- Initial incomplete spec
+
