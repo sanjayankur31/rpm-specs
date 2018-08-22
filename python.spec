@@ -57,11 +57,13 @@ Summary:        %{summary}
 %files -n python2-%{srcname}
 %license COPYING
 %doc README.rst
+# update this, wild cards are now forbidden
 %{python2_sitelib}/*
 
 %files -n python3-%{srcname}
 %license COPYING
 %doc README.rst
+# update this, wild cards are now forbidden
 %{python3_sitelib}/*
 %{_bindir}/sample-exec
 
