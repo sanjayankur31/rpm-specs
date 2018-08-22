@@ -32,9 +32,8 @@ BuildRequires:  python2-devel
 # Test deps
 BuildRequires:  %{py2_dist pytest}
 BuildRequires:  %{py2_dist six}
-BuildRequires:  %{py2_dist nose}
+BuildRequires:  %{py2_dist lxml}
 BuildRequires:  %{py2_dist citeproc-py}
-BuildRequires:  %{py2_dist mock}
 BuildRequires:  %{py2_dist requests}
 BuildRequires:  %{py2_dist scipy}
 BuildRequires:  %{py2_dist numpy}
@@ -42,6 +41,9 @@ BuildRequires:  %{py2_dist scikit-learn}
 BuildRequires:  %{py2_dist statsmodels}
 BuildRequires:  %{py2_dist pandas}
 BuildRequires:  %{py2_dist matplotlib}
+# not yet packaged
+# BuildRequires:  %%{py2_dist psychopy}
+# BuildRequires:  %%{py2_dist PyMVPA}
 Requires:       %{py2_dist six}
 Requires:       %{py2_dist citeproc-py}
 Requires:       %{py2_dist requests}
@@ -56,9 +58,8 @@ BuildRequires:  python3-devel
 # Test deps
 BuildRequires:  %{py3_dist pytest}
 BuildRequires:  %{py3_dist six}
-BuildRequires:  %{py3_dist nose}
+BuildRequires:  %{py3_dist lxml}
 BuildRequires:  %{py3_dist citeproc-py}
-BuildRequires:  %{py3_dist mock}
 BuildRequires:  %{py3_dist requests}
 BuildRequires:  %{py3_dist scipy}
 BuildRequires:  %{py3_dist numpy}
@@ -66,6 +67,9 @@ BuildRequires:  %{py3_dist scikit-learn}
 BuildRequires:  %{py3_dist statsmodels}
 BuildRequires:  %{py3_dist pandas}
 BuildRequires:  %{py3_dist matplotlib}
+# not yet packaged
+# BuildRequires:  %%{py3_dist psychopy}
+# BuildRequires:  %%{py3_dist PyMVPA}
 Requires:       %{py3_dist six}
 Requires:       %{py3_dist citeproc-py}
 Requires:       %{py3_dist requests}
@@ -86,8 +90,8 @@ rm -rfv *egg-info
 %py3_install
 
 %check
-nosetests-%{python2_version} -v
-nosetests-%{python3_version} -v
+%{__python2} -c 'import duecredit' && pytest-2
+%{__python3} -c 'import duecredit' && pytest-3
 
 %files -n python2-%{srcname}
 %doc examples README.md CHANGELOG.md CONTRIBUTING.md
