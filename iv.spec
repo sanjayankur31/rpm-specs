@@ -1,25 +1,18 @@
-# We can't remove libtiff - it's a really old version which doesn't seem to be
-# compatible with the version we have in Fedora
-
 %global tarversion 19
-%global hg_revision 23
 Name:       iv
 Version:    3.2b.hines18
-Release:    3.hg%{hg_revision}%{?dist}
+Release:    2%{?dist}
 Summary:    NEURON graphical interface
 
-
-# src/* LGPLv2+
-# autotools stuff is GPLv2+
-License:    LGPLv2+ and GPLv2+
+License:    GPLv2+ and GPLv3+
 URL:        http://www.neuron.yale.edu/neuron/
 # the tar keeps getting a version bump, but the configure.in script doesn't.
-Source0:    %{name}-hg%{hg_revision}.tar.gz
+Source0:    http://www.neuron.yale.edu/ftp/neuron/versions/v7.4/%{name}-%{tarversion}.tar.gz
+#Source0:    ftp://ftp.sgi.com/graphics/interviews/%{version}.tar.Z
 # Format security corrections
 Patch0:     %{name}-%{tarversion}-format-security.patch
 
 BuildRequires:  xorg-x11-server-devel chrpath libtiff-devel imake
-BuildRequires:  libX11-devel automake autoconf libtool libXext-devel
 
 %description
 InterViews is a native C++ toolkit for X Windows developed by Mark Linton and
@@ -38,15 +31,15 @@ Requires: %{name}%{?_isa} = %{version}-%{release}
 %description devel
 Headers and development shared libraries for the %{name} package
 
-#%package static
-#Summary:    Static libraries for %{name}
-#Requires: %{name}%{?_isa} = %{version}-%{release}
+%package static
+Summary:    Static libraries for %{name}
+Requires: %{name}%{?_isa} = %{version}-%{release}
 
-#%description static
-#Static libraries for %{name}
+%description static
+Static libraries for %{name}
 
 %prep
-%setup -q -n %{name}
+%setup -q -n %{name}-%{tarversion}
 %patch0
 #Remove executable perms from source files
 find . -name "*.cpp" -exec chmod -x '{}' \;
@@ -56,33 +49,34 @@ find . -name "*.bm" -exec chmod -x '{}' \;
 find . -name "*.la" -exec rm -f '{}' \;
 chmod -x README Copyright
 
+#rm -rf include/TIFF
+#rm -rf src/lib/TIFF #src/lib/OS
+
+
+
 %build
-./build.sh
-%configure --with-x CXXFLAGS="$CXXFLAGS -std=c++98"
-make %{?_smp_mflags}
+%configure --with-pic --enable-shared=yes --enable-static=no --disable-rpath --with-x
+#make %{?_smp_mflags}
+make
 
 %install
 make install DESTDIR=%{buildroot}
 
-rm -fv %{buildroot}/%{_libdir}/*.la
-chrpath --delete %{buildroot}%{_bindir}/i*
-
-# Don't need to install these - nothing else uses them
-rm -rf %{buildroot}/%{_includedir}/TIFF
+# Cannot remove static libraries. Required by neuron
+## rm -fv %{buildroot}/%{_libdir}/*.la
+chrpath --delete $RPM_BUILD_ROOT%{_bindir}/i*
 
 %post -p /sbin/ldconfig
 
 %postun -p /sbin/ldconfig
 
 %files
-%license Copyright
-%doc README 
+%doc README Copyright
 %{_bindir}/i*
 %{_libdir}/*.so.*
-%dir %{_datadir}/app-defaults
+%{_datadir}/app-defaults/Doc
 %{_datadir}/app-defaults/Idemo
 %{_datadir}/app-defaults/InterViews
-%{_datadir}/app-defaults/Doc
 
 %files devel
 %{_includedir}/Dispatch/
@@ -91,23 +85,14 @@ rm -rf %{buildroot}/%{_includedir}/TIFF
 %{_includedir}/IV-look/
 %{_includedir}/InterViews/
 %{_includedir}/OS/
+%{_includedir}/TIFF/
 %{_includedir}/*.h
 %{_libdir}/*.so
 
-#%files static
-#%{_libdir}/*.la
-#
+%files static
+%{_libdir}/*.la
 
 %changelog
-* Mon May 2 2016 Ankur Sinha <ankursinha AT fedoraproject DOT org> 3.2b.hines18-3.hg23
-- https://bugzilla.redhat.com/show_bug.cgi?id=1150441
-- Update as per review comments
-- Fix licensing
-- Add comment explaining libtiff inclusion
-- Remove static library
-- only use buildroot
-- build from latest hg sources
-
 * Fri Jul 31 2015 Ankur Sinha <ankursinha AT fedoraproject DOT org> 3.2b.hines18-2
 - New tar release, but no version bump
 
