@@ -1,18 +1,19 @@
 %global tarversion 19
 Name:       iv
 Version:    3.2b.hines18
-Release:    2%{?dist}
+Release:    3%{?dist}
 Summary:    NEURON graphical interface
 
 License:    GPLv2+ and GPLv3+
 URL:        http://www.neuron.yale.edu/neuron/
 # the tar keeps getting a version bump, but the configure.in script doesn't.
-Source0:    http://www.neuron.yale.edu/ftp/neuron/versions/v7.4/%{name}-%{tarversion}.tar.gz
-#Source0:    ftp://ftp.sgi.com/graphics/interviews/%{version}.tar.Z
-# Format security corrections
-Patch0:     %{name}-%{tarversion}-format-security.patch
+Source0:    http://www.neuron.yale.edu/ftp/neuron/versions/v7.5/%{name}-%{tarversion}.tar.gz
 
-BuildRequires:  xorg-x11-server-devel chrpath libtiff-devel imake
+BuildRequires:  xorg-x11-server-devel
+BuildRequires:  chrpath
+BuildRequires:  libtiff-devel
+BuildRequires:  imake
+BuildRequires:  gcc-c++
 
 %description
 InterViews is a native C++ toolkit for X Windows developed by Mark Linton and
@@ -22,7 +23,7 @@ application framework which was the basis of John Vlissides' thesis work at
 Stanford. InterViews also has lightweight glyphs with switchable look-and-feel
 (Apple monochrome, Motif, OpenLook, and SGI Motif). It has been ported to most
 any Unix which runs X11. Other programmers known to have worked on InterViews
-include Paul Calder, John Interrante, Steven Tang, and Scott Stanton. 
+include Paul Calder, John Interrante, Steven Tang, and Scott Stanton.
 
 %package devel
 Summary:    Development files for %{name}
@@ -39,8 +40,7 @@ Requires: %{name}%{?_isa} = %{version}-%{release}
 Static libraries for %{name}
 
 %prep
-%setup -q -n %{name}-%{tarversion}
-%patch0
+%{autosetup} -n %{name}-%{tarversion}
 #Remove executable perms from source files
 find . -name "*.cpp" -exec chmod -x '{}' \;
 find . -name "*.c" -exec chmod -x '{}' \;
@@ -56,11 +56,11 @@ chmod -x README Copyright
 
 %build
 %configure --with-pic --enable-shared=yes --enable-static=no --disable-rpath --with-x
-#make %{?_smp_mflags}
+#%%make_build
 make
 
 %install
-make install DESTDIR=%{buildroot}
+%make_install
 
 # Cannot remove static libraries. Required by neuron
 ## rm -fv %{buildroot}/%{_libdir}/*.la
@@ -93,6 +93,11 @@ chrpath --delete $RPM_BUILD_ROOT%{_bindir}/i*
 %{_libdir}/*.la
 
 %changelog
+* Sun Aug 26 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 3.2b.hines18-3
+- Include g++ BR
+- Remove included patch
+- Use autosetup
+
 * Fri Jul 31 2015 Ankur Sinha <ankursinha AT fedoraproject DOT org> 3.2b.hines18-2
 - New tar release, but no version bump
 
