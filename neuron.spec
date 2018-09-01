@@ -6,28 +6,35 @@ Summary:    A flexible and powerful simulator of neurons and networks
 
 License:    GPLv2+
 URL:        http://www.neuron.yale.edu/neuron/
-# Latest is 7.4, but the source tar isn't available. 
-# https://www.neuron.yale.edu/phpBB/viewtopic.php?f=6&t=3349
 Source0:    https://neuron.yale.edu/ftp/neuron/versions/v%{version}/%{tarname}-%{version}.tar.gz
 
 # HACK! HACK! HACK!
 # I don't know how else to fix it.
-Patch0:     %{name}-%{version}-config.patch
-Patch1:     %{name}-%{version}-src-makefile.patch
-Patch2:     %{name}-%{version}-nrnpython.patch
-Patch3:     %{name}-%{version}-python-installroot.patch
-Patch4:     %{name}-%{version}-python-installroot-neuronmusic.patch
-Patch5:     %{name}-%{version}-python-installroot-setup-neuronmusic.patch
-Patch6:     %{name}-%{version}-homedir.patch
-Patch7:     %{name}-%{version}-python-makefile.patch
-Patch8:     %{name}-%{version}-nrnunits.patch
-Patch9:     %{name}-%{version}-bin-files.patch
+# Patch0:     %{name}-%{version}-config.patch
+# Patch1:     %{name}-%{version}-src-makefile.patch
+# Patch2:     %{name}-%{version}-nrnpython.patch
+# Patch3:     %{name}-%{version}-python-installroot.patch
+# Patch4:     %{name}-%{version}-python-installroot-neuronmusic.patch
+# Patch5:     %{name}-%{version}-python-installroot-setup-neuronmusic.patch
+# Patch6:     %{name}-%{version}-homedir.patch
+# Patch7:     %{name}-%{version}-python-makefile.patch
+# Patch8:     %{name}-%{version}-nrnunits.patch
+# Patch9:     %{name}-%{version}-bin-files.patch
 
-BuildRequires:  ncurses-devel iv-static iv-devel readline-devel
-BuildRequires:  Random123-devel Cython
-#BuildRequires:  java-1.8.0-openjdk-devel 
-BuildRequires:  python2-devel 
+BuildRequires:  ncurses-devel
+BuildRequires:  readline-devel
+BuildRequires:  Random123-devel 
+BuildRequires:  python2-Cython
+BuildRequires:  python2-devel
 BuildRequires:  libX11-devel
+BuildRequires:  gcc
+BuildRequires:  gcc-c++
+BuildRequires:  python3-devel
+BuildRequires:  python3-Cython
+
+# BuildRequires:  java-1.8.0-openjdk-devel
+# Not building with iv yet
+# BuildRequires:  iv-static iv-devel
 
 # Is pvm packaged properly? Everything appears to be in /usr/share..
 # Cannot be used in this state
@@ -60,67 +67,99 @@ Static libraries for %{name}
 Summary:    Python bindings for NEURON
 
 %description -n python-%{name}
-This package contains the python bindings for NEURON.
+This package contains the Python2 bindings for NEURON.
+
+%package -n python3-%{name}
+Summary:    Python bindings for NEURON
+
+%description -n python3-%{name}
+This package contains the Python3 bindings for NEURON.
 
 %prep
-%setup -q
-%patch0
-%patch1
-%patch2
-%patch3
-%patch4
-%patch5
-%patch6
-%patch7
-%patch8
-%patch9
+%setup -q -n %{tarname}-%{version}
+
+# %patch0
+# %patch1
+# %patch2
+# %patch3
+# %patch4
+# %patch5
+# %patch6
+# %patch7
+# %patch8
+# %patch9
 
 # Way too much work patching them individually
 #sed -i "s|pkgdatadir = \$(datadir)/@PACKAGE@|pkgdatadir = \$(datadir)/@PACKAGE@-@PACKAGE_VERSION@/|" Makefile.in
-find ./share/lib/hoc/ -name "Makefile.in" -execdir sed -i "s|neuronhomedir = \$(prefix)/share/@PACKAGE@/lib|neuronhomedir = \$(prefix)/share/@PACKAGE@/|" '{}' \;
-sed -i -e "s|nrndir = \$(prefix)/share/@PACKAGE@/lib|nrndir = \$(prefix)/share/@PACKAGE@|" share/lib/hoc/chanbild/Makefile.in
-find ./share/lib/auditscripts/ -name "Makefile.in" -execdir sed -i "s|neuronhomedir = \$(prefix)/share/@PACKAGE@/lib|neuronhomedir = \$(prefix)/share/@PACKAGE@/|" '{}' \;
-find ./share/demo -name "Makefile.in" -execdir sed -i "s|thisdir = \$(prefix)/share/@PACKAGE@/demo|thisdir = \$(prefix)/share/@PACKAGE@/demo|" '{}' \;
-find ./share/examples/ -name "Makefile.in" -execdir sed -i "s|thisdir = \$(prefix)/share/@PACKAGE@/examples/|thisdir = \$(prefix)/share/@PACKAGE@/examples/|" '{}' \;
+# find ./share/lib/hoc/ -name "Makefile.in" -execdir sed -i "s|neuronhomedir = \$(prefix)/share/@PACKAGE@/lib|neuronhomedir = \$(prefix)/share/@PACKAGE@/|" '{}' \;
+# sed -i -e "s|nrndir = \$(prefix)/share/@PACKAGE@/lib|nrndir = \$(prefix)/share/@PACKAGE@|" share/lib/hoc/chanbild/Makefile.in
+# find ./share/lib/auditscripts/ -name "Makefile.in" -execdir sed -i "s|neuronhomedir = \$(prefix)/share/@PACKAGE@/lib|neuronhomedir = \$(prefix)/share/@PACKAGE@/|" '{}' \;
+# find ./share/demo -name "Makefile.in" -execdir sed -i "s|thisdir = \$(prefix)/share/@PACKAGE@/demo|thisdir = \$(prefix)/share/@PACKAGE@/demo|" '{}' \;
+# find ./share/examples/ -name "Makefile.in" -execdir sed -i "s|thisdir = \$(prefix)/share/@PACKAGE@/examples/|thisdir = \$(prefix)/share/@PACKAGE@/examples/|" '{}' \;
 # cannot remove gnu, looks like a customized version.  I cant find the headers
 # or declarations yet. The code headers have a 1988 copyright!
-rm -fr src/Random123 src/e_editor src/mswin src/readline
+rm -fr src/Random123 src/e_editor src/readline
 
 # e_editor is replaced by ed
 sed -ibackup "s|../e_editor/hoc_ed|/usr/bin/ed|" src/nrnoc/Makefile.am src/nrnoc/Makefile.in
 # Line 986
 sed -ibackup "s|\$(HOC_E_DEP)$||" src/nrnoc/Makefile.am src/nrnoc/Makefile.in
-sed -i 's|IV_LIBDIR="$IV_DIR"/"$host_cpu"/lib|IV_LIBDIR="%{_libdir}"|' configure
-sed -i 's|IV_LIBDIR="$IV_DIR"/"$host_cpu"/lib|IV_LIBDIR="%{_libdir}"|' configure
-sed -i 's|IV_INCLUDE=-I$IV_DIR/include|IV_INCLUDE=-I%{_includedir}|' configure
+# sed -i 's|IV_LIBDIR="$IV_DIR"/"$host_cpu"/lib|IV_LIBDIR="%{_libdir}"|' configure
+# sed -i 's|IV_LIBDIR="$IV_DIR"/"$host_cpu"/lib|IV_LIBDIR="%{_libdir}"|' configure
+# sed -i 's|IV_INCLUDE=-I$IV_DIR/include|IV_INCLUDE=-I%{_includedir}|' configure
 
 # Doesn't live in /usr/share/nrn/lib any more
-sed -i 's|lib/cleanup|cleanup|' src/oc/hoc.c
+# sed -i 's|lib/cleanup|cleanup|' src/oc/hoc.c
 
 # spurious executable perm
 find . -name "*.c" -execdir chmod -x '{}' \;
 find . -name "*.h" -execdir chmod -x '{}' \;
 find . -name "*.cpp" -execdir chmod -x '{}' \;
 
-%build
-%configure --with-x --with-nrnpython=%{__python2} --with-numpy --without-nrnjava --with-pic --enable-shared=yes --enable-static=no --disable-rpath --with-iv --disable-pysetup
-#make %{?_smp_mflags}
-make
+# for python3 build---must build twice, very hard to uncouple to python build from the build system
+cd ..
+cp -r %{tarname}-%{version} %{tarname}-%{version}-py3
 
-pushd src/nrnpython
-    CFLAGS="$RPM_OPT_FLAGS" %{__python} setup.py build
+%build
+cd ../
+
+pushd %{tarname}-%{version}
+    %configure --with-x --with-nrnpython=%{__python2} --with-numpy --without-nrnjava --with-pic --enable-shared=yes --enable-static=no --disable-rpath --without-iv --disable-pysetup
+    make
+    pushd src/nrnpython
+        CFLAGS="$RPM_OPT_FLAGS" %{__python2} setup.py build
+    popd
+popd
+pushd %{tarname}-%{version}-py3
+    %configure --with-x --with-nrnpython=%{__python3} --with-numpy --without-nrnjava --with-pic --enable-shared=yes --enable-static=no --disable-rpath --without-iv --disable-pysetup
+    make
+    pushd src/nrnpython
+        CFLAGS="$RPM_OPT_FLAGS" %{__python3} setup.py build
+    popd
 popd
 
 
 %install
-make install DESTDIR=$RPM_BUILD_ROOT
+pushd %{tarname}-%{version}
+    make install DESTDIR=$RPM_BUILD_ROOT
 
-pushd src/nrnpython
-    %{__python} setup.py install --skip-build --root $RPM_BUILD_ROOT
+    pushd src/nrnpython
+        %{__python2} setup.py install --skip-build --root $RPM_BUILD_ROOT
+    popd
+
+    # Remove random object files
+    rm -f $RPM_BUILD_ROOT/%{_libdir}/*.o
 popd
+pushd %{tarname}-%{version}-py3
+    make install DESTDIR=$RPM_BUILD_ROOT
 
-# Remove random object files
-rm -f $RPM_BUILD_ROOT/%{_libdir}/*.o
+    pushd src/nrnpython
+        %{__python3} setup.py install --skip-build --root $RPM_BUILD_ROOT
+    popd
+
+    # Remove random object files
+    rm -f $RPM_BUILD_ROOT/%{_libdir}/*.o
+popd
 
 %check
 # Wants a built SO not sure how to proceed
@@ -150,6 +189,10 @@ rm -f $RPM_BUILD_ROOT/%{_libdir}/*.o
 %files -n python-%{name}
 %{python2_sitearch}/neuron/
 %{python2_sitearch}/NEURON-%{version}-py?.?.egg-info
+
+%files -n python3-%{name}
+%{python3_sitearch}/neuron/
+%{python3_sitearch}/NEURON-%{version}-py?.?.egg-info
 
 %changelog
 * Sun Aug 26 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 7.5-1
