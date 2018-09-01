@@ -26,6 +26,7 @@ BuildRequires:  readline-devel
 BuildRequires:  Random123-devel 
 BuildRequires:  python2-Cython
 BuildRequires:  python2-devel
+BuildRequires:  sundials-devel
 BuildRequires:  libX11-devel
 BuildRequires:  gcc
 BuildRequires:  gcc-c++
@@ -98,12 +99,13 @@ This package contains the Python3 bindings for NEURON.
 # find ./share/examples/ -name "Makefile.in" -execdir sed -i "s|thisdir = \$(prefix)/share/@PACKAGE@/examples/|thisdir = \$(prefix)/share/@PACKAGE@/examples/|" '{}' \;
 # cannot remove gnu, looks like a customized version.  I cant find the headers
 # or declarations yet. The code headers have a 1988 copyright!
-rm -fr src/Random123 src/e_editor src/readline
+rm -fr src/Random123
+sed -i 's|Random123||g' src/Makefile.*
+sed -i 's|sundials||g' src/Makefile.*
+sed -i 's|src/Random123/Makefile||g' configure
+sed -i 's|src/readline/Makefile||g' configure
+sed -i 's|src/sundials/Makefile||g' configure
 
-# e_editor is replaced by ed
-sed -ibackup "s|../e_editor/hoc_ed|/usr/bin/ed|" src/nrnoc/Makefile.am src/nrnoc/Makefile.in
-# Line 986
-sed -ibackup "s|\$(HOC_E_DEP)$||" src/nrnoc/Makefile.am src/nrnoc/Makefile.in
 # sed -i 's|IV_LIBDIR="$IV_DIR"/"$host_cpu"/lib|IV_LIBDIR="%{_libdir}"|' configure
 # sed -i 's|IV_LIBDIR="$IV_DIR"/"$host_cpu"/lib|IV_LIBDIR="%{_libdir}"|' configure
 # sed -i 's|IV_INCLUDE=-I$IV_DIR/include|IV_INCLUDE=-I%{_includedir}|' configure
