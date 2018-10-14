@@ -3,9 +3,14 @@
 
 %global with_mpich 0
 %global with_openmpi 0
-%global with_py2 1
+%global with_py2 0
 
-%global _description\
+%global lname music
+
+# debugsourcefiles.list is always empty somehow
+%global debug_package %{nil}
+
+%global _description \
 MUSIC is an API allowing large scale neuron simulators using MPI internally to \
 exchange data during runtime.  MUSIC provides mechanisms to transfer massive \
 amounts of event information and continuous values from one parallel \
@@ -39,15 +44,13 @@ BuildRequires:  autoconf
 BuildRequires:  libtool
 BuildRequires:  gcc-c++
 BuildRequires:  python3-devel
+BuildRequires:  python3-Cython
 BuildRequires:  freeglut-devel
-
-%description
-%{_description}
 
 %if %{with_py2}
 BuildRequires:  python2-devel
+BuildRequires:  python2-Cython
 %endif
-
 
 %description
 %{_description}
@@ -194,25 +197,30 @@ export CXXFLAGS="%{optflags}"  \
 export LDFLAGS="${LDFLAGS:--Wl,-z,relro -specs=/usr/lib/rpm/redhat/redhat-hardened-ld}"  \
 ./configure MPI_CXXFLAGS="$FLAGS" MPI_CFLAGS="$FLAGS" MPI_LDFLAGS="$LDFLAGS" \\\
 --disable-static \\\
---with-python=$PYTHON_VERSION \\\
 --prefix=$MPI_HOME \\\
 --libdir=$MPI_LIB \\\
 --includedir=$MPI_INCLUDE \\\
 --bindir=$MPI_BIN \\\
-%if "$MPI_YES" == "no" \
+%if "%{mpi_enabled}" \
 --disable-mpi \\\
 %endif \
 --mandir=$MPI_MAN && \
 %make_build && \
 popd || exit -1
 
+%global do_pybuild \
+pushd %{name}-${commit}$MPI_COMPILE_TYPE  && \
+    pushd pymusic && \
+        CFLAGS="%{optflags}" $PYTHON_BIN setup.py build \
+    popd && \
+popd || exit -1;
 
 cd ../
 
 %if %{with_py2}
 MPI_COMPILE_TYPE=""
-PYTHON_VERSION=2
-MPI_YES="no"
+%global mpi_enabled 0
+PYTHON_BIN=%{__python2}
 MPI_HOME=%{_prefix}
 MPI_LIB=%{_libdir}
 MPI_INCLUDE=%{_includedir}
@@ -221,12 +229,13 @@ MPI_MAN=%{_mandir}
 MPI_CXX=""
 FLAGS="%{optflags}"
 %{do_build}
+%{do_pybuild}
 %endif
 
 
 MPI_COMPILE_TYPE="-py3"
-PYTHON_VERSION=3
-MPI_YES="no"
+%global mpi_enabled 0
+PYTHON_BIN=%{__python3}
 MPI_HOME=%{_prefix}
 MPI_LIB=%{_libdir}
 MPI_INCLUDE=%{_includedir}
@@ -241,8 +250,8 @@ FLAGS="%{optflags}"
 %{_mpich_load}
 %if %{with_py2}
 MPI_COMPILE_TYPE="-mpich"
-PYTHON_VERSION=2
-MPI_YES="yes"
+%global mpi_enabled 1
+PYTHON_BIN=%{__python2}
 MPI_CXX="mpicxx"
 FLAGS=""
 %{do_build}
@@ -251,7 +260,8 @@ FLAGS=""
 
 MPI_COMPILE_TYPE="-mpich-py3"
 PYTHON_VERSION=3
-MPI_YES="yes"
+%global mpi_enabled 1
+PYTHON_BIN=%{__python3}
 MPI_CXX="mpicxx"
 FLAGS=""
 %{do_build}
@@ -265,7 +275,8 @@ FLAGS=""
 %if %{with_py2}
 MPI_COMPILE_TYPE="-openmpi"
 PYTHON_VERSION=2
-MPI_YES="yes"
+%global mpi_enabled 1
+PYTHON_BIN=%{__python2}
 MPI_CXX="mpicxx"
 FLAGS=""
 %{do_build}
@@ -274,7 +285,8 @@ FLAGS=""
 
 MPI_COMPILE_TYPE="-openmpi-py3"
 PYTHON_VERSION=3
-MPI_YES="yes"
+%global mpi_enabled 1
+PYTHON_BIN=%{__python3}
 MPI_CXX="mpicxx"
 FLAGS=""
 %{do_build}
@@ -341,11 +353,13 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 %files
 %license COPYING
 %doc README
-# %{_libdir}/%{name}.so.*
+%{_bindir}/%{lname}
+%{_libdir}/libmusic*.so.*
+%{_mandir}/man1/*.gz
 
 %files devel
-# %{_includedir}/*
-# %{_libdir}/*.so
+%{_includedir}/%{lname}
+%{_libdir}/libmusic*.so
 
 %files -n python3-%{name}
 # %{_libdir}/libpy3neurosim*.so.*
