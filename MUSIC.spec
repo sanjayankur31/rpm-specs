@@ -7,9 +7,6 @@
 
 %global lname music
 
-# debugsourcefiles.list is always empty somehow
-%global debug_package %{nil}
-
 %global _description \
 MUSIC is an API allowing large scale neuron simulators using MPI internally to \
 exchange data during runtime.  MUSIC provides mechanisms to transfer massive \
@@ -32,7 +29,7 @@ MUSIC is distributed under the GNU General Public License v3.
 
 Name:           MUSIC
 Version:        0
-Release:        0.20181013git%{shortcommit}%{?dist}
+Release:        0.201810191036git%{shortcommit}%{?dist}
 Summary:        MUSIC, the MUltiSimulation Coordinator
 
 License:        GPLv3+
@@ -55,10 +52,17 @@ BuildRequires:  python2-Cython
 %description
 %{_description}
 
+%package        common
+Summary:        Common files for %{name}
+BuildArch:      noarch
+
+%description    common
+The %{name}-common package contains common files required by all sub packages.
 
 %package        devel
 Summary:        Development files for %{name}
 Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       %{name}-common = %{version}-%{release}
 
 %description    devel
 The %{name}-devel package contains libraries and header files for
@@ -66,6 +70,7 @@ developing applications that use %{name}.
 
 %package -n python3-%{name}
 Summary:        Python3 support for %{name}
+Requires:       %{name}-common = %{version}-%{release}
 %{?python_provide:%python_provide python3-%{name}}
 
 %description -n python3-%{name}
@@ -74,6 +79,7 @@ Summary:        Python3 support for %{name}
 %if %{with_py2}
 %package -n python2-%{name}
 Summary:        Python2 support for %{name}
+Requires:       %{name}-common = %{version}-%{release}
 %{?python_provide:%python_provide python2-%{name}}
 
 %description -n python2-%{name}
@@ -86,7 +92,7 @@ Summary:        %{name} built with openmpi
 BuildRequires:  openmpi-devel
 BuildRequires:  rpm-mpi-hooks
 Requires:       openmpi
-Requires:       %{name}-openmpi-common = %{version}-%{release}
+Requires:       %{name}-common = %{version}-%{release}
 %description openmpi
 %{_description}
 
@@ -95,7 +101,7 @@ Summary:        %{name} built with openmpi
 BuildRequires:  openmpi-devel
 BuildRequires:  rpm-mpi-hooks
 Requires:       openmpi
-Requires:       %{name}-openmpi-common = %{version}-%{release}
+Requires:       %{name}-common = %{version}-%{release}
 %description openmpi-devel
 %{_description}
 
@@ -104,6 +110,7 @@ Summary:        Python3 support for %{name} built with openmpi
 BuildRequires:  openmpi-devel
 BuildRequires:  rpm-mpi-hooks
 Requires:       openmpi
+Requires:       %{name}-common = %{version}-%{release}
 %{?python_provide:%python_provide python3-%{name}-openmpi}
 
 %description -n python3-%{name}-openmpi
@@ -115,6 +122,7 @@ Summary:        Python2 support for %{name} built with openmpi
 BuildRequires:  openmpi-devel
 BuildRequires:  rpm-mpi-hooks
 Requires:       openmpi
+Requires:       %{name}-common = %{version}-%{release}
 %{?python_provide:%python_provide python2-%{name}-openmpi}
 
 %description -n python2-%{name}-openmpi
@@ -129,7 +137,7 @@ Summary:        %{name} built with mpich
 BuildRequires:  mpich-devel
 BuildRequires:  rpm-mpi-hooks
 Requires:       mpich
-Requires:       %{name}-mpich-common = %{version}-%{release}
+Requires:       %{name}-common = %{version}-%{release}
 
 %description mpich
 %{_description}
@@ -139,6 +147,7 @@ Summary:        %{name} built with mpich
 BuildRequires:  mpich-devel
 BuildRequires:  rpm-mpi-hooks
 Requires:       mpich
+Requires:       %{name}-common = %{version}-%{release}
 
 %description mpich-devel
 %{_description}
@@ -148,6 +157,7 @@ Summary:        Python3 support for %{name} built with mpich
 BuildRequires:  mpich-devel
 BuildRequires:  rpm-mpi-hooks
 Requires:       mpich
+Requires:       %{name}-common = %{version}-%{release}
 %{?python_provide:%python_provide python3-%{name}-mpich}
 
 %description -n python3-%{name}-mpich
@@ -159,6 +169,7 @@ Summary:        Python2 support for %{name} built with mpich
 BuildRequires:  mpich-devel
 BuildRequires:  rpm-mpi-hooks
 Requires:       mpich
+Requires:       %{name}-common = %{version}-%{release}
 %{?python_provide:%python_provide python2-%{name}-mpich}
 
 %description -n python2-%{name}-mpich
@@ -167,11 +178,9 @@ Requires:       mpich
 %endif
 
 %prep
-%autosetup -n %{name}-%{commit}
+%autosetup -c -n %{name}-%{commit}
 
-cd ../
 cp -a %{name}-%{commit} %{name}-%{commit}-py3
-
 
 %if %{with_mpich}
     %if %{with_py2}
@@ -192,9 +201,7 @@ cp -a %{name}-%{commit} %{name}-%{commit}-py3
 %global do_build \
 pushd %{name}-%{commit}$MPI_COMPILE_TYPE && \
 ./autogen.sh && \
-export CFLAGS="%{optflags}"  \
-export CXXFLAGS="%{optflags}"  \
-export LDFLAGS="${LDFLAGS:--Wl,-z,relro -specs=/usr/lib/rpm/redhat/redhat-hardened-ld}"  \
+%{set_build_flags} \
 ./configure MPI_CXXFLAGS="$FLAGS" MPI_CFLAGS="$FLAGS" MPI_LDFLAGS="$LDFLAGS" \\\
 --disable-static \\\
 --prefix=$MPI_HOME \\\
@@ -345,14 +352,10 @@ PYTHON_VERSION=3
 find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 
 
-%post -p /sbin/ldconfig
-
-%postun -p /sbin/ldconfig
+%ldconfig_scriptlets
 
 
 %files
-%license COPYING
-%doc README
 %{_bindir}/%{lname}
 %{_libdir}/libmusic*.so.*
 %{_mandir}/man1/*.gz
@@ -360,6 +363,10 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 %files devel
 %{_includedir}/%{lname}
 %{_libdir}/libmusic*.so
+
+%files common
+%license COPYING
+%doc README
 
 %files -n python3-%{name}
 # %{_libdir}/libpy3neurosim*.so.*
@@ -372,8 +379,6 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 
 %if %{with_mpich}
 %files mpich
-%license COPYING
-%doc README
 # %{_libdir}/mpich/lib/%{name}.so.*
 
 %files mpich-devel
@@ -392,8 +397,6 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 
 %if %{with_openmpi}
 %files openmpi
-%license COPYING
-%doc README
 # %{_libdir}/openmpi/lib/%{name}.so.*
 
 %files openmpi-devel
@@ -411,5 +414,10 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 %endif
 
 %changelog
+* Fri Oct 19 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0-0.201810191036gita77e5787
+- Use macros
+- Put common files into separate sub package
+- Correct autosetup usage
+
 * Sat Oct 13 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0-0.20181013.gita77e5787
 - Initial build
