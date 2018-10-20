@@ -2,7 +2,6 @@ Name:           rudeconfig
 Version:        5.0.5
 Release:        10%{?dist}
 Summary:        Library (C++ API) for reading and writing configuration/.ini files
-Group:          System Environment/Libraries
 License:        GPLv2+
 URL:            http://www.rudeserver.com/config
 Source0:        http://www.rudeserver.com/config/download/%{name}-%{version}.tar.bz2
@@ -15,8 +14,7 @@ and create configuration/.ini files.
 
 %package        devel
 Summary:        Development files for %{name}
-Group:          Development/Libraries
-Requires:       %{name} = %{version}-%{release}
+Requires:       %{name}%{?_isa} = %{version}-%{release}
 
 %description    devel
 %{name} is a library that allows applications to read, modify
