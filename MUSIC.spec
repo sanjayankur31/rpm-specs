@@ -1,9 +1,18 @@
+# MUSIC depends on MPI for communication, so a non-MPI version is not being
+# built.
+# https://github.com/INCF/MUSIC/issues/55
+
+# Since the main package is now empty, instead of using a -common sub package
+# for the noarch files, I'll just use the main package.
+
+# TODO: unbundle rudeconfig
+
 %global commit a77e57878158b36401c0977702c1386ba01db118
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
 
-%global with_mpich 0
-%global with_openmpi 0
-%global with_py2 1
+%global with_mpich 1
+%global with_openmpi 1
+%global with_py2 0
 
 %global lname music
 
@@ -49,42 +58,11 @@ BuildRequires:  python2-devel
 BuildRequires:  python2-Cython
 %endif
 
+BuildArch:      noarch
+
 %description
 %{_description}
 
-%package        common
-Summary:        Common files for %{name}
-BuildArch:      noarch
-
-%description    common
-The %{name}-common package contains common files required by all sub packages.
-
-%package        devel
-Summary:        Development files for %{name}
-Requires:       %{name}%{?_isa} = %{version}-%{release}
-Requires:       %{name}-common = %{version}-%{release}
-
-%description    devel
-The %{name}-devel package contains libraries and header files for
-developing applications that use %{name}.
-
-%package -n python3-%{name}
-Summary:        Python3 support for %{name}
-Requires:       %{name}-common = %{version}-%{release}
-%{?python_provide:%python_provide python3-%{name}}
-
-%description -n python3-%{name}
-%{_description}
-
-%if %{with_py2}
-%package -n python2-%{name}
-Summary:        Python2 support for %{name}
-Requires:       %{name}-common = %{version}-%{release}
-%{?python_provide:%python_provide python2-%{name}}
-
-%description -n python2-%{name}
-%{_description}
-%endif
 
 %if %{with_openmpi}
 %package openmpi
@@ -92,7 +70,7 @@ Summary:        %{name} built with openmpi
 BuildRequires:  openmpi-devel
 BuildRequires:  rpm-mpi-hooks
 Requires:       openmpi
-Requires:       %{name}-common = %{version}-%{release}
+Requires:       %{name} = %{version}-%{release}
 %description openmpi
 %{_description}
 
@@ -101,7 +79,7 @@ Summary:        %{name} built with openmpi
 BuildRequires:  openmpi-devel
 BuildRequires:  rpm-mpi-hooks
 Requires:       openmpi
-Requires:       %{name}-common = %{version}-%{release}
+Requires:       %{name} = %{version}-%{release}
 %description openmpi-devel
 %{_description}
 
@@ -109,8 +87,10 @@ Requires:       %{name}-common = %{version}-%{release}
 Summary:        Python3 support for %{name} built with openmpi
 BuildRequires:  openmpi-devel
 BuildRequires:  rpm-mpi-hooks
+BuildRequires:  python3-mpi4py-openmpi
+Requires:       python3-mpi4py-openmpi
 Requires:       openmpi
-Requires:       %{name}-common = %{version}-%{release}
+Requires:       %{name} = %{version}-%{release}
 %{?python_provide:%python_provide python3-%{name}-openmpi}
 
 %description -n python3-%{name}-openmpi
@@ -121,8 +101,10 @@ Requires:       %{name}-common = %{version}-%{release}
 Summary:        Python2 support for %{name} built with openmpi
 BuildRequires:  openmpi-devel
 BuildRequires:  rpm-mpi-hooks
+BuildRequires:  python2-mpi4py-openmpi
+Requires:       python2-mpi4py-openmpi
 Requires:       openmpi
-Requires:       %{name}-common = %{version}-%{release}
+Requires:       %{name} = %{version}-%{release}
 %{?python_provide:%python_provide python2-%{name}-openmpi}
 
 %description -n python2-%{name}-openmpi
@@ -156,6 +138,8 @@ Requires:       %{name}-common = %{version}-%{release}
 Summary:        Python3 support for %{name} built with mpich
 BuildRequires:  mpich-devel
 BuildRequires:  rpm-mpi-hooks
+BuildRequires:  python3-mpi4py-mpich
+Requires:       python3-mpi4py-mpich
 Requires:       mpich
 Requires:       %{name}-common = %{version}-%{release}
 %{?python_provide:%python_provide python3-%{name}-mpich}
@@ -168,6 +152,8 @@ Requires:       %{name}-common = %{version}-%{release}
 Summary:        Python2 support for %{name} built with mpich
 BuildRequires:  mpich-devel
 BuildRequires:  rpm-mpi-hooks
+BuildRequires:  python2-mpi4py-mpich
+Requires:       python2-mpi4py-mpich
 Requires:       mpich
 Requires:       %{name}-common = %{version}-%{release}
 %{?python_provide:%python_provide python2-%{name}-mpich}
@@ -208,72 +194,36 @@ echo "** BUILDING $MPI_COMPILE_TYPE **" \
 pushd %{name}-%{commit}$MPI_COMPILE_TYPE && \
 ./autogen.sh && \
 %{set_build_flags} \
-./configure MPI_CXXFLAGS="$FLAGS" MPI_CFLAGS="$FLAGS" MPI_LDFLAGS="$LDFLAGS" PYTHON="$PYTHON_BIN" \\\
+MPI_CXXFLAGS="$CXXFLAGS $(pkg-config --cflags $MPI_VARIANT)" \
+MPI_CFLAGS="$CFLAGS $(pkg-config --cflags $MPI_VARIANT)" \
+MPI_LDFLAGS="$LDFLAGS -L$MPI_LIB -lmpi" \
+./configure MPI_CXXFLAGS="$MPI_CXXFLAGS" MPI_CFLAGS="$MPI_CFLAGS" MPI_LDFLAGS="$MPI_LDFLAGS" PYTHON="$PYTHON_BIN" \\\
 --disable-static \\\
 --prefix=$MPI_HOME \\\
 --libdir=$MPI_LIB \\\
 --includedir=$MPI_INCLUDE \\\
 --bindir=$MPI_BIN \\\
-%if "%{mpi_enabled}" \
---disable-mpi \\\
-%endif \
 --mandir=$MPI_MAN && \
 %make_build && \
 popd || exit -1
 
-%global do_pybuild \
-pushd %{name}-%{commit}$MPI_COMPILE_TYPE  && \
-    pushd pymusic && \
-        CFLAGS="%{optflags}" $PYTHON_BIN setup.py build \
-    popd && \
-popd || exit -1;
-
-%if %{with_py2}
-MPI_COMPILE_TYPE="-py2"
-%global mpi_enabled 0
-PYTHON_BIN=%{__python2}
-MPI_HOME=%{_prefix}
-MPI_LIB=%{_libdir}
-MPI_INCLUDE=%{_includedir}
-MPI_BIN=%{_bindir}
-MPI_MAN=%{_mandir}
-MPI_CXX=""
-FLAGS="%{optflags}"
-%{do_build}
-%endif
-
-
-MPI_COMPILE_TYPE=""
-%global mpi_enabled 0
-PYTHON_BIN=%{__python3}
-MPI_HOME=%{_prefix}
-MPI_LIB=%{_libdir}
-MPI_INCLUDE=%{_includedir}
-MPI_BIN=%{_bindir}
-MPI_MAN=%{_mandir}
-MPI_CXX=""
-FLAGS="%{optflags}"
-%{do_build}
 
 # Mpich
 %if %{with_mpich}
 %{_mpich_load}
+MPI_CXX="mpicxx"
+MPI_VARIANT="mpich"
+
 %if %{with_py2}
 MPI_COMPILE_TYPE="-mpich-py2"
-%global mpi_enabled 1
-PYTHON_BIN=%{__python2}
-MPI_CXX="mpicxx"
-FLAGS=""
+PYTHON_BIN="%{__python2}"
 %{do_build}
 %endif
 
 
 MPI_COMPILE_TYPE="-mpich"
 PYTHON_VERSION=3
-%global mpi_enabled 1
-PYTHON_BIN=%{__python3}
-MPI_CXX="mpicxx"
-FLAGS=""
+PYTHON_BIN="%{__python3}"
 %{do_build}
 
 %{_mpich_unload}
@@ -282,23 +232,20 @@ FLAGS=""
 # Openmpi
 %if %{with_openmpi}
 %{_openmpi_load}
+MPI_VARIANT="ompi"
+MPI_CXX="mpicxx"
+
 %if %{with_py2}
 MPI_COMPILE_TYPE="-openmpi-py2"
 PYTHON_VERSION=2
-%global mpi_enabled 1
-PYTHON_BIN=%{__python2}
-MPI_CXX="mpicxx"
-FLAGS=""
+PYTHON_BIN="%{__python2}"
 %{do_build}
 %endif
 
 
 MPI_COMPILE_TYPE="-openmpi"
 PYTHON_VERSION=3
-%global mpi_enabled 1
-PYTHON_BIN=%{__python3}
-MPI_CXX="mpicxx"
-FLAGS=""
+PYTHON_BIN="%{__python3}"
 %{do_build}
 %{_openmpi_unload}
 %endif
@@ -307,29 +254,16 @@ FLAGS=""
 %global do_install \
 %make_install -C %{name}-%{commit}$MPI_COMPILE_TYPE || exit -1
 
-%if %{with_py2}
-MPI_COMPILE_TYPE="-py2"
-PYTHON_VERSION=2
-%{do_install}
-%endif
-
-
-MPI_COMPILE_TYPE=""
-PYTHON_VERSION=3
-%{do_install}
-
 # Mpich
 %if %{with_mpich}
 %{_mpich_load}
 %if %{with_py2}
 MPI_COMPILE_TYPE="-mpich-py2"
-PYTHON_VERSION=2
 %{do_install}
 %endif
 
 
 MPI_COMPILE_TYPE="-mpich"
-PYTHON_VERSION=3
 %{do_install}
 %{_mpich_unload}
 %endif
@@ -339,13 +273,11 @@ PYTHON_VERSION=3
 %{_openmpi_load}
 %if %{with_py2}
 MPI_COMPILE_TYPE="-openmpi-py2"
-PYTHON_VERSION=2
 %{do_install}
 %endif
 
 
 MPI_COMPILE_TYPE="-openmpi"
-PYTHON_VERSION=3
 %{do_install}
 %{_openmpi_unload}
 %endif
@@ -356,40 +288,25 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 
 
 %files
-%{_bindir}/%{lname}
-# %{_libdir}/libmusic*.so.*
-# %{_mandir}/man1/*.gz
-
-%files devel
-%{_includedir}/%{lname}
-%{_includedir}/%{lname}-c.h
-%{_includedir}/%{lname}.hh
-# %{_includedir}/predict_rank.h
-# %{_libdir}/libmusic*.so
-
-%files common
 %license LICENSE
 %doc README
 
-%files -n python3-%{name}
-# %{_libdir}/libpy3neurosim*.so.*
-
-%if %{with_py2}
-%files -n python2-%{name}
-# %{_libdir}/libpy2neurosim*.so.*
-# %{_libdir}/libpyneurosim*.so.*
-%endif
-
 %if %{with_mpich}
 %files mpich
-# %{_libdir}/mpich/lib/%{name}.so.*
+%{_libdir}/mpich/bin/%{lname}
+%{_libdir}/mpich/bin/%{lname}_tests.sh
+%{_libdir}/mpich/bin/%{lname}run
+%{_libdir}/mpich/lib/libmusic-c.so.1
+%{_libdir}/mpich/lib/libmusic-c.so.1.0.0
 
 %files mpich-devel
-# %{_includedir}/mpich*/neurosim
-# %{_libdir}/mpich/lib/*.so
+%{_includedir}/mpich*/%{name}
+%{_includedir}/mpich*/%{name}*.*
+%{_includedir}/mpich*/predict_rank-c.h
+%{_libdir}/mpich/lib/libmusic-c.so
 
 %files -n python3-%{name}-mpich
-# %{_libdir}/mpich/lib/libpy3neurosim*.so.*
+# %{_libdir}/mpich/lib/%{name}.so.*
 
 %if %{with_py2}
 %files -n python2-%{name}-mpich
@@ -418,6 +335,7 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 
 %changelog
 * Sat Oct 20 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0-1.20181020gita77e5787
+- Remove non MPI packages
 - Use macros
 - Put common files into separate sub package
 - Correct autosetup usage
