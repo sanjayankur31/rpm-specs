@@ -3,7 +3,7 @@
 
 %global with_mpich 0
 %global with_openmpi 0
-%global with_py2 0
+%global with_py2 1
 
 %global lname music
 
@@ -29,7 +29,7 @@ MUSIC is distributed under the GNU General Public License v3.
 
 Name:           MUSIC
 Version:        0
-Release:        0.201810191036git%{shortcommit}%{?dist}
+Release:        1.20181020git%{shortcommit}%{?dist}
 Summary:        MUSIC, the MUltiSimulation Coordinator
 
 License:        GPLv3+
@@ -180,29 +180,35 @@ Requires:       %{name}-common = %{version}-%{release}
 %prep
 %autosetup -c -n %{name}-%{commit}
 
-cp -a %{name}-%{commit} %{name}-%{commit}-py3
+cp %{name}-%{commit}/LICENSE .
+cp %{name}-%{commit}/README .
+
+%if %{with_py2}
+    cp -a %{name}-%{commit} %{name}-%{commit}-py2
+%endif
 
 %if %{with_mpich}
     %if %{with_py2}
-        cp -a %{name}-%{commit} %{name}-%{commit}-mpich
+        cp -a %{name}-%{commit} %{name}-%{commit}-mpich-py2
     %endif
-    cp -a %{name}-%{commit}-py3 %{name}-%{commit}-mpich-py3
+    cp -a %{name}-%{commit} %{name}-%{commit}-mpich
 %endif
 
 %if %{with_openmpi}
     %if %{with_py2}
-        cp -a %{name}-%{commit} %{name}-%{commit}-openmpi
+        cp -a %{name}-%{commit} %{name}-%{commit}-openmpi-py2
     %endif
-    cp -a %{name}-%{commit}-py3 %{name}-%{commit}-openmpi-py3
+    cp -a %{name}-%{commit} %{name}-%{commit}-openmpi
 %endif
 
 %build
 
 %global do_build \
+echo "** BUILDING $MPI_COMPILE_TYPE **" \
 pushd %{name}-%{commit}$MPI_COMPILE_TYPE && \
 ./autogen.sh && \
 %{set_build_flags} \
-./configure MPI_CXXFLAGS="$FLAGS" MPI_CFLAGS="$FLAGS" MPI_LDFLAGS="$LDFLAGS" \\\
+./configure MPI_CXXFLAGS="$FLAGS" MPI_CFLAGS="$FLAGS" MPI_LDFLAGS="$LDFLAGS" PYTHON="$PYTHON_BIN" \\\
 --disable-static \\\
 --prefix=$MPI_HOME \\\
 --libdir=$MPI_LIB \\\
@@ -216,16 +222,14 @@ pushd %{name}-%{commit}$MPI_COMPILE_TYPE && \
 popd || exit -1
 
 %global do_pybuild \
-pushd %{name}-${commit}$MPI_COMPILE_TYPE  && \
+pushd %{name}-%{commit}$MPI_COMPILE_TYPE  && \
     pushd pymusic && \
         CFLAGS="%{optflags}" $PYTHON_BIN setup.py build \
     popd && \
 popd || exit -1;
 
-cd ../
-
 %if %{with_py2}
-MPI_COMPILE_TYPE=""
+MPI_COMPILE_TYPE="-py2"
 %global mpi_enabled 0
 PYTHON_BIN=%{__python2}
 MPI_HOME=%{_prefix}
@@ -236,11 +240,10 @@ MPI_MAN=%{_mandir}
 MPI_CXX=""
 FLAGS="%{optflags}"
 %{do_build}
-%{do_pybuild}
 %endif
 
 
-MPI_COMPILE_TYPE="-py3"
+MPI_COMPILE_TYPE=""
 %global mpi_enabled 0
 PYTHON_BIN=%{__python3}
 MPI_HOME=%{_prefix}
@@ -256,7 +259,7 @@ FLAGS="%{optflags}"
 %if %{with_mpich}
 %{_mpich_load}
 %if %{with_py2}
-MPI_COMPILE_TYPE="-mpich"
+MPI_COMPILE_TYPE="-mpich-py2"
 %global mpi_enabled 1
 PYTHON_BIN=%{__python2}
 MPI_CXX="mpicxx"
@@ -265,7 +268,7 @@ FLAGS=""
 %endif
 
 
-MPI_COMPILE_TYPE="-mpich-py3"
+MPI_COMPILE_TYPE="-mpich"
 PYTHON_VERSION=3
 %global mpi_enabled 1
 PYTHON_BIN=%{__python3}
@@ -280,7 +283,7 @@ FLAGS=""
 %if %{with_openmpi}
 %{_openmpi_load}
 %if %{with_py2}
-MPI_COMPILE_TYPE="-openmpi"
+MPI_COMPILE_TYPE="-openmpi-py2"
 PYTHON_VERSION=2
 %global mpi_enabled 1
 PYTHON_BIN=%{__python2}
@@ -290,7 +293,7 @@ FLAGS=""
 %endif
 
 
-MPI_COMPILE_TYPE="-openmpi-py3"
+MPI_COMPILE_TYPE="-openmpi"
 PYTHON_VERSION=3
 %global mpi_enabled 1
 PYTHON_BIN=%{__python3}
@@ -301,19 +304,17 @@ FLAGS=""
 %endif
 
 %install
-cd ../
-
 %global do_install \
 %make_install -C %{name}-%{commit}$MPI_COMPILE_TYPE || exit -1
 
 %if %{with_py2}
-MPI_COMPILE_TYPE=""
+MPI_COMPILE_TYPE="-py2"
 PYTHON_VERSION=2
 %{do_install}
 %endif
 
 
-MPI_COMPILE_TYPE="-py3"
+MPI_COMPILE_TYPE=""
 PYTHON_VERSION=3
 %{do_install}
 
@@ -321,13 +322,13 @@ PYTHON_VERSION=3
 %if %{with_mpich}
 %{_mpich_load}
 %if %{with_py2}
-MPI_COMPILE_TYPE="-mpich"
+MPI_COMPILE_TYPE="-mpich-py2"
 PYTHON_VERSION=2
 %{do_install}
 %endif
 
 
-MPI_COMPILE_TYPE="-mpich-py3"
+MPI_COMPILE_TYPE="-mpich"
 PYTHON_VERSION=3
 %{do_install}
 %{_mpich_unload}
@@ -337,13 +338,13 @@ PYTHON_VERSION=3
 %if %{with_openmpi}
 %{_openmpi_load}
 %if %{with_py2}
-MPI_COMPILE_TYPE="-openmpi"
+MPI_COMPILE_TYPE="-openmpi-py2"
 PYTHON_VERSION=2
 %{do_install}
 %endif
 
 
-MPI_COMPILE_TYPE="-openmpi-py3"
+MPI_COMPILE_TYPE="-openmpi"
 PYTHON_VERSION=3
 %{do_install}
 %{_openmpi_unload}
@@ -351,21 +352,23 @@ PYTHON_VERSION=3
 
 find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 
-
 %ldconfig_scriptlets
 
 
 %files
 %{_bindir}/%{lname}
-%{_libdir}/libmusic*.so.*
-%{_mandir}/man1/*.gz
+# %{_libdir}/libmusic*.so.*
+# %{_mandir}/man1/*.gz
 
 %files devel
 %{_includedir}/%{lname}
-%{_libdir}/libmusic*.so
+%{_includedir}/%{lname}-c.h
+%{_includedir}/%{lname}.hh
+# %{_includedir}/predict_rank.h
+# %{_libdir}/libmusic*.so
 
 %files common
-%license COPYING
+%license LICENSE
 %doc README
 
 %files -n python3-%{name}
@@ -414,10 +417,8 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 %endif
 
 %changelog
-* Fri Oct 19 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0-0.201810191036gita77e5787
+* Sat Oct 20 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0-1.20181020gita77e5787
 - Use macros
 - Put common files into separate sub package
 - Correct autosetup usage
-
-* Sat Oct 13 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0-0.20181013.gita77e5787
 - Initial build
