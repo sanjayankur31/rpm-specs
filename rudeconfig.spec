@@ -1,11 +1,14 @@
+%global commit 669d31c24a1c173581f7abc45e73516a6434b026
+%global gittag v5.0.6
+%global shortcommit %(c=%{commit}; echo ${c:0:7})
+
 Name:           rudeconfig
-Version:        5.0.5
-Release:        11%{?dist}
+Version:        5.0.6
+Release:        1%{?dist}
 Summary:        Library (C++ API) for reading and writing configuration/.ini files
 License:        GPLv2+
 URL:            http://www.rudeserver.com/config
-Source0:        http://www.rudeserver.com/config/download/%{name}-%{version}.tar.bz2
-Patch0:         %{name}-%{version}-correct-fsf.patch
+Source0:        https://github.com/mflood/%{name}/archive/%{commit}/%{name}-%{shortcommit}.tar.gz
 
 BuildRequires: gcc-c++
 
@@ -24,7 +27,7 @@ contains libraries, header files, and documentation needed
 to develop C++ applications using %{name}.
 
 %prep
-%autosetup -p1
+%autosetup -n %{name}-%{commit}
 
 %build
 %configure --disable-static
@@ -50,6 +53,10 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 %{_mandir}/man3/*
 
 %changelog
+* Sun Oct 21 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 5.0.6-1
+- Update to latest release
+- Remove patch
+
 * Sat Oct 20 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 5.0.5-11
 - Patch files to update FSF address
 
