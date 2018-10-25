@@ -1,0 +1,120 @@
+%global srcname libNeuroML
+
+%global with_py2 0
+
+%global _description \
+This package provides Python libNeuroML, for working with neuronal models \
+specified in NeuroML 2 (http://neuroml.org/neuromlv2).  NeuroML provides an \
+object model for describing neuronal morphologies, ion channels, synapses and \
+3D network structure.  Documentation is available at \
+http://readthedocs.org/docs/libneuroml/en/latest/
+
+
+Name:           python-%{srcname}
+Version:        0.2.45
+Release:        1%{?dist}
+Summary:        Python libNeuroML for working with neuronal models specified in NeuroML
+
+License:        MIT
+URL:            https://pypi.python.org/pypi/%{srcname}
+Source0:        %{pypi_source}
+# These require a mongodb db set up, so we disable them
+Patch0:         %{srcname}-%{version}-disable-mongodb-test.patch
+
+BuildArch:      noarch
+
+%description
+%{_description}
+
+%package -n python3-%{srcname}
+Summary:        %{summary}
+BuildRequires:  python3-devel
+BuildRequires:  %{py3_dist lxml}
+BuildRequires:  %{py3_dist nose}
+BuildRequires:  %{py3_dist numpy}
+BuildRequires:  %{py3_dist tables}
+BuildRequires:  %{py3_dist jsonpickle}
+BuildRequires:  %{py3_dist pymongo}
+BuildRequires:  %{py3_dist sphinx}
+Requires:  %{py3_dist lxml}
+%{?python_provide:%python_provide python3-%{srcname}}
+
+%description -n python3-%{srcname}
+%{_description}
+
+%package %{srcname}-doc
+Summary:    Documentation for %{srcname}
+
+%description %{srcname}-doc
+%{_description}
+
+%if %{with_py2}
+%package -n python2-%{srcname}
+Summary:        %{summary}
+BuildRequires:  python2-devel
+BuildRequires:  %{py2_dist lxml}
+BuildRequires:  %{py2_dist nose}
+BuildRequires:  %{py2_dist numpy}
+BuildRequires:  %{py2_dist tables}
+BuildRequires:  %{py2_dist jsonpickle}
+BuildRequires:  %{py2_dist pymongo}
+Requires:  %{py2_dist lxml}
+%{?python_provide:%python_provide python2-%{srcname}}
+
+%description -n python2-%{srcname}
+%{_description}
+%endif
+
+%prep
+%autosetup -p 1 -n %{srcname}-%{version}
+
+rm -fv %{name}.egg-info
+
+%build
+%py3_build
+
+%if %{with_py2}
+%py2_build
+%endif
+
+# Make documentation
+pushd doc && \
+    make html && \
+popd
+
+%install
+%py3_install
+
+%if %{with_py2}
+%py2_install
+%endif
+
+%check
+nosetests-3
+
+%if %{with_py2}
+nosetests-2
+%endif
+
+%files -n python3-%{srcname}
+%license LICENSE
+%doc README.md AUTHORS
+%{python3_sitelib}/%{srcname}-*.egg-info/
+%{python3_sitelib}/neuroml
+
+%files %{srcname}-doc
+%license LICENSE
+%doc README.md AUTHORS
+%doc neuroml/examples doc/_build/html/
+
+%if %{with_py2}
+%files -n python2-%{srcname}
+%license LICENSE
+%doc README.md AUTHORS
+%{python3_sitelib}/%{srcname}-*.egg-info/
+%{python3_sitelib}/neuroml
+%endif
+
+%changelog
+* Thu Oct 25 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.2.45-1
+- Initial build
