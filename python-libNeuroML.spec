@@ -111,8 +111,8 @@ nosetests-2
 %files -n python2-%{srcname}
 %license LICENSE
 %doc README.md AUTHORS
-%{python3_sitelib}/%{srcname}-*.egg-info/
-%{python3_sitelib}/neuroml
+%{python2_sitelib}/%{srcname}-*.egg-info/
+%{python2_sitelib}/neuroml
 %endif
 
 %changelog
