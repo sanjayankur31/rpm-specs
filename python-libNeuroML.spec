@@ -12,7 +12,7 @@ http://readthedocs.org/docs/libneuroml/en/latest/
 
 Name:           python-%{srcname}
 Version:        0.2.45
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Python libNeuroML for working with neuronal models specified in NeuroML
 
 License:        MIT
@@ -79,8 +79,8 @@ rm -fv %{name}.egg-info
 
 # Make documentation
 pushd doc && \
-    make html && \
-popd
+    make html SPHINXBUILD=sphinx-build-3 && \
+popd || exit -1
 
 %install
 %py3_install
@@ -116,6 +116,9 @@ nosetests-2
 %endif
 
 %changelog
+* Thu Oct 25 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.2.45-3
+- Correct doc build
+
 * Thu Oct 25 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.2.45-2
 - Correct doc sub package name
 
