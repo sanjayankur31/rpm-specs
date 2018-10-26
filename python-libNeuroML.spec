@@ -1,6 +1,7 @@
 %global srcname libNeuroML
 
-%global with_py2 0
+# %global with_py2 0
+%bcond_with python2
 
 %global _description \
 This package provides Python libNeuroML, for working with neuronal models \
@@ -48,7 +49,7 @@ Summary:    Documentation for %{srcname}
 %description doc
 %{_description}
 
-%if %{with_py2}
+%if %{with python2}
 %package -n python2-%{srcname}
 Summary:        %{summary}
 BuildRequires:  python2-devel
@@ -73,7 +74,7 @@ rm -fv %{name}.egg-info
 %build
 %py3_build
 
-%if %{with_py2}
+%if %{with python2}
 %py2_build
 %endif
 
@@ -85,14 +86,14 @@ popd || exit -1
 %install
 %py3_install
 
-%if %{with_py2}
+%if %{with python2}
 %py2_install
 %endif
 
 %check
 nosetests-3
 
-%if %{with_py2}
+%if %{with python2}
 nosetests-2
 %endif
 
@@ -107,7 +108,7 @@ nosetests-2
 %doc README.md AUTHORS
 %doc neuroml/examples doc/_build/html/
 
-%if %{with_py2}
+%if %{with python2}
 %files -n python2-%{srcname}
 %license LICENSE
 %doc README.md AUTHORS
@@ -118,6 +119,7 @@ nosetests-2
 %changelog
 * Thu Oct 25 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.2.45-3
 - Correct doc build
+- Temporarily use bcond
 
 * Thu Oct 25 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.2.45-2
 - Correct doc sub package name
