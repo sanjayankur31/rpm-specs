@@ -1,3 +1,10 @@
+# https://fedoraproject.org/wiki/Packaging:DistTag?rd=Packaging/DistTag#Conditionals
+%if 0%{?fedora} < 30
+%global with_py2 1
+%else
+%global with_py2 0
+%endif
+
 %global srcname example
 
 %global desc \
@@ -18,12 +25,14 @@ BuildRequires:  python2-devel python3-devel
 %description
 %{desc}
 
+%if %{with_py2}
 %package -n python2-%{srcname}
 Summary:        %{summary}
 %{?python_provide:%python_provide python2-%{srcname}}
 
 %description -n python2-%{srcname}
 %{desc}
+%endif
 
 %package -n python3-%{srcname}
 Summary:        %{summary}
@@ -37,8 +46,11 @@ Summary:        %{summary}
 %autosetup -n %{srcname}-%{version}
 
 %build
-%py2_build
 %py3_build
+
+%if %{with_py2}
+%py2_build
+%endif
 
 %install
 # Must do the python2 install first because the scripts in /usr/bin are
@@ -46,19 +58,25 @@ Summary:        %{summary}
 # python3 version to be the default.
 # If, however, we're installing separate executables for python2 and python3,
 # the order needs to be reversed so the unversioned executable is the python2 one.
+%if %{with_py2}
 %py2_install
+%endif
+
 %py3_install
 
 %check
+%if %{with_py2}
 %{__python2} setup.py test
+%endif
 %{__python3} setup.py test
 
-# Note that there is no %%files section for the unversioned python module if we are building for several python runtimes
+%if %{with_py2}
 %files -n python2-%{srcname}
 %license COPYING
 %doc README.rst
 # update this, wild cards are now forbidden
 %{python2_sitelib}/*
+%endif
 
 %files -n python3-%{srcname}
 %license COPYING
