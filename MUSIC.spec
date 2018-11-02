@@ -2,17 +2,18 @@
 # built.
 # https://github.com/INCF/MUSIC/issues/55
 
-# Since the main package is now empty, instead of using a -common sub package
-# for the noarch files, I'll just use the main package.
-
-# TODO: unbundle rudeconfig
-
 %global commit a77e57878158b36401c0977702c1386ba01db118
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
 
 %global with_mpich 1
 %global with_openmpi 1
+
+# https://fedoraproject.org/wiki/Packaging:DistTag?rd=Packaging/DistTag#Conditionals
+%if 0%{?fedora} < 30
+%global with_py2 1
+%else
 %global with_py2 0
+%endif
 
 %global lname music
 
@@ -44,6 +45,7 @@ Summary:        MUSIC, the MUltiSimulation Coordinator
 License:        GPLv3+
 URL:            https://github.com/INCF/%{name}/
 Source0:        https://github.com/INCF/%{name}/archive/%{commit}/%{name}-%{shortcommit}.tar.gz
+Patch0:         0001-Remove-bundled-rudeconfig.patch
 
 BuildRequires:  automake
 BuildRequires:  autoconf
@@ -52,13 +54,12 @@ BuildRequires:  gcc-c++
 BuildRequires:  python3-devel
 BuildRequires:  python3-Cython
 BuildRequires:  freeglut-devel
+BuildRequires:  rudeconfig-devel
 
 %if %{with_py2}
 BuildRequires:  python2-devel
 BuildRequires:  python2-Cython
 %endif
-
-BuildArch:      noarch
 
 %description
 %{_description}
@@ -164,7 +165,13 @@ Requires:       %{name}-common = %{version}-%{release}
 %endif
 
 %prep
-%autosetup -c -n %{name}-%{commit}
+%autosetup -c -n %{name}-%{commit} -N
+
+# remove bundled rudeconfig
+pushd %{name}-%{commit}
+    rm -rfv rudeconfig
+    %autopatch -p1
+popd
 
 cp %{name}-%{commit}/LICENSE .
 cp %{name}-%{commit}/README .
@@ -293,6 +300,7 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 
 %if %{with_mpich}
 %files mpich
+%license LICENSE
 %{_libdir}/mpich/bin/%{lname}
 %{_libdir}/mpich/bin/%{lname}_tests.sh
 %{_libdir}/mpich/bin/%{lname}run
@@ -300,16 +308,19 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 %{_libdir}/mpich/lib/libmusic-c.so.1.0.0
 
 %files mpich-devel
+%license LICENSE
 %{_includedir}/mpich*/%{name}
 %{_includedir}/mpich*/%{name}*.*
 %{_includedir}/mpich*/predict_rank-c.h
 %{_libdir}/mpich/lib/libmusic-c.so
 
 %files -n python3-%{name}-mpich
+%license LICENSE
 # %{_libdir}/mpich/lib/%{name}.so.*
 
 %if %{with_py2}
 %files -n python2-%{name}-mpich
+%license LICENSE
 # %{_libdir}/mpich/lib/libpy2neurosim*.so.*
 # %{_libdir}/mpich/lib/libpyneurosim*.so.*
 %endif
@@ -317,17 +328,21 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 
 %if %{with_openmpi}
 %files openmpi
+%license LICENSE
 # %{_libdir}/openmpi/lib/%{name}.so.*
 
 %files openmpi-devel
+%license LICENSE
 # %{_includedir}/openmpi*/neurosim
 # %{_libdir}/openmpi/lib/*.so
 
 %files -n python3-%{name}-openmpi
+%license LICENSE
 # %{_libdir}/openmpi/lib/libpy3neurosim*.so.*
 
 %if %{with_py2}
 %files -n python2-%{name}-openmpi
+%license LICENSE
 # %{_libdir}/openmpi/lib/libpy2neurosim*.so.*
 # %{_libdir}/openmpi/lib/libpyneurosim*.so.*
 %endif
@@ -335,6 +350,7 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 
 %changelog
 * Sat Oct 20 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0-1.20181020gita77e5787
+- Depend on packaged rudeconfig
 - Remove non MPI packages
 - Use macros
 - Put common files into separate sub package
