@@ -1,3 +1,7 @@
+%global commit af6f7768527086ae820d3d4f988f33a4e7f977b2
+%global shortcommit %(c=%{commit}; echo ${c:0:7})
+
+
 # https://fedoraproject.org/wiki/Packaging:DistTag?rd=Packaging/DistTag#Conditionals
 %if 0%{?fedora} < 30
 %global with_py2 1
@@ -5,22 +9,28 @@
 %global with_py2 0
 %endif
 
-%global srcname example
+%global srcname neuromllite
+%global pretty_name NeuroMLlite
 
 %global desc \
-Add a description here.
+A common framework for reading/writing/generating network specifications.
 
-Name:           python-%{srcname}
-Version:        1.2.3
-Release:        1%{?dist}
-Summary:        An example python module
+Name:           python-%{pretty_name}
+Version:        0.1.4
+Release:        1.20181102.git%{shortcommit}%{?dist}
+Summary:        A common framework for reading/writing/generating network specifications
 
-License:        MIT
-URL:            https://pypi.python.org/pypi/%{srcname}
-Source0:        %pypi_source
+License:        LGPLv3
+URL:            https://github.com/NeuroML/%{pretty_name}
+
+# Use latest upstream commit as PyPi version does not build correctly
+Source0:        https://github.com/NeuroML/%{pretty_name}/archive/%{commit}/%{srcname}-%{shortcommit}.tar.gz
+
+# PR Opened: https://github.com/NeuroML/NeuroMLlite/pull/2
+Source1:        LICENSE.lesser
 
 BuildArch:      noarch
-BuildRequires:  python2-devel python3-devel
+BuildRequires:  python3-devel
 
 %description
 %{desc}
@@ -28,6 +38,7 @@ BuildRequires:  python2-devel python3-devel
 %if %{with_py2}
 %package -n python2-%{srcname}
 Summary:        %{summary}
+BuildRequires:  python2-devel
 %{?python_provide:%python_provide python2-%{srcname}}
 
 %description -n python2-%{srcname}
@@ -43,7 +54,9 @@ Summary:        %{summary}
 
 
 %prep
-%autosetup -n %{srcname}-%{version}
+%autosetup -n %{pretty_name}-%{commit}
+rm -rf %{srcname}.egg-info
+cp -v %{SOURCE1} .
 
 %build
 %py3_build
@@ -72,17 +85,19 @@ Summary:        %{summary}
 
 %if %{with_py2}
 %files -n python2-%{srcname}
-%license COPYING
-%doc README.rst
+%license LICENSE.lesser
+%doc README.md
 # update this, wild cards are now forbidden
-%{python2_sitelib}/*
+# %{python2_sitelib}/*
 %endif
 
 %files -n python3-%{srcname}
-%license COPYING
-%doc README.rst
+%license LICENSE.lesser
+%doc README.md
 # update this, wild cards are now forbidden
-%{python3_sitelib}/*
-%{_bindir}/sample-exec
+# %{python3_sitelib}/*
+# %{_bindir}/sample-exec
 
 %changelog
+* Fri Nov 02 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.1.4-1.20181102.gitaf6f776
+- Initial build
