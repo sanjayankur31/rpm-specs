@@ -20,7 +20,7 @@ URL:            https://pypi.python.org/pypi/%{srcname}
 Source0:        %pypi_source
 
 BuildArch:      noarch
-BuildRequires:  python2-devel python3-devel
+BuildRequires:  python3-devel
 
 %description
 %{desc}
@@ -28,6 +28,7 @@ BuildRequires:  python2-devel python3-devel
 %if %{with_py2}
 %package -n python2-%{srcname}
 Summary:        %{summary}
+BuildRequires:  python2-devel 
 %{?python_provide:%python_provide python2-%{srcname}}
 
 %description -n python2-%{srcname}
