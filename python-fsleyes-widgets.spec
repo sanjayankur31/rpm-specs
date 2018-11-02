@@ -1,9 +1,13 @@
 # https://fedoraproject.org/wiki/Packaging:DistTag?rd=Packaging/DistTag#Conditionals
-%if 0%{?fedora} < 30
-%global with_py2 1
-%else
+# %%if 0%%{?fedora} < 30
+# %%global with_py2 1
+# %%else
+# %%global with_py2 0
+# %%endif
+
+# This package is required for fsleyes which only supports py3, so we don't
+# support py2 for this either.
 %global with_py2 0
-%endif
 
 %global srcname fsleyes-widgets
 
