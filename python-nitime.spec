@@ -5,12 +5,8 @@
 %global run_tests 1
 
 
-# https://fedoraproject.org/wiki/Packaging:DistTag?rd=Packaging/DistTag#Conditionals
-%if 0%{?fedora} < 30
-%global with_py2 1
-%else
+# Requires nibabel which is only available for python3-nibabel
 %global with_py2 0
-%endif
 
 %global srcname nitime
 
@@ -31,7 +27,7 @@ http://mail.scipy.org/mailman/listinfo/nipy-devel.
 Name:           python-%{srcname}
 Version:        0.8
 Release:        0.1.git%{shortcommit}%{?dist}
-Summary:        An example python module
+Summary:        Timeseries analysis for neuroscience data
 
 License:        BSD
 URL:            http://nipy.org/%{srcname}
