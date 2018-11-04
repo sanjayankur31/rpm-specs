@@ -32,7 +32,9 @@ Summary:        Timeseries analysis for neuroscience data
 License:        BSD
 URL:            http://nipy.org/%{srcname}
 Source0:        https://github.com/nipy/nitime/archive/%{commit}/%{srcname}-%{shortcommit}.tar.gz
-Patch0:         %{srcname}-0.7-remove-six.patch
+# Remove bundled six
+# Fix matplotlib
+Patch0:         %{srcname}-fix-builds.patch
 
 BuildRequires:  python3-devel
 
