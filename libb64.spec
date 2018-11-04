@@ -1,16 +1,6 @@
-%global _description %{expand: \
-libb64 is a library of ANSI C routines for fast encoding/decoding data into and
-from a base64-encoded format. C++ wrappers are included, as well as the source
-code for standalone encoding and decoding executables.
-
-Base64 uses a subset of displayable ASCII characters, and is therefore a useful
-encoding for storing binary data in a text file, such as XML, or sending binary
-data over text-only email.}
-
-
 Name:           libb64
 Version:        1.2
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A library for fast encoding/decoding data into and from a base64-encoded format
 
 License:        Public Domain
@@ -21,7 +11,13 @@ Source0:        https://downloads.sourceforge.net/%{name}/%{name}-%{version}.src
 BuildRequires: gcc-c++
 
 %description
-%{_description}
+libb64 is a library of ANSI C routines for fast encoding/decoding data into and
+from a base64-encoded format. C++ wrappers are included, as well as the source
+code for standalone encoding and decoding executables.
+
+Base64 uses a subset of displayable ASCII characters, and is therefore a useful
+encoding for storing binary data in a text file, such as XML, or sending binary
+data over text-only email.
 
 
 %package        devel
@@ -40,9 +36,7 @@ developing applications that use %{name}.
 
 
 %build
-export "CFLAGS=%{optflags}"
-export "CXXFLAGS=%{optflags}"
-export "LDFLAGS=%{build_ldflags}"
+%set_build_flags
 %make_build
 
 
@@ -69,5 +63,9 @@ install -D -m 0644 -p -t $RPM_BUILD_ROOT/%{_includedir}/b64/  include/b64/*
 %{_libdir}/libb64.a
 
 %changelog
+* Sun Nov 04 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 1.2-2
+- Do not use description macro
+- Use easier macro for build flags
+
 * Sat Nov 03 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 1.2-1
 - Initial build
