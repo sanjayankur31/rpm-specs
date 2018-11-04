@@ -1,4 +1,4 @@
-%global _description %{expand:
+%global _description %{expand: \
 libb64 is a library of ANSI C routines for fast encoding/decoding data into and
 from a base64-encoded format. C++ wrappers are included, as well as the source
 code for standalone encoding and decoding executables.
