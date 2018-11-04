@@ -7,7 +7,7 @@
 
 %global srcname duecredit
 
-%global _description %{expand:
+%global _description %{expand: \
 duecredit is being conceived to address the problem of inadequate citation of
 scientific software and methods, and limited visibility of donation requests
 for open-source software.
@@ -20,8 +20,8 @@ software provides multiple citeable implementations.}
 
 Name:           python-%{srcname}
 Version:        0.6.4
-Release:        1%{?dist}
-Summary:        Automated collection and reporting of citations for used software/methods/datasets
+Release:        2%{?dist}
+Summary:        Automated collection and reporting of citations
 
 License:        BSD
 URL:            https://github.com/%{srcname}/%{srcname}
@@ -78,7 +78,7 @@ BuildRequires:  python3-devel
 Summary:        Documentation for %{name}
 
 %description doc
-%{_description}
+Documentation for %{name}.
 
 %prep
 %autosetup -n %{srcname}-%{version}
@@ -124,6 +124,11 @@ PYTHONPATH=%{buildroot}/%{python3_sitelib} pytest-3 duecredit/tests --ignore=due
 
 
 %changelog
+* Sun Nov 04 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.6.4-2
+- Shorten summary
+- Remove stray empty line in description
+- Improve description for doc package
+
 * Sat Nov 03 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.6.4-1
 - Update to new version
 - Only install py3 bin
