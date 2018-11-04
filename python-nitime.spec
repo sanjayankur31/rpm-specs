@@ -42,6 +42,7 @@ BuildRequires:  %{py3_dist nibabel}
 BuildRequires:  %{py3_dist cython}
 BuildRequires:  %{py3_dist pytest}
 BuildRequires:  %{py3_dist nose}
+BuildRequires:  %{py3_dist matplotlib}
 BuildRequires:  gcc
 BuildRequires:  texlive-latex
 BuildRequires:  texlive-ucs
@@ -68,6 +69,7 @@ BuildRequires:  %{py2_dist nibabel}
 BuildRequires:  %{py2_dist cython}
 BuildRequires:  %{py2_dist pytest}
 BuildRequires:  %{py2_dist nose}
+BuildRequires:  %{py2_dist matplotlib}
 
 Requires:       %{py2_dist numpy}
 Requires:       %{py2_dist scipy}
