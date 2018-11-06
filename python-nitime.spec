@@ -2,12 +2,18 @@
 %global commit 1fab57162a016351f530a7db2c77c1c1b3355476
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
 
-# Multiple tests fail
+# Multiple tests fail on i386
+# https://github.com/nipy/nitime/issues/136
+# https://github.com/nipy/nitime/issues/137
 %global run_tests 0
 
 # The documentation fails to build on F29, so we'll just point to upstream
 # documentation
+%if 0%{?fedora} < 30
 %global with_doc 0
+%else
+%global with_doc 1
+%endif%
 
 
 # Requires nibabel which is only available for python3-nibabel
@@ -33,7 +39,7 @@ Documentation is available at http://nipy.org/nitime/documentation.html
 
 Name:           python-%{srcname}
 Version:        0.8
-Release:        0.1.git%{shortcommit}%{?dist}
+Release:        0.2.git%{shortcommit}%{?dist}
 Summary:        Timeseries analysis for neuroscience data
 
 License:        BSD
@@ -104,7 +110,8 @@ Summary:        %{summary}
 
 %if %{with_doc}
 %package doc
-Summary:    Documentation for %{name}.
+Summary:    Documentation for %{name}
+BuildArch:  noarch
 
 %description doc
 Documentation files for %{name}.
@@ -135,6 +142,7 @@ popd
 %if %{with_doc}
 pushd doc &&
     PYTHONPATH=../ make html &&
+    rm -fv _build/html/.buildinfo
 popd
 %endif
 
@@ -157,8 +165,8 @@ PYTHONPATH=$RPM_BUILD_ROOT/%{python3_sitearch} nosetests-3 '--exclude=test_(cohe
 
 %if %{with_py2}
 %files -n python2-%{srcname}
-%license LICENSE THANKS
-%doc README.txt
+%license LICENSE
+%doc README.txt THANKS
 %{python2_sitearch}/%{srcname}-%{version}.dev0-py2.?.egg-info
 %{python2_sitearch}/%{srcname}
 %endif
@@ -176,5 +184,11 @@ PYTHONPATH=$RPM_BUILD_ROOT/%{python3_sitearch} nosetests-3 '--exclude=test_(cohe
 %endif
 
 %changelog
+* Tue Nov 06 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.8-0.2.git1fab571
+- Enable documentation on rawhide where build succeeds (F30)
+- Remove extra buildinfo file
+- Make doc package noarch
+- Move THANKS file to correct bits
+
 * Sun Nov 04 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.8-0.1.git1fab571
 - Initial build
