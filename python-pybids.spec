@@ -19,7 +19,6 @@ Summary:    Interface with datasets conforming to BIDS
 License:    MIT
 URL:        http://bids.neuroimaging.io
 Source0:    https://github.com/INCF/%{srcname}/archive/%{commit}/%{srcname}-%{shortcommit}.tar.gz
-Patch0:     pybids-debug.patch
 
 
 BuildArch:      noarch
@@ -82,7 +81,7 @@ Requires:       %{py3_dist scipy}
 PyBIDS is a Python module to interface with datasets conforming BIDS.
 
 %prep
-%autosetup -n %{srcname}-%{commit} -p1
+%autosetup -n %{srcname}-%{commit}
 
 # stray backup file?
 rm -rf *.egg-info
@@ -104,9 +103,9 @@ rm -rf *.egg-info
 %check
 %if %{run_tests}
 %if %{with_py2}
-PYTHONPATH=. py.test -s -v --rootdir=$RPM_BUILD_ROOT .
+PYTHONPATH=. py.test -s -v .
 %endif
-PYTHONPATH=. py.test-3 -s -v --rootdir=$RPM_BUILD_ROOT .
+PYTHONPATH=. py.test-3 -s -v  .
 %endif
 
 %if %{with_py2}
