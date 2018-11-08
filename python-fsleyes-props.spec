@@ -9,16 +9,26 @@
 # support py2 for this either.
 %global with_py2 0
 
-%global srcname fsleyes-widgets
+%global srcname fsleyes-props
 
-%global desc \
-A collection of custom wx widgets and utilities used by FSLeyes.
+%global desc %{expand: \
+%{name} is a library which is used by used by FSLeyes, and which allows you to:
+
+- Listen for change to attributes on a python object,
+- Automatically generate wxpython widgets which are bound to attributes of a
+  python object
+- Automatically generate a command line interface to set values of the
+  attributes of a python object.
+
+To do this, you just need to subclass the .HasProperties class, and add some
+PropertyBase types as class attributes.}
+
 
 
 Name:           python-%{srcname}
-Version:        0.7.0
+Version:        1.6.4
 Release:        1%{?dist}
-Summary:        A collection of custom wx widgets and utilities used by FSLeyes.
+Summary:        [wx]Python event programming framework
 
 License:        ASL 2.0
 URL:            https://pypi.python.org/pypi/%{srcname}
@@ -86,7 +96,7 @@ This package contains documentation for %{name}.
 
 %prep
 %autosetup -n %{srcname}-%{version}
-rm -rfv fsleyes_widgets.egg-info
+rm -rfv fsleyes_props.egg-info
 
 %build
 %py3_build
@@ -107,32 +117,30 @@ rm -rfv fsleyes_widgets.egg-info
 
 
 %check
-# From https://git.fmrib.ox.ac.uk/fsl/fsleyes/widgets/blob/master/.ci/test_template.sh
-# These tests fail, so I've disabled them for the time being. Upstream has been e-mailed.
 %if %{with_py2}
-xvfb-run pytest-2 tests --ignore=tests/test_autotextctrl.py --ignore=tests/test_bitmapradio.py --ignore=tests/test_bitmaptoggle.py --ignore=tests/test_colourbutton.py --ignore=tests/test_floatslider.py --ignore=tests/test_notebook.py --ignore=tests/test_rangeslider.py --ignore=tests/test_texttag.py --ignore=tests/test_numberdialog.py
+xvfb-run pytest-2 tests
 %endif
 
-xvfb-run pytest-3 tests --ignore=tests/test_autotextctrl.py --ignore=tests/test_bitmapradio.py --ignore=tests/test_bitmaptoggle.py --ignore=tests/test_colourbutton.py --ignore=tests/test_floatslider.py --ignore=tests/test_notebook.py --ignore=tests/test_rangeslider.py --ignore=tests/test_texttag.py --ignore=tests/test_numberdialog.py
+xvfb-run pytest-3 tests
 
 %if %{with_py2}
 %files -n python2-%{srcname}
 %license LICENSE COPYRIGHT
 %doc README.rst
-%{python2_sitelib}/fsleyes_widgets/
-%{python2_sitelib}/fsleyes_widgets-%{version}-py2.?.egg-info
+%{python2_sitelib}/fsleyes_props/
+%{python2_sitelib}/fsleyes_props-%{version}-py2.?.egg-info
 %endif
 
 %files -n python3-%{srcname}
 %license LICENSE COPYRIGHT
 %doc README.rst
-%{python3_sitelib}/fsleyes_widgets/
-%{python3_sitelib}/fsleyes_widgets-%{version}-py3.?.egg-info
+%{python3_sitelib}/fsleyes_props/
+%{python3_sitelib}/fsleyes_props-%{version}-py3.?.egg-info
 
 %files doc
 %license LICENSE COPYRIGHT
 %doc doc/html
 
 %changelog
-* Fri Nov 02 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.7.0-1
-- Initial build
+* Thu Nov 08 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 1.6.4-1
+- WIP: needs fslpy and fsleyes-widgets, so will continue on this after.
