@@ -7,7 +7,7 @@ FSLeyes.
 
 Name:           python-%{srcname}
 Version:        1.12.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        The FSL Python Library
 
 
@@ -17,16 +17,6 @@ Source0:        %pypi_source
 
 BuildArch:      noarch
 BuildRequires:  python3-devel
-Requires:  %{py3_dist six}
-Requires:  %{py3_dist numpy}
-Requires:  %{py3_dist scipy}
-Requires:  %{py3_dist nibabel}
-Requires:  %{py3_dist wxpython}
-Requires:  %{py3_dist rtree}
-# Not yet packaged
-# Extra
-# Requires:  %%{py3_dist trimesh}
-# Requires:  %%{py3_dist indexed_gzip}
 
 BuildRequires:  %{py3_dist sphinx}
 BuildRequires:  %{py3_dist pytest pytest-cov}
@@ -46,6 +36,16 @@ BuildRequires:  dcm2niix
 
 %package -n python3-%{srcname}
 Summary:        %{summary}
+Requires:  %{py3_dist six}
+Requires:  %{py3_dist numpy}
+Requires:  %{py3_dist scipy}
+Requires:  %{py3_dist nibabel}
+Requires:  %{py3_dist wxpython}
+Requires:  %{py3_dist rtree}
+# Not yet packaged
+# Extra
+# Requires:  %%{py3_dist trimesh}
+# Requires:  %%{py3_dist indexed_gzip}
 %{?python_provide:%python_provide python3-%{srcname}}
 
 %description -n python3-%{srcname}
@@ -61,11 +61,19 @@ This package contains documentation for %{name}.
 %autosetup -n %{srcname}-%{version}
 rm -rfv %{srcname}.egg-info
 
+# remove unneeded shebangs
+find . -name "*py" -exec sed -i '/#!\/usr\/bin\/env python/ d' '{}' \;
+
 %build
 %py3_build
 
 # Build documentation
 %{__python3} setup.py doc
+# Remove build artefacts
+pushd doc
+    rm -frv html/.buildinfo
+    rm -frv html/.doctrees
+popd
 
 %install
 %py3_install
@@ -101,5 +109,9 @@ pytest-3 tests  -m "not longtest" --ignore=tests/test_idle.py --ignore=tests/tes
 %doc doc/html
 
 %changelog
+* Thu Nov 08 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 1.12.0-2
+- Correct shebangs
+- Move Requires to the sub package
+
 * Thu Nov 01 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 1.12.0-1
 - Initial build
