@@ -7,8 +7,8 @@
 
 %global srcname example
 
-%global desc \
-Add a description here.
+%global desc %{expand: \
+Add a description here.}
 
 Name:           python-%{srcname}
 Version:        1.2.3
