@@ -17,8 +17,8 @@ A collection of custom wx widgets and utilities used by FSLeyes.
 
 Name:           python-%{srcname}
 Version:        0.7.0
-Release:        1%{?dist}
-Summary:        A collection of custom wx widgets and utilities used by FSLeyes.
+Release:        2%{?dist}
+Summary:        A collection of custom wx widgets and utilities used by FSLeyes
 
 License:        ASL 2.0
 URL:            https://pypi.python.org/pypi/%{srcname}
@@ -36,12 +36,6 @@ BuildRequires:  %{py3_dist matplotlib}
 BuildRequires:  %{py3_dist six}
 BuildRequires:  %{py3_dist deprecation}
 BuildRequires:  xorg-x11-server-Xvfb
-
-Requires:  %{py3_dist six}
-Requires:  %{py3_dist deprecation}
-Requires:  %{py3_dist numpy}
-Requires:  %{py3_dist matplotlib}
-Requires:  %{py3_dist wxpython}
 
 %description
 %{desc}
@@ -73,6 +67,12 @@ Requires:  %{py2_dist wxpython}
 
 %package -n python3-%{srcname}
 Summary:        %{summary}
+Requires:  %{py3_dist six}
+Requires:  %{py3_dist deprecation}
+Requires:  %{py3_dist numpy}
+Requires:  %{py3_dist matplotlib}
+Requires:  %{py3_dist wxpython}
+
 %{?python_provide:%python_provide python3-%{srcname}}
 
 %description -n python3-%{srcname}
@@ -88,6 +88,9 @@ This package contains documentation for %{name}.
 %autosetup -n %{srcname}-%{version}
 rm -rfv fsleyes_widgets.egg-info
 
+# remove unneeded shebangs
+find . -name "*py" -exec sed -i '/#!\/usr\/bin\/env python/ d' '{}' \;
+
 %build
 %py3_build
 
@@ -97,6 +100,12 @@ rm -rfv fsleyes_widgets.egg-info
 
 # Build documentation
 %{__python3} setup.py doc
+# Remove build artefacts
+pushd doc
+    rm -frv html/.buildinfo
+    rm -frv html/.doctrees
+popd
+
 
 %install
 %if %{with_py2}
@@ -134,5 +143,10 @@ xvfb-run pytest-3 tests --ignore=tests/test_autotextctrl.py --ignore=tests/test_
 %doc doc/html
 
 %changelog
+* Thu Nov 08 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.7.0-2
+- Remove leftover files from the doc
+- Move requires to py3 sub package
+- Remove dot at end of summary
+
 * Fri Nov 02 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.7.0-1
 - Initial build
