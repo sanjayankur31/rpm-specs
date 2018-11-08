@@ -32,7 +32,7 @@ BuildArch:      noarch
 
 %if %{with_py2}
 %package -n python2-%{srcname}
-Summary:        %{sum}
+Summary:    Interface with datasets conforming to BIDS
 BuildRequires:  python2-devel
 BuildRequires:  %{py2_dist setuptools}
 BuildRequires:  %{py2_dist pytest}
@@ -58,7 +58,7 @@ Requires:       %{py2_dist scipy}
 
 
 %package -n python3-%{srcname}
-Summary:        %{sum}
+Summary:    Interface with datasets conforming to BIDS
 BuildRequires:  python3-devel
 BuildRequires:  %{py3_dist setuptools}
 BuildRequires:  %{py3_dist pytest}
@@ -83,7 +83,7 @@ Requires:       %{py3_dist scipy}
 %{_description}
 
 %package doc
-Summary:        %{sum}
+Summary:    Interface with datasets conforming to BIDS
 BuildRequires:  %{py3_dist sphinx}
 BuildRequires:  %{py3_dist sphinx_rtd_theme}
 BuildRequires:  %{py3_dist m2r}
