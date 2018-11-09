@@ -20,10 +20,10 @@ Detailed documentation is available at http://nilearn.github.io/.}
 
 Name:           python-%{srcname}
 Version:        0.4.2
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Python module for fast and easy statistical learning on NeuroImaging data
 
-License:        MIT
+License:        BSD
 URL:            https://pypi.python.org/pypi/%{srcname}
 Source0:        %pypi_source
 
@@ -79,6 +79,10 @@ Summary:        %{summary}
 
 %prep
 %autosetup -n %{srcname}-%{version}
+# Remove shebangs
+find . -name "*py" -exec sed -i '/#!\/usr\/bin\/env python/ d' '{}' \;
+# Remove pre-compiled files
+find . -name "*pyc" -exec rm -f '{}' \;
 
 %build
 %py3_build
@@ -115,5 +119,10 @@ Summary:        %{summary}
 %{python3_sitelib}/%{srcname}-%{version}-py3.?.egg-info
 
 %changelog
+* Fri Nov 09 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.4.2-2
+- Correct license
+- Remvoe shebangs
+- Remove pre-compiled files
+
 * Thu Nov 08 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.4.2-1
 - Initial build
