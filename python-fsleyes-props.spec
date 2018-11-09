@@ -12,7 +12,7 @@
 %global srcname fsleyes-props
 
 %global desc %{expand: \
-fsleyes-props is a library which is used by used by FSLeyes , and which allows
+fsleyes-props is a library which is used by used by FSLeyes, and which allows
 you to:
 
 - Listen for change to attributes on a python object,
