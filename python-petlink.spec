@@ -54,7 +54,7 @@ Requires:       %{py3_dist simplewrap} >= 0.3.3
 
 %prep
 %autosetup -n %{srcname}-%{version}
-cp -v %{SOURCE1} .
+cp -v %{SOURCE1} LICENSE
 
 rm -rfv %{srcname}.egg-info
 
@@ -80,18 +80,21 @@ rm -rfv %{srcname}.egg-info
 
 %if %{with_py2}
 %files -n python2-%{srcname}
-%license LICENSE.%{srcname}
+%license LICENSE
 %doc README.rst
 %{python2_sitearch}/%{srcname}-%{version}-py2.?.egg-info
 %{python2_sitearch}/%{srcname}
 %endif
 
 %files -n python3-%{srcname}
-%license LICENSE.%{srcname}
+%license LICENSE
 %doc README.rst
 %{python3_sitearch}/%{srcname}-%{version}-py3.?.egg-info
 %{python3_sitearch}/%{srcname}
 
 %changelog
+* Fri Nov 09 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.3.2-1
+- Rename license file to LICENSE as per reviewer suggestion
+
 * Thu Nov 08 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.3.2-1
 - Initial build
