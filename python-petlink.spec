@@ -5,9 +5,6 @@
 %global with_py2 0
 %endif
 
-# Tests fail https://github.com/spedemon/petlink/issues/2
-%global run_tests 0
-
 %global srcname petlink
 
 %global desc %{expand: \
@@ -34,9 +31,9 @@ BuildRequires:  gcc
 %package -n python2-%{srcname}
 Summary:        %{summary}
 BuildRequires:  python2-devel
-BuildRequires:  %{py2_dist simplewrap}
+BuildRequires:  %{py2_dist simplewrap} >= 0.3.3
 Requires:       %{py2_dist numpy}
-Requires:       %{py2_dist simplewrap}
+Requires:       %{py2_dist simplewrap} >= 0.3.3
 %{?python_provide:%python_provide python2-%{srcname}}
 
 %description -n python2-%{srcname}
@@ -46,9 +43,9 @@ Requires:       %{py2_dist simplewrap}
 %package -n python3-%{srcname}
 Summary:        %{summary}
 BuildRequires:  python3-devel
-BuildRequires:  %{py3_dist simplewrap}
+BuildRequires:  %{py3_dist simplewrap} >= 0.3.3
 Requires:       %{py3_dist numpy}
-Requires:       %{py3_dist simplewrap}
+Requires:       %{py3_dist simplewrap} >= 0.3.3
 %{?python_provide:%python_provide python3-%{srcname}}
 
 %description -n python3-%{srcname}
@@ -76,12 +73,10 @@ rm -rfv %{srcname}.egg-info
 %py3_install
 
 %check
-%if %{run_tests}
 %if %{with_py2}
 %{__python2} setup.py test
 %endif
 %{__python3} setup.py test
-%endif
 
 %if %{with_py2}
 %files -n python2-%{srcname}
