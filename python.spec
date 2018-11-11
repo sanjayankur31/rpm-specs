@@ -1,9 +1,14 @@
 # https://fedoraproject.org/wiki/Packaging:DistTag?rd=Packaging/DistTag#Conditionals
-%if 0%{?fedora} < 30
-%global with_py2 1
+# http://rpm.org/user_doc/conditional_builds.html
+%if 0%{?fedora} >= 30
+# disabled by default
+%bcond_with py2
 %else
-%global with_py2 0
+%bcond_without py2 0
 %endif
+
+# disabled to begin with
+%bcond_with tests
 
 %global srcname example
 
@@ -25,7 +30,7 @@ BuildRequires:  python3-devel
 %description
 %{desc}
 
-%if %{with_py2}
+%if %{with py2}
 %package -n python2-%{srcname}
 Summary:        %{summary}
 BuildRequires:  python2-devel 
@@ -49,7 +54,7 @@ Summary:        %{summary}
 %build
 %py3_build
 
-%if %{with_py2}
+%if %{with py2}
 %py2_build
 %endif
 
@@ -59,19 +64,21 @@ Summary:        %{summary}
 # python3 version to be the default.
 # If, however, we're installing separate executables for python2 and python3,
 # the order needs to be reversed so the unversioned executable is the python2 one.
-%if %{with_py2}
+%if %{with py2}
 %py2_install
 %endif
 
 %py3_install
 
 %check
-%if %{with_py2}
+%if %{with tests}
+%if %{with py2}
 %{__python2} setup.py test
 %endif
 %{__python3} setup.py test
+%endif
 
-%if %{with_py2}
+%if %{with py2}
 %files -n python2-%{srcname}
 %license COPYING
 %doc README.rst
