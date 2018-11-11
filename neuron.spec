@@ -13,13 +13,13 @@ This is currently built without GUI (iv) support.
 }
 
 %global tarname nrn
-%global with_py2 0
 
-%global with_mpich 0
-%global with_openmpi 0
+# disabled for the moment
+%bcond_with mpich
+%bcond_with openmpi
 
-# fails somehow
-%global with_metis 0
+# fails somehow, disabled by default
+%bcond_with metis
 
 Name:       neuron
 Version:    7.5
@@ -31,8 +31,10 @@ URL:        http://www.neuron.yale.edu/neuron/
 Source0:    https://github.com/neuronsimulator/%{tarname}/archive/%{commit}/%{tarname}-%{shortcommit}.tar.gz
 Source1:    neuron-nrnversion.h
 Patch0:     0001-Unbundle-Random123.patch
-Patch1:     0002-Disable-nrnpy-build-install-during-make-install.patch
 
+# Random123 does not build on these, so neither can NEURON
+# https://github.com/neuronsimulator/nrn/issues/114
+ExcludeArch:    %{arm} mips64r2 mips32r2 s390 s390x
 
 BuildRequires:  ncurses-devel
 BuildRequires:  readline-devel
@@ -70,28 +72,6 @@ Requires: %{name}%{?_isa} = %{version}-%{release}
 %description static
 Static libraries for %{name}
 
-%if %{with_py2}
-%package -n python2-%{name}
-Summary:    Python2 bindings for NEURON
-BuildRequires:  %{py2_dist Cython}
-BuildRequires:  python2-devel
-
-%description -n python2-%{name}
-%{desc}
-
-This package contains the Python2 bindings for NEURON.
-%endif
-
-%package -n python3-%{name}
-Summary:    Python bindings for NEURON
-BuildRequires:  %{py3_dist Cython}
-BuildRequires:  python3-devel
-
-%description -n python3-%{name}
-%{desc}
-
-This package contains the Python3 bindings for NEURON.
-
 %prep
 %autosetup -c -n %{tarname}-%{commit} -N
 
@@ -102,22 +82,11 @@ pushd %{tarname}-%{commit}
     sed -i '/git2nrnversion_h.sh/ d' build.sh
 popd
 
-# py3 build directories do not have a suffix, py2 ones have -py2
-%if %{with_py2}
-cp -a %{tarname}-%{commit} %{tarname}-%{commit}-py2
-%endif
-
-%if %{with_mpich}
-%if %{with_py2}
-    cp -a %{tarname}-%{commit}-py2 %{tarname}-%{commit}-mpich-py2
-%endif
+%if %{with mpich}
 cp -a %{tarname}-%{commit} %{tarname}-%{commit}-mpich
 %endif
 
-%if %{with_openmpi}
-%if %{with_py2}
-    cp -a %{tarname}-%{commit}-py2 %{tarname}-%{commit}-openmpi-py2
-%endif
+%if %{with openmpi}
 cp -a %{tarname}-%{commit} %{tarname}-%{commit}-openmpi
 %endif
 
@@ -127,27 +96,22 @@ echo "*** Building %{tarname}-%{commit}$MPI_COMPILE_TYPE ***"
 pushd %{tarname}-%{commit}$MPI_COMPILE_TYPE
 ./build.sh &&
 %configure --without-iv \\\
-%if %{with_metis} \
+%if %{with metis} \
 --with-metis  \\\
 %endif \
 --with-x \\\
-%if %{with_mpich} || %{with_openmpi} \
+%if %{with mpich} || %{with openmpi} \
 --with-paranrn=dynamic \\\
 --with-mpi --with-multisend \\\
-%endif \
---with-nrnpython=dynamic --with-pyexe=$MPI_PYTHON 
+%endif
 
 %make_build
 
-pushd src/nrnpython
-CFLAGS="%{optflags}" $MPI_PYTHON setup.py build
-popd
 popd
 }
 
-# Serial py3 build
+# Serial build
 export MPI_COMPILE_TYPE=""
-export MPI_PYTHON=%{__python3}
 %{do_build}
 
 %install
@@ -156,45 +120,111 @@ echo "*** Installing %{tarname}-%{commit}$MPI_COMPILE_TYPE ***"
 pushd %{tarname}-%{commit}$MPI_COMPILE_TYPE
 %make_install
 
-pushd src/nrnpython
-$MPI_PYTHON setup.py install
-popd
-
 popd
 }
 
-# Serial py3 build
 export MPI_COMPILE_TYPE=""
-export MPI_PYTHON=%{__python3}
 %{do_install}
 
+# Remove stray object files
+# Probably worth a PR
+find . $RPM_BUILD_ROOT/%{_libdir}/ -name "*.o" -exec rm -fv '{}' \;
+rm -fv $RPM_BUILD_ROOT/%{_datadir}/%{tarname}/libtool
 
 %ldconfig_scriptlets
 
 %files
 %doc
-# %{_bindir}/*
-# %{_datadir}/%{name}
-# %{_libdir}/*.so.*
+%{_bindir}/bbswork.sh
+%{_bindir}/hel2mos1.sh
+%{_bindir}/ivoc
+%{_bindir}/memacs
+%{_bindir}/mkthreadsafe
+%{_bindir}/modlunit
+%{_bindir}/mos2nrn
+%{_bindir}/mos2nrn2.sh
+%{_bindir}/neurondemo
+%{_bindir}/nocmodl
+%{_bindir}/nrndiagnose.sh
+%{_bindir}/nrngui
+%{_bindir}/nrniv
+%{_bindir}/nrniv_makefile
+%{_bindir}/nrnivmodl
+%{_bindir}/nrnmech_makefile
+%{_bindir}/nrnoc
+%{_bindir}/nrnoc_makefile
+%{_bindir}/nrnocmodl
+%{_bindir}/nrnpyenv.sh
+%{_bindir}/oc
+%{_bindir}/set_nrnpyenv.sh
+%{_bindir}/sortspike
+%{_libdir}/libivoc.so.0.0.0
+%{_libdir}/libivoc.so.0
+%{_libdir}/libmemacs.so.0.0.0
+%{_libdir}/libmemacs.so.0
+%{_libdir}/libmeschach.so.0.0.0
+%{_libdir}/libmeschach.so.0
+%{_libdir}/libneuron_gnu.so.0.0.0
+%{_libdir}/libneuron_gnu.so.0
+%{_libdir}/libnrniv.so.0.0.0
+%{_libdir}/libnrniv.so.0
+%{_libdir}/libnrnmpi.so.0.0.0
+%{_libdir}/libnrnmpi.so.0
+%{_libdir}/libnrnoc.so.0.0.0
+%{_libdir}/libnrnoc.so.0
+%{_libdir}/liboc.so.0.0.0
+%{_libdir}/liboc.so.0
+%{_libdir}/libocxt.so.0.0.0
+%{_libdir}/libocxt.so.0
+%{_libdir}/libscopath.so.0.0.0
+%{_libdir}/libscopath.so.0
+%{_libdir}/libsparse13.so.0.0.0
+%{_libdir}/libsparse13.so.0
+# BUNDLING!
+%{_libdir}/libsundials.so.0.0.0
+%{_libdir}/libsundials.so.0
+
+%{_datadir}/%{name}/lib
 
 %files devel
-# %{_includedir}/%{name}/
-# %{_libdir}/*.so
-# %{_libdir}/nrnconf.h
+%{_includedir}/%{tarname}
+%{_libdir}/libivoc.so
+%{_libdir}/libmemacs.so
+%{_libdir}/libmeschach.so
+%{_libdir}/libneuron_gnu.so
+%{_libdir}/libnrniv.so
+%{_libdir}/libnrnmpi.so
+%{_libdir}/libnrnoc.so
+%{_libdir}/liboc.so
+%{_libdir}/libocxt.so
+%{_libdir}/libscopath.so
+%{_libdir}/libsparse13.so
+# BUNDLING!
+%{_libdir}/libsundials.so
+
+# should this be here?!
+%{_libdir}/nrnconf.h
 
 # Do we need the static libraries?
 %files static
-# %{_libdir}/*.la
+%{_libdir}/libivoc.la
+%{_libdir}/libmemacs.la
+%{_libdir}/libmeschach.la
+%{_libdir}/libneuron_gnu.la
+%{_libdir}/libnrniv.la
+%{_libdir}/libnrnmpi.la
+%{_libdir}/libnrnoc.la
+%{_libdir}/liboc.la
+%{_libdir}/libocxt.la
+%{_libdir}/libscopath.la
+%{_libdir}/libsparse13.la
+# BUNDLING!
+%{_libdir}/libsundials.la
 
-%if %{with_py2}
-%files -n python2-%{name}
-# %{python2_sitearch}/neuron/
-# %{python2_sitearch}/NEURON-%{version}-py?.?.egg-info
-%endif
 
-%files -n python3-%{name}
-# %{python3_sitearch}/neuron/
-# %{python3_sitearch}/NEURON-%{version}-py?.?.egg-info
+%doc
+%{_datadir}/%{name}/examples
+%{_datadir}/%{name}/demo
 
 %changelog
 * Sun Nov 11 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 7.5-1.git4650e7c
