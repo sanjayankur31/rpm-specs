@@ -1,14 +1,17 @@
 # https://fedoraproject.org/wiki/Packaging:DistTag?rd=Packaging/DistTag#Conditionals
-%if 0%{?fedora} < 30
-%global with_py2 1
+%if 0%{?fedora} >= 30
+%bcond_with py2
 %else
-%global with_py2 0
+%bcond_without py2
 %endif
+
+%bcond_without tests
 
 %global srcname brian2
 %global pretty_name Brian2
 
-%global generate_docs 0
+# Documents disabled for the moment
+%bcond_with docs
 
 # For the time being, while cython builds do not work:
 # https://github.com/brian-team/brian2/issues/1026
@@ -47,7 +50,7 @@ BuildRequires:  gcc-c++ gcc
 %description
 %{desc}
 
-%if %{with_py2}
+%if %{with py2}
 %package -n python2-%{srcname}
 Summary:        %{summary}
 BuildRequires:  python2-devel
@@ -78,7 +81,7 @@ Summary:        %{summary}
 BuildRequires:  %{py3_dist Cython} >= 0.18
 BuildRequires:  %{py3_dist setuptools}
 BuildRequires:  %{py3_dist nose}
-%if %{generate_docs}
+%if %{with docs}
 BuildRequires:  %{py3_dist sphinx}
 %endif
 BuildRequires:  %{py3_dist numpy} >= 1.10
@@ -108,57 +111,84 @@ Documentation and examples for %{name}.
 
 
 %prep
-%autosetup -n %{pretty_name}-%{version} -p0
-rm -rvf %{pretty_name}.egg-info
+# We must create a different directory because otherwise the Cython bits etc
+# seem to cause trouble when building boty py2 and py3
+%autosetup -n %{pretty_name}-%{version} -c -N
 
-# Remove this since it is only an issue on Windows systems
-sed -i 's|, !=4.0.0||' setup.py
+pushd %{pretty_name}-%{version}
+    rm -rvf %{pretty_name}.egg-info
+    rm -f brian2/synapses/cythonspikequeue.cpp
+    %autopatch -p0
+    # Remove this since it is only an issue on Windows systems
+    sed -i 's|, !=4.0.0||' setup.py
+popd
+
+cp -r %{pretty_name}-%{version} %{pretty_name}-%{version}-py2
+
 
 %build
-%py3_build
+pushd %{pretty_name}-%{version}
+    %py3_build
+    %if %{with docs}
+    # Build documentation
+    PYTHONPATH=.
+    sphinx-build-3 docs_sphinx html
+    %endif
+popd
 
-%if %{with_py2}
-%py2_build
+%if %{with py2}
+pushd %{pretty_name}-%{version}-py2
+    %py2_build
+popd
 %endif
 
-%if %{generate_docs}
-# Build documentation
-PYTHONPATH=.
-sphinx-build-3 docs_sphinx html
-%endif
 
 %install
-%if %{with_py2}
-%py2_install
+%if %{with py2}
+pushd %{pretty_name}-%{version}-py
+    %py2_install
+popd
 %endif
 
-%py3_install
+pushd %{pretty_name}-%{version}
+    %py3_install
+popd
 
 %check
-%if %{with_py2}
-nosetests-2
+%if %{with tests}
+# We cannot use the local copy because the codebase is still py2 and uses 2to3
+# to convert to py3, so we *must* point to the installed version for tests
+# https://github.com/brian-team/brian2/issues/1027
+%if %{with py2}
+pushd %{pretty_name}-%{version}-py2
+    PYTHONPATH=$RPM_BUILD_ROOT/%{python2_sitearch} nosetests-2
+popd
 %endif
-nosetests-3
 
-%if %{with_py2}
+pushd %{pretty_name}-%{version}
+    PYTHONPATH=$RPM_BUILD_ROOT/%{python3_sitearch} nosetests-3
+popd
+%endif
+
+%if %{with py2}
 %files -n python2-%{srcname}
-%license LICENSE
-%doc README.rst AUTHORS
+%license %{pretty_name}-%{version}/LICENSE
+%doc %{pretty_name}-%{version}/README.rst %{pretty_name}-%{version}/AUTHORS
 %{python2_sitearch}/%{srcname}
 %{python2_sitearch}/%{pretty_name}-%{version}-py2.?.egg-info
 %endif
 
 %files -n python3-%{srcname}
-%license LICENSE
+%license %{pretty_name}-%{version}/LICENSE
 %{python3_sitearch}/%{srcname}
 %{python3_sitearch}/%{pretty_name}-%{version}-py3.?.egg-info
-%doc README.rst AUTHORS
+%doc %{pretty_name}-%{version}/README.rst %{pretty_name}-%{version}/AUTHORS
 
 %files doc
-%license LICENSE
-%doc examples tutorials
-%if %{generate_docs}
-%doc html
+%license %{pretty_name}-%{version}/LICENSE
+%doc %{pretty_name}-%{version}/examples %{pretty_name}-%{version}/tutorials
+%if %{with docs}
+%doc %{pretty_name}-%{version}/html
 %endif
 
 %changelog
