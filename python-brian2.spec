@@ -5,7 +5,8 @@
 %bcond_without py2
 %endif
 
-%bcond_without tests
+# Tests hang koji...
+%bcond_with tests
 
 %global srcname brian2
 %global pretty_name Brian2
@@ -44,8 +45,8 @@ URL:            https://pypi.python.org/pypi/%{pretty_name}
 Source0:        %pypi_source %{pretty_name}
 Patch0:         0001-Brian2-2.2-remove-crosscompiling.patch
 
-BuildRequires:  python3-devel
 BuildRequires:  gcc-c++ gcc
+BuildRequires:  gsl-devel
 
 %description
 %{desc}
@@ -63,6 +64,8 @@ BuildRequires:  %{py2_dist pyparsing}
 BuildRequires:  %{py2_dist jinja2}
 BuildRequires:  %{py2_dist py-cpuinfo}
 
+# For code generation
+Requires:       %{py2_dist Cython} >= 0.18
 Requires:       %{py2_dist numpy} >= 1.10
 Requires:       %{py2_dist sympy} >= 0.7.6
 Requires:       %{py2_dist pyparsing}
@@ -78,6 +81,7 @@ Suggests:       %{py2_dist ipython}
 
 %package -n python3-%{srcname}
 Summary:        %{summary}
+BuildRequires:  python3-devel
 BuildRequires:  %{py3_dist Cython} >= 0.18
 BuildRequires:  %{py3_dist setuptools}
 BuildRequires:  %{py3_dist nose}
@@ -90,6 +94,8 @@ BuildRequires:  %{py3_dist pyparsing}
 BuildRequires:  %{py3_dist jinja2}
 BuildRequires:  %{py3_dist py-cpuinfo}
 
+# For code generation
+Requires:       %{py3_dist Cython} >= 0.18
 Requires:       %{py3_dist numpy} >= 1.10
 Requires:       %{py3_dist sympy} >= 0.7.6
 Requires:       %{py3_dist pyparsing}
@@ -112,15 +118,23 @@ Documentation and examples for %{name}.
 
 %prep
 # We must create a different directory because otherwise the Cython bits etc
-# seem to cause trouble when building boty py2 and py3
+# seem to cause trouble when building both py2 and py3. This is because the
+# codebase is still py2, and 2to3 is run during the build to convert it to py3.
+# So, we must keep the two versions completely separate
 %autosetup -n %{pretty_name}-%{version} -c -N
 
 pushd %{pretty_name}-%{version}
+    # Remove unnecessary files
+    find . -name ".gitignore" -print -delete
     rm -rvf %{pretty_name}.egg-info
     rm -f brian2/synapses/cythonspikequeue.cpp
     %autopatch -p0
     # Remove this since it is only an issue on Windows systems
     sed -i 's|, !=4.0.0||' setup.py
+
+    # Remove exec and shebang
+    find examples -name "*.py" -print -exec sed -i '/^#!\/usr\/bin\/env python$/ d' '{}' \;
+    find examples -name "*" -print -exec chmod -v -x '{}' \;
 popd
 
 cp -r %{pretty_name}-%{version} %{pretty_name}-%{version}-py2
@@ -145,7 +159,7 @@ popd
 
 %install
 %if %{with py2}
-pushd %{pretty_name}-%{version}-py
+pushd %{pretty_name}-%{version}-py2
     %py2_install
 popd
 %endif
@@ -156,17 +170,18 @@ popd
 
 %check
 %if %{with tests}
-# We cannot use the local copy because the codebase is still py2 and uses 2to3
-# to convert to py3, so we *must* point to the installed version for tests
+# We cannot use the local build because the codebase is still py2 and uses 2to3
+# to convert to py3 during the build process and install the converted bits, so
+# we *must* point to the installed version for tests
 # https://github.com/brian-team/brian2/issues/1027
 %if %{with py2}
 pushd %{pretty_name}-%{version}-py2
-    PYTHONPATH=$RPM_BUILD_ROOT/%{python2_sitearch} nosetests-2
+    nosetests-2 $RPM_BUILD_ROOT/%{python2_sitearch}/%{srcname}/tests/
 popd
 %endif
 
 pushd %{pretty_name}-%{version}
-    PYTHONPATH=$RPM_BUILD_ROOT/%{python3_sitearch} nosetests-3
+    nosetests-3 $RPM_BUILD_ROOT/%{python3_sitearch}/%{srcname}/tests/
 popd
 %endif
 
