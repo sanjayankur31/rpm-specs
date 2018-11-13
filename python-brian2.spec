@@ -14,10 +14,6 @@
 # Documents disabled for the moment
 %bcond_with docs
 
-# For the time being, while cython builds do not work:
-# https://github.com/brian-team/brian2/issues/1026
-%global debug_package %{nil}
-
 %global desc %{expand: \
 Brian2 is a simulator for spiking neural networks available on almost all
 platforms. The motivation for this project is that a simulator should not only
@@ -132,9 +128,8 @@ pushd %{pretty_name}-%{version}
     # Remove this since it is only an issue on Windows systems
     sed -i 's|, !=4.0.0||' setup.py
 
-    # Remove exec and shebang
-    find examples -name "*.py" -print -exec sed -i '/^#!\/usr\/bin\/env python$/ d' '{}' \;
-    find examples -name "*" -print -exec chmod -v -x '{}' \;
+    # Correct shebang for examples
+    find examples -name "*.py" -print -exec sed -i 's|^#!/usr/bin/env python|#!/usr/bin/python3|' '{}' \;
 popd
 
 cp -r %{pretty_name}-%{version} %{pretty_name}-%{version}-py2
