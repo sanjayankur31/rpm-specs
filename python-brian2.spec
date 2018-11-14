@@ -5,7 +5,8 @@
 %bcond_without py2
 %endif
 
-# Tests hang koji...
+# Tests take a long time on koji. Have been tested locally, and issues
+# submitted upstream
 %bcond_with tests
 
 %global srcname brian2
@@ -169,14 +170,19 @@ popd
 # to convert to py3 during the build process and install the converted bits, so
 # we *must* point to the installed version for tests
 # https://github.com/brian-team/brian2/issues/1027
+export PYTHONDONTWRITEBYTECODE=1
 %if %{with py2}
 pushd %{pretty_name}-%{version}-py2
-    nosetests-2 $RPM_BUILD_ROOT/%{python2_sitearch}/%{srcname}/tests/
+    # remove since we dont want it to use this version
+    rm -rf %{srcname}
+    PYTHONPATH=$RPM_BUILD_ROOT/%{python2_sitearch}/ %{__python2} -c 'import brian2; brian2.test()'
 popd
 %endif
 
 pushd %{pretty_name}-%{version}
-    nosetests-3 $RPM_BUILD_ROOT/%{python3_sitearch}/%{srcname}/tests/
+    # remove since we dont want it to use this version
+    rm -rf %{srcname}
+    PYTHONPATH=$RPM_BUILD_ROOT/%{python3_sitearch}/ %{__python3} -c 'import brian2; brian2.test()'
 popd
 %endif
 
