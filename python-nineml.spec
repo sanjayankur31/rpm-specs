@@ -7,9 +7,7 @@
 %bcond_without py2
 %endif
 
-# Failing tests
-# https://github.com/INCF/nineml-python/issues/40
-%bcond_with tests
+%bcond_without tests
 
 # Docs fail to build:
 # https://github.com/INCF/nineml-python/issues/41
@@ -28,7 +26,7 @@ NineML specification.
 The NineML Python Library is a software package written in Python, which maps
 the NineML object model onto Python classes for convenient creation,
 manipulation and validation of NineML models, as well as handling their
-serialisation to and from XML, JSON, YAML, and HDF5.
+serialization to and from XML, JSON, YAML, and HDF5.
 
 Links
 - Online documentation: http://nineml-python.readthedocs.org
@@ -36,9 +34,12 @@ Links
 - Issue tracker: https://github.com/INCF/nineml-python/issues
 }
 
+# Enable automatic dep generator
+%{?python_enable_dependency_generator}
+
 Name:           python-%{srcname}
 Version:        1.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A tool for reading, writing and generally working with 9ML
 
 
@@ -46,6 +47,11 @@ License:        BSD
 URL:            https://github.com/INCF/nineml-python
 # Include tests and license
 Source0:        https://github.com/INCF/%{srcname}-python/archive/%{version}/%{srcname}-%{version}.tar.gz
+# Fixes failing tests
+Patch0:         0001-Fix-some-typos-in-documentation.patch
+Patch1:         0002-fixed-handling-of-c89-negation-when-using-tokenize-p.patch
+Patch2:         0003-removed-Python-3.3-support-as-Sympy-no-longer-suppor.patch
+
 BuildArch:      noarch
 
 BuildRequires:  hdf5-devel
@@ -63,10 +69,6 @@ BuildRequires:  %{py2_dist sympy}
 BuildRequires:  %{py2_dist h5py}
 BuildRequires:  %{py2_dist pyyaml}
 BuildRequires:  %{py2_dist lxml}
-Requires:       %{py2_dist sympy}
-Requires:       %{py2_dist h5py}
-Requires:       %{py2_dist pyyaml}
-Requires:       %{py2_dist lxml}
 %{?python_provide:%python_provide python2-%{srcname}}
 
 %description -n python2-%{srcname}
@@ -85,10 +87,6 @@ BuildRequires:  %{py3_dist sympy}
 BuildRequires:  %{py3_dist h5py}
 BuildRequires:  %{py3_dist pyyaml}
 BuildRequires:  %{py3_dist lxml}
-Requires:       %{py3_dist sympy}
-Requires:       %{py3_dist h5py}
-Requires:       %{py3_dist pyyaml}
-Requires:       %{py3_dist lxml}
 %{?python_provide:%python_provide python3-%{srcname}}
 
 %description -n python3-%{srcname}
@@ -98,17 +96,14 @@ Requires:       %{py3_dist lxml}
 Summary:    %{summary}
 
 %description doc
-Documentatation for %{name}.
+Documentation for %{name}.
 
 
 %prep
-%autosetup -n %{srcname}-python-%{version}
+%autosetup -n %{srcname}-python-%{version} -S git -p1
 rm -rf %{srcname}.egg-info
 
 sed -i '/^#!\/usr\/bin\/env python/ d' nineml/abstraction/connectionrule/base.py
-
-# https://github.com/INCF/nineml-python/issues/40
-sed -i 's/sympy.parsing.sympy_tokenize/tokenize/' nineml/abstraction/expressions/parser.py
 
 %build
 %py3_build
@@ -119,7 +114,7 @@ sed -i 's/sympy.parsing.sympy_tokenize/tokenize/' nineml/abstraction/expressions
 
 %if %{with api_docs}
 pushd doc
-    make html
+    SPHINXBUILD=sphinx-build-3 make html
     rm -rfv build/html/.buildinfo
     rm -rfv build/html/.doctrees
 popd
@@ -162,5 +157,11 @@ nosetests-%{python3_version}
 %endif
 
 %changelog
+* Thu Nov 15 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 1.0-2
+- Include test build fixes and enable tests
+- Fix typo
+- Use automatic dep generator
+- Specify sphinx-build-3
+
 * Wed Nov 14 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 1.0-1
 - Initial package
