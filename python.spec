@@ -50,6 +50,7 @@ Summary:        %{summary}
 
 %prep
 %autosetup -n %{srcname}-%{version}
+rm -rf %{srcname}.egg-info
 
 %build
 %py3_build
