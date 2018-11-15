@@ -1,64 +1,76 @@
+# https://fedoraproject.org/wiki/Packaging:DistTag?rd=Packaging/DistTag#Conditionals
+%if 0%{?fedora} >= 30
+%bcond_with py2
+%else
+%bcond_without py2
+%endif
+
+
 Name:		vxl	
 Version:	1.18.0	
 Release:	1%{?dist}
 Summary:	C++ Libraries for Computer Vision Research and Implementation
 License:	BSD
 URL:		https://sf.net/projects/vxl/
+
+# Source0:   https://github.com/vxl/vxl/archive/v%{version}/%{name}-%{version}.tar.gz
 # Need to remove the non-free lena image from the sources
 # tar xf vxl-1.18.0.tar.gz
 # rm -rf vxl-1.18.0/contrib/prip/vdtop/tests/lena.org.pgm 
 # tar cfz vxl-1.18.0-clean.tar.gz vxl-1.18.0/
-#Source0:   https://github.com/vxl/vxl/archive/v%{version}/%{name}-%{version}.tar.gz
 Source0:	%{name}-%{version}-clean.tar.gz
+
+# Patches from this branch that is based on the 1.18.0 release
+# https://github.com/sanjayankur31/vxl/tree/fedora-tweaks
+
 # Fedora has a distribution-specific include dir
-Patch1:		0001-Added-include-path-for-geotiff.patch
-Patch2:		0002-Added-soname-info-for-core-libraries.patch
+# Patch1:		0001-Added-include-path-for-geotiff.patch
+# Patch2:		0002-Added-soname-info-for-core-libraries.patch
 # Use system rply and don't use mpeg2
-Patch3:		0003-Use-system-rply.patch
-Patch4:		0004-Added-more-soname.patch
-Patch5:		0005-Do-not-build-OUL.patch
-Patch6:		0006-BUG-rplyConfig.cmake-has-wrong-include-path.patch
-Patch7:		0007-Arguments-of-ply_open-and-create-changed.-Thanks-to-.patch
-Patch8:		0008-More-sonames.patch
-Patch9:		0009-Bumped-up-version-to-1.14.patch
-#TODO: Refers to contrib and is therefore not correct
-Patch10:	0010-Use-system-FindEXPAT.patch
-Patch11:	0011-Do-not-use-bundled-minizip.patch
-Patch12:	0012-Added-Coin3D-Submitted-by-Volker-Frohlich.patch
-Patch13:	0013-Added-SIMVoleon-Submitted-by-Volker-Frohlich.patch
-Patch14:	0014-Added-additional-search-path-for-xerces-Submitted-by.patch
-Patch15:	0015-Manage-KL-library-Submitted-by-Volker-Frohlich.patch
-Patch16:	0016-Manage-KL-library-2-2-Submitted-by-Volker-Frohlich.patch
-Patch17:	0017-Add-sonames-to-vpgl-lib.patch
-Patch18:	0018-Added-sonames-to-vgui-vidl-vpdl-Qv-libs.patch
-Patch19:	0019-Removed-box2m-which-requires-OpenCL-libraries.patch
-Patch20:	0020-Included-missing-vcl_cstdio.h-header.patch
-Patch21:	0021-Use-expatpp.h-which-is-provided-by-fedora-repos.patch
-Patch22:	0022-Include-missing-vcl_cstdio.h-header.patch
-Patch23:	0023-Remove-volm-because-of-error-in-function-prototype.patch
-Patch24:	0024-Added-missing-sonames-for-mvl2-and-vepl1.patch
-Patch25:	0025-Legacy-def1-r35963.patch
-Patch26:	0026-Legacy-def2-r36001.patch
+Patch3:		0001-vxl-1.18.0-Unbundle-rply.patch
+# Patch4:		0004-Added-more-soname.patch
+# Patch5:		0005-Do-not-build-OUL.patch
+# Patch6:		0006-BUG-rplyConfig.cmake-has-wrong-include-path.patch
+# Patch7:		0007-Arguments-of-ply_open-and-create-changed.-Thanks-to-.patch
+# Patch8:		0008-More-sonames.patch
+# Patch9:		0009-Bumped-up-version-to-1.14.patch
+# #TODO: Refers to contrib and is therefore not correct
+Patch10:	0002-vxl-1.18.0-Use-Fedora-FindEXPAT.patch
+Patch11:	0003-vxl-1.18.0-Use-Fedora-minizip.patch
+# Patch12:	0012-Added-Coin3D-Submitted-by-Volker-Frohlich.patch
+# Patch13:	0013-Added-SIMVoleon-Submitted-by-Volker-Frohlich.patch
+# Patch14:	0014-Added-additional-search-path-for-xerces-Submitted-by.patch
+# Patch15:	0015-Manage-KL-library-Submitted-by-Volker-Frohlich.patch
+# Patch16:	0016-Manage-KL-library-2-2-Submitted-by-Volker-Frohlich.patch
+# Patch17:	0017-Add-sonames-to-vpgl-lib.patch
+# Patch18:	0018-Added-sonames-to-vgui-vidl-vpdl-Qv-libs.patch
+# Patch19:	0019-Removed-box2m-which-requires-OpenCL-libraries.patch
+# Patch20:	0020-Included-missing-vcl_cstdio.h-header.patch
+# Patch21:	0021-Use-expatpp.h-which-is-provided-by-fedora-repos.patch
+# Patch22:	0022-Include-missing-vcl_cstdio.h-header.patch
+# Patch23:	0023-Remove-volm-because-of-error-in-function-prototype.patch
+# Patch24:	0024-Added-missing-sonames-for-mvl2-and-vepl1.patch
+# Patch25:	0025-Legacy-def1-r35963.patch
+# Patch26:	0026-Legacy-def2-r36001.patch
+#
+# Patch50:        vxl-0.17.0-gcc5.diff
+# Patch51:	vxl-1.17.0-gcc6.patch
+#
+# Patch100:	%{name}-1.17.0-secondary.patch
 
-Patch50:        vxl-0.17.0-gcc5.diff
-Patch51:	vxl-1.17.0-gcc6.patch
-
-Patch100:	%{name}-1.17.0-secondary.patch
-
-#KL is used in an "UNMAINTAINED_LIBRARY", vgel is only built on request
-
-Buildroot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-
+Patch101:	0004-vxl-1.18.0-Correct-dcmtk-includes.patch
+#
+BuildRequires:  git
 BuildRequires:  gcc
 BuildRequires:  gcc-c++
 BuildRequires:	cmake 
 BuildRequires:	doxygen
-BuildRequires:	expat-devel
+BuildRequires:	graphviz
 BuildRequires:	Coin2-devel
 BuildRequires:	dcmtk-devel
-BuildRequires:	doxygen
 BuildRequires:	expat-devel
 BuildRequires:	expatpp-devel
+BuildRequires:	openjpeg2-devel
 BuildRequires:	freeglut-devel
 BuildRequires:	klt-devel
 BuildRequires:	libpng-devel
@@ -109,12 +121,12 @@ You should install this package if you would like to
 develop code based on VXL.
 
 %prep
-%autosetup -N
+%autosetup -S git -p1
 
 #Remove bundled library (let's use FEDORA's ones)
 # v3p/netlib (made by f2c) dependency not removed because of heavily modifications
 # QV is a Silicon Graphics' VRML parser from the 90s. Now unmantained.
-for l in jpeg png zlib tiff geotiff rply dcmtk bzlib
+for l in jpeg png zlib tiff geotiff dcmtk bzlib
 do
 	find v3p/$l -type f ! -name 'CMakeLists.txt' -execdir rm {} +
 done
@@ -122,7 +134,6 @@ done
 find contrib/brl/b3p/shapelib -type f ! -name 'CMakeLists.txt' -execdir rm {} +
 find contrib/brl/b3p/minizip -type f ! -name 'CMakeLists.txt' -execdir rm {} +
 find contrib/brl/b3p/expat -type f ! -name 'CMakeLists.txt' -execdir rm {} +
-find contrib/gel/vgel/kl -type f ! -name 'CMakeLists.txt' -execdir rm {} +
 find contrib/brl/b3p/expatpp -type f ! -name 'CMakeLists.txt' -execdir rm {} +
 
 # v3p/mpeg2 lib in fedora is not enough to build the target. Moreover it is in rpmfusion repo
@@ -130,44 +141,45 @@ find contrib/brl/b3p/expatpp -type f ! -name 'CMakeLists.txt' -execdir rm {} +
 #TODO: Various
 #vxl-devel.x86_64: E: invalid-soname /usr/lib64/libvvid.so libvvid.so
 
-%patch1 -p1
-%patch2 -p1
-%patch3 -p1
-%patch4 -p1
-%patch5 -p1
-%patch6 -p1
-%patch7 -p1
-%patch8 -p1
-%patch9 -p1
-%patch10 -p1
-%patch11 -p1
-%patch12 -p1
-%patch13 -p1
-%patch14 -p1
-%patch15 -p1
-%patch16 -p1
-%patch17 -p1
-%patch18 -p1
-%patch19 -p1
-%patch20 -p1
-%patch21 -p1
-%patch22 -p1
-%patch23 -p1
-%patch24 -p1
-%patch25 -p1
-%patch26 -p1
-%patch50 -p1
-%patch51 -p1 -b .gcc6
-%patch100 -p1 -b .secondary
 
-
+# %patch1 -p1
+# %patch2 -p1
+# %patch3 -p1
+# %patch4 -p1
+# %patch5 -p1
+# %patch6 -p1
+# %patch7 -p1
+# %patch8 -p1
+# %patch9 -p1
+# %patch10 -p1
+# %patch11 -p1
+# %patch12 -p1
+# %patch13 -p1
+# %patch14 -p1
+# %patch15 -p1
+# %patch16 -p1
+# %patch17 -p1
+# %patch18 -p1
+# %patch19 -p1
+# %patch20 -p1
+# %patch21 -p1
+# %patch22 -p1
+# %patch23 -p1
+# %patch24 -p1
+# %patch25 -p1
+# %patch26 -p1
+# %patch50 -p1
+# %patch51 -p1 -b .gcc6
+# %patch100 -p1 -b .secondary
+#
+#
 #Fix lib / lib64 problem during install:
 find . -name CMakeLists.txt -exec sed -i "s/INSTALL_TARGETS([ ]*\/lib/INSTALL_TARGETS(\/lib\$\{LIB_SUFFIX\}/;" {} +
 
 # Fix executable permissions on source file
-find . -name "*.h" | xargs chmod ugo-x
-find . -name "*.cxx" | xargs chmod ugo-x
-find . -name "*.txx" | xargs chmod ugo-x
+# find . -name "*.h" | xargs chmod ugo-x
+# find . -name "*.cxx" | xargs chmod ugo-x
+# find . -name "*.txx" | xargs chmod ugo-x
 
 %build
 %cmake -DCMAKE_VERBOSE_MAKEFILE=ON \
@@ -218,18 +230,15 @@ find . -name "*.txx" | xargs chmod ugo-x
 #TODO: Testing?
 #BR: coin2, coin3 (coin3d) brl, bbas
 
-make %{?_smp_mflags}
+%make_build
 
 %install
-rm -rf $RPM_BUILD_ROOT
-make install DESTDIR=$RPM_BUILD_ROOT
+%make_install
 
 %check
 ctest .
 
-%post -p /sbin/ldconfig
-
-%postun -p /sbin/ldconfig
+%ldconfig_scriptlets
 
 %files
 %doc core/vxl_copyright.h
@@ -249,6 +258,16 @@ ctest .
 
 
 %changelog
+* Thu Nov 15 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 1.18.0-1
+- Update to latest release from Github
+- Update macros
+- Remove unused tags
+- Remove kl deletion (no longer in source)
+- Refresh find expat patch
+- Refresh unbundle rply patch
+- Refresh minizip patch
+- Add dcmtk patch
+
 * Tue Aug 28 2018 Patrik Novotný <panovotn@redhat.com> - 1.17.0-28
 - change requires to minizip-compat(-devel), rhbz#1609830, rhbz#1615381
 
