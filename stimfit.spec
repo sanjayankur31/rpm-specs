@@ -10,6 +10,10 @@
 # disabled to begin with
 %bcond_with tests
 
+# In review, not yet packaged
+# currently using bundled biosiglite
+%bcond_with biosig
+
 %global desc %{expand: \
 Stimfit is a free, fast and simple program for viewing and analyzing
 electrophysiological data. It features an embedded Python shell that allows you
@@ -20,7 +24,7 @@ graphical user interface is also available.
 Please cite the following publication when you use Stimfit for your research:
 
 Guzman SJ, Schlögl A, Schmidt-Hieber C (2014) Stimfit: quantifying
-electrophysiological data with Python. Front Neuroinform 
+electrophysiological data with Python. Front Neuroinform
 doi:10.3389/fninf.2014.00016}
 
 
@@ -35,9 +39,18 @@ Source0:        https://github.com/neurodroid/%{name}/archive/v%{version}windows
 
 BuildRequires:  autoconf
 BuildRequires:  automake
-BuildRequires:  gcc
-# Not yet packaged
-# BuildRequires:  biosig4c++-devel
+BuildRequires:  libtool
+BuildRequires:  gcc-c++
+BuildRequires:  swig
+BuildRequires:  fftw-devel
+BuildRequires:  lapack-devel
+BuildRequires:  wxGTK-devel
+BuildRequires:  suitesparse-devel
+BuildRequires:  boost-devel
+BuildRequires:  wxPython-devel
+%if %{with biosig}
+BuildRequires:  biosig4c++-devel
+%endif
 BuildRequires:  hdf5-devel
 
 %description
@@ -47,6 +60,7 @@ BuildRequires:  hdf5-devel
 %package -n python2-%{name}
 Summary:        %{summary}
 BuildRequires:  python2-devel
+BuildRequires:  %{py2_dist numpy}
 %{?python_provide:%python_provide python2-%{name}}
 
 %description -n python2-%{name}
@@ -56,6 +70,7 @@ BuildRequires:  python2-devel
 %package -n python3-%{name}
 Summary:        %{summary}
 BuildRequires:  python3-devel
+BuildRequires:  %{py3_dist numpy}
 %{?python_provide:%python_provide python3-%{name}}
 
 %description -n python3-%{name}
@@ -63,7 +78,17 @@ BuildRequires:  python3-devel
 
 
 %prep
-%autosetup -n -c %{name}-%{version}
+%autosetup -c -n %{name}-%{version}
+
+# Correct wxpython header location
+pushd %{name}-%{version}windows
+for f in "src/stimfit/py/pystf.cxx" "src/stimfit/gui/app.h" "src/stimfit/gui/unopt.cpp"
+do
+    sed -i 's|#include <wx/wxPython/wxpy_api.h>|#include <wx-3.0/wx/wxPython/wxPython.h>|' $f
+done
+popd
+
+
 %if %{with py2}
 cp -r %{name}-%{version}windows %{name}-%{version}windows-py2
 %endif
@@ -72,7 +97,11 @@ cp -r %{name}-%{version}windows %{name}-%{version}windows-py2
 pushd %{name}-%{version}windows
     ./autogen.sh
     export PYTHON_VERSION=%{python3_version}
+%if %{with biosig}
     %configure --enable-python --with-biosig
+%else
+    %configure --enable-python --with-biosiglite
+%endif
     %{make_build}
 popd
 
@@ -80,7 +109,12 @@ popd
 pushd %{name}-%{version}windows-py2
     ./autogen.sh
     export PYTHON_VERSION=%{python3_version}
+%if %{with biosig}
     %configure --enable-python --with-biosig
+%else
+    %configure --enable-python --with-biosiglite
+%endif
+    %{make_build}
 popd
 %endif
 %install
