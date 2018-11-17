@@ -44,10 +44,9 @@ BuildRequires:  gcc-c++
 BuildRequires:  swig
 BuildRequires:  fftw-devel
 BuildRequires:  lapack-devel
-BuildRequires:  wxGTK-devel
 BuildRequires:  suitesparse-devel
 BuildRequires:  boost-devel
-BuildRequires:  wxPython-devel
+BuildRequires:  wxBase3-devel
 %if %{with biosig}
 BuildRequires:  biosig4c++-devel
 %endif
@@ -60,6 +59,7 @@ BuildRequires:  hdf5-devel
 %package -n python2-%{name}
 Summary:        %{summary}
 BuildRequires:  python2-devel
+BuildRequires:  wxPython-devel
 BuildRequires:  %{py2_dist numpy}
 %{?python_provide:%python_provide python2-%{name}}
 
@@ -81,16 +81,16 @@ BuildRequires:  %{py3_dist numpy}
 %autosetup -c -n %{name}-%{version}
 
 # Correct wxpython header location
-pushd %{name}-%{version}windows
+
+
+%if %{with py2}
+cp -r %{name}-%{version}windows %{name}-%{version}windows-py2
+pushd %{name}-%{version}windows-py2
 for f in "src/stimfit/py/pystf.cxx" "src/stimfit/gui/app.h" "src/stimfit/gui/unopt.cpp"
 do
     sed -i 's|#include <wx/wxPython/wxpy_api.h>|#include <wx-3.0/wx/wxPython/wxPython.h>|' $f
 done
 popd
-
-
-%if %{with py2}
-cp -r %{name}-%{version}windows %{name}-%{version}windows-py2
 %endif
 
 %build
@@ -98,9 +98,9 @@ pushd %{name}-%{version}windows
     ./autogen.sh
     export PYTHON_VERSION=%{python3_version}
 %if %{with biosig}
-    %configure --enable-python --with-biosig
+    %configure --enable-python --with-biosig --with-wx-config=%{_bindir}/wx-config-3.0
 %else
-    %configure --enable-python --with-biosiglite
+    %configure --enable-python --with-biosiglite --with-wx-config=%{_bindir}/wx-config-3.0
 %endif
     %{make_build}
 popd
@@ -110,9 +110,9 @@ pushd %{name}-%{version}windows-py2
     ./autogen.sh
     export PYTHON_VERSION=%{python3_version}
 %if %{with biosig}
-    %configure --enable-python --with-biosig
+    %configure --enable-python --with-biosig --with-wx-config=%{_bindir}/wx-config-3.0
 %else
-    %configure --enable-python --with-biosiglite
+    %configure --enable-python --with-biosiglite --with-wx-config=%{_bindir}/wx-config-3.0
 %endif
     %{make_build}
 popd
