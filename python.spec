@@ -20,12 +20,13 @@ Version:        1.2.3
 Release:        1%{?dist}
 Summary:        An example python module
 
-License:        MIT
+License:
 URL:            https://pypi.python.org/pypi/%{srcname}
 Source0:        %pypi_source
 
 BuildArch:      noarch
-BuildRequires:  python3-devel
+
+%{?python_enable_dependency_generator}
 
 %description
 %{desc}
@@ -33,7 +34,7 @@ BuildRequires:  python3-devel
 %if %{with py2}
 %package -n python2-%{srcname}
 Summary:        %{summary}
-BuildRequires:  python2-devel 
+BuildRequires:  python2-devel
 %{?python_provide:%python_provide python2-%{srcname}}
 
 %description -n python2-%{srcname}
@@ -42,6 +43,7 @@ BuildRequires:  python2-devel
 
 %package -n python3-%{srcname}
 Summary:        %{summary}
+BuildRequires:  python3-devel
 %{?python_provide:%python_provide python3-%{srcname}}
 
 %description -n python3-%{srcname}
