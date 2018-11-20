@@ -4,7 +4,7 @@
 # disabled by default
 %bcond_with py2
 %else
-%bcond_without py2 0
+%bcond_without py2
 %endif
 
 # disabled to begin with
