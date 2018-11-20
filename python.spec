@@ -44,11 +44,18 @@ BuildRequires:  python2-devel
 %package -n python3-%{srcname}
 Summary:        %{summary}
 BuildRequires:  python3-devel
+# For documentation
+BuildRequires:  %{py3_dist sphinx}
 %{?python_provide:%python_provide python3-%{srcname}}
 
 %description -n python3-%{srcname}
 %{desc}
 
+%package doc
+Summary:        %{summary}
+
+%description doc
+Documentation for %{name}.
 
 %prep
 %autosetup -n %{srcname}-%{version}
@@ -60,6 +67,12 @@ rm -rf %{srcname}.egg-info
 %if %{with py2}
 %py2_build
 %endif
+
+pushd doc
+    make SPHINXBUILD=sphinx-build-3 html
+    rm -rf _build/html/.doctrees
+    rm -rf _build/html/.buildinfo
+popd
 
 %install
 # Must do the python2 install first because the scripts in /usr/bin are
@@ -85,15 +98,18 @@ rm -rf %{srcname}.egg-info
 %files -n python2-%{srcname}
 %license COPYING
 %doc README.rst
-# update this, wild cards are now forbidden
-%{python2_sitelib}/*
+%{python2_sitelib}/%{srcname}-%{version}-py2.?.egg-info
+%{python2_sitelib}/%{srcname}
 %endif
 
 %files -n python3-%{srcname}
 %license COPYING
 %doc README.rst
-# update this, wild cards are now forbidden
-%{python3_sitelib}/*
-%{_bindir}/sample-exec
+%{python3_sitelib}/%{srcname}-%{version}-py3.?.egg-info
+%{python3_sitelib}/%{srcname}
+
+%files doc
+%license COPYING
+%doc doc/_build/html
 
 %changelog
