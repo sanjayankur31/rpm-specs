@@ -7,22 +7,22 @@
 %bcond_without py2
 %endif
 
-# disabled to begin with
-%bcond_with tests
+# Enabled by default
+%bcond_without tests
 
-%global srcname example
+%global pypi_name example
 
 %global desc %{expand: \
 Add a description here.}
 
-Name:           python-%{srcname}
+Name:           python-%{pypi_name}
 Version:        1.2.3
 Release:        1%{?dist}
 Summary:        An example python module
 
 License:
-URL:            https://pypi.python.org/pypi/%{srcname}
-Source0:        %pypi_source
+URL:            https://pypi.python.org/pypi/%{pypi_name}
+Source0:        %pypi_source %{pypi_name}
 
 BuildArch:      noarch
 
@@ -32,23 +32,23 @@ BuildArch:      noarch
 %{desc}
 
 %if %{with py2}
-%package -n python2-%{srcname}
+%package -n python2-%{pypi_name}
 Summary:        %{summary}
 BuildRequires:  python2-devel
-%{?python_provide:%python_provide python2-%{srcname}}
+%{?python_provide:%python_provide python2-%{pypi_name}}
 
-%description -n python2-%{srcname}
+%description -n python2-%{pypi_name}
 %{desc}
 %endif
 
-%package -n python3-%{srcname}
+%package -n python3-%{pypi_name}
 Summary:        %{summary}
 BuildRequires:  python3-devel
 # For documentation
 BuildRequires:  %{py3_dist sphinx}
-%{?python_provide:%python_provide python3-%{srcname}}
+%{?python_provide:%python_provide python3-%{pypi_name}}
 
-%description -n python3-%{srcname}
+%description -n python3-%{pypi_name}
 %{desc}
 
 %package doc
@@ -58,8 +58,8 @@ Summary:        %{summary}
 Documentation for %{name}.
 
 %prep
-%autosetup -n %{srcname}-%{version}
-rm -rf %{srcname}.egg-info
+%autosetup -n %{pypi_name}-%{version}
+rm -rf %{pypi_name}.egg-info
 
 %build
 %py3_build
@@ -95,18 +95,18 @@ popd
 %endif
 
 %if %{with py2}
-%files -n python2-%{srcname}
+%files -n python2-%{pypi_name}
 %license COPYING
 %doc README.rst
-%{python2_sitelib}/%{srcname}-%{version}-py2.?.egg-info
-%{python2_sitelib}/%{srcname}
+%{python2_sitelib}/%{pypi_name}-%{version}-py2.?.egg-info
+%{python2_sitelib}/%{pypi_name}
 %endif
 
-%files -n python3-%{srcname}
+%files -n python3-%{pypi_name}
 %license COPYING
 %doc README.rst
-%{python3_sitelib}/%{srcname}-%{version}-py3.?.egg-info
-%{python3_sitelib}/%{srcname}
+%{python3_sitelib}/%{pypi_name}-%{version}-py3.?.egg-info
+%{python3_sitelib}/%{pypi_name}
 
 %files doc
 %license COPYING
