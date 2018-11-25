@@ -1,7 +1,3 @@
-# Does not yet support neuron which is not packaged yet
-
-# Not noarch since it depends on arch versions of NEST/Brian and so on
-
 # https://fedoraproject.org/wiki/Packaging:DistTag?rd=Packaging/DistTag#Conditionals
 # http://rpm.org/user_doc/conditional_builds.html
 %if 0%{?fedora} >= 30
@@ -13,18 +9,19 @@
 
 # Since nest-config varies for these environments
 # Does not affect brian, which is MPI free
+# Also no brian mpich/openmpi sub packages for this reason
 %bcond_with mpich
 %bcond_with openmpi
 
 # Tests
 %bcond_with tests
 
-# Currently doesn't build: issue filed upstream
+# nest extensions don't build: issue filed upstream
 # https://github.com/NeuralEnsemble/PyNN/issues/611
-%bcond_with nest
+%bcond_with nestext
 
 # Neuron has not yet been packaged
-%bcond_with neuron
+%bcond_with neuronext
 
 %bcond_with docs
 
@@ -69,115 +66,275 @@ URL:            http://neuralensemble.org/%{pypi_name}/
 Source0:        %pypi_source %{pypi_name}
 Patch0:         %{pypi_name}-0.9.2-disable-extensions.patch
 
+%if %{with nestext}
 BuildRequires:  cmake
 BuildRequires:  gcc-c++
 BuildRequires:  gsl-devel
+%endif
+
+
+# If neither nest nor neuron are being built, this is a noarch package
+%if !%{with nestext} && !%{with neuronext}
+BuildArch:      noarch
+%endif
+
+%if %{with mpich} || %{with openmpi}
+BuildRequires:  rpm-mpi-hooks
+%endif
+
+%if %{with mpich}
+BuildRequires:  mpich-devel
+%endif
+
+%if %{with openmpi}
+BuildRequires:  openmpi-devel
+%endif
 
 %{?python_enable_dependency_generator}
 
 %description
 %{desc}
 
-%if %{with py2}
-%package -n python2-%{pypi_name}
-Summary:        %{summary}
-BuildRequires:  python2-devel
-BuildRequires:  nest
-BuildRequires:  nest-headers
-Recommends:     %{py2_dist nest}
-Recommends:     %{py2_dist brain}
-%{?python_provide:%python_provide python2-%{pypi_name}}
-
-%description -n python2-%{pypi_name}
-%{desc}
-%endif
-
-%package -n python3-%{pypi_name}
-Summary:        %{summary}
-BuildRequires:  python3-devel
-BuildRequires:  nest
-BuildRequires:  nest-headers
-Recommends:     %{py3_dist nest}
-Recommends:     %{py3_dist brain}
-%if %{with docs}
-BuildRequires:  %{py3_dist sphinx}
-%endif
-%{?python_provide:%python_provide python3-%{pypi_name}}
-
-%description -n python3-%{pypi_name}
-%{desc}
-
 %package doc
 Summary:        %{summary}
 BuildArch:      noarch
+BuildRequires:  %{py3_dist sphinx}
+BuildRequires:  %{py3_dist jinja2}
 
 %description doc
 Documentation for %{name}.
 
+%if %{with py2}
+%package -n python2-%{pypi_name}-common
+Summary:        %{summary}
+BuildArch:      noarch
+BuildRequires:  python2-devel
+
+%description -n python2-%{pypi_name}-common
+Common files for python2-%{pypi_name}.
+
+%{?python_provide:%python_provide python2-%{pypi_name}-common}
+
+%package -n python2-%{pypi_name}-nest
+Summary:        %{summary}
+BuildRequires:  nest
+BuildRequires:  nest-headers
+Requires:     %{py2_dist nest}
+Requires:     python2-%{pypi_name}-common
+
+%description -n python2-%{pypi_name}-nest
+%{pypi_name} files for the NEST simulator.
+
+%{?python_provide:%python_provide python2-%{pypi_name}-nest}
+
+%package -n python2-%{pypi_name}-neuron
+Summary:        %{summary}
+%if %{with neuronext}
+BuildRequires:  neuron
+%endif
+Requires:     %{py2_dist neuron}
+Requires:     python2-%{pypi_name}-common
+
+%description -n python2-%{pypi_name}-neuron
+%{pypi_name} files for the NEURON simulator.
+
+%{?python_provide:%python_provide python2-%{pypi_name}-neuron}
+
+%package -n python2-%{pypi_name}-brian
+Summary:      %{summary}
+BuildArch:      noarch
+Requires:     %{py2_dist brian}
+Requires:     python2-%{pypi_name}-common
+
+%description -n python2-%{pypi_name}-brian
+%{pypi_name} files for the Brian simulator.
+
+%{?python_provide:%python_provide python2-%{pypi_name}-brian}
+
+%package -n python2-%{pypi_name}-nineml
+Summary:      %{summary}
+BuildArch:      noarch
+Requires:     %{py2_dist nineml}
+Requires:     python2-%{pypi_name}-common
+
+%description -n python2-%{pypi_name}-nineml
+%{pypi_name} files for NineML.
+
+%{?python_provide:%python_provide python2-%{pypi_name}-nineml}
+%endif # py2
+
+%package -n python3-%{pypi_name}-common
+Summary:        %{summary}
+BuildArch:      noarch
+BuildRequires:  python3-devel
+
+%description -n python3-%{pypi_name}-common
+Common files for python3-%{pypi_name}.
+
+%{?python_provide:%python_provide python3-%{pypi_name}-common}
+
+%package -n python3-%{pypi_name}-nest
+Summary:        %{summary}
+BuildRequires:  nest
+BuildRequires:  nest-headers
+Requires:     %{py3_dist nest}
+Requires:     python3-%{pypi_name}-common
+
+%description -n python3-%{pypi_name}-nest
+%{pypi_name} files for the NEST simulator.
+
+%{?python_provide:%python_provide python3-%{pypi_name}-nest}
+
+%package -n python3-%{pypi_name}-neuron
+Summary:        %{summary}
+%if %{with neuronext}
+BuildRequires:  neuron
+%endif
+Requires:     %{py3_dist neuron}
+Requires:     python3-%{pypi_name}-common
+
+%description -n python3-%{pypi_name}-neuron
+%{pypi_name} files for the NEURON simulator.
+
+%{?python_provide:%python_provide python3-%{pypi_name}-neuron}
+
+%package -n python3-%{pypi_name}-brian
+Summary:      %{summary}
+BuildArch:      noarch
+Requires:     %{py3_dist brian}
+Requires:     python3-%{pypi_name}-common
+
+%description -n python3-%{pypi_name}-brian
+%{pypi_name} files for the Brian simulator.
+
+%{?python_provide:%python_provide python3-%{pypi_name}-brian}
+
+%package -n python3-%{pypi_name}-nineml
+Summary:      %{summary}
+BuildArch:      noarch
+Requires:     %{py3_dist nineml}
+Requires:     python3-%{pypi_name}-common
+
+%description -n python3-%{pypi_name}-nineml
+%{pypi_name} files for NineML.
+
+%{?python_provide:%python_provide python3-%{pypi_name}-nineml}
+
+# mpich
 %if %{with mpich}
 %if %{with py2}
-%package -n python2-%{pypi_name}-mpich
+%package -n python2-%{pypi_name}-nest-mpich
 Summary:        %{summary}
-BuildRequires:  python2-devel
-BuildRequires:  rpm-mpi-hooks
 BuildRequires:  nest-mpich
 BuildRequires:  nest-mpich-headers
-Requires:       %{py2_dist mpi4py-mpich}
-Recommends:     %{py2_dist nest-mpich}
-Recommends:     %{py2_dist brain}
-%{?python_provide:%python_provide python2-%{pypi_name}-mpich}
+Requires:     %{py2_dist nest-mpich}
+Requires:     python2-%{pypi_name}-common
 
-%description -n python2-%{pypi_name}
-%{desc}
-%endif
+%description -n python2-%{pypi_name}-nest-mpich
+%{pypi_name} files for the NEST simulator.
 
-%package -n python3-%{pypi_name}-mpich
+%{?python_provide:%python_provide python2-%{pypi_name}-nest-mpich}
+
+%package -n python2-%{pypi_name}-neuron-mpich
 Summary:        %{summary}
-BuildRequires:  python3-devel
-BuildRequires:  rpm-mpi-hooks
+%if %{with neuronext}
+BuildRequires:  neuron
+%endif
+Requires:     %{py2_dist neuron}
+Requires:     python2-%{pypi_name}-common
+
+%description -n python2-%{pypi_name}-neuron-mpich
+%{pypi_name} files for the NEURON simulator.
+
+%{?python_provide:%python_provide python2-%{pypi_name}-neuron-mpich}
+
+%endif # py2
+
+
+%package -n python3-%{pypi_name}-nest-mpich
+Summary:        %{summary}
 BuildRequires:  nest-mpich
 BuildRequires:  nest-mpich-headers
-Requires:       %{py3_dist mpi4py-mpich}
-Recommends:     %{py3_dist nest-mpich}
-Recommends:     %{py3_dist brain}
-%{?python_provide:%python_provide python3-%{pypi_name}-mpich}
+Requires:     %{py3_dist nest-mpich}
+Requires:     python3-%{pypi_name}-common
 
-%description -n python3-%{pypi_name}-mpich
-%{desc}
+%description -n python3-%{pypi_name}-nest-mpich
+%{pypi_name} files for the NEST simulator.
+
+%{?python_provide:%python_provide python3-%{pypi_name}-nest-mpich}
+
+%package -n python3-%{pypi_name}-neuron-mpich
+Summary:        %{summary}
+%if %{with neuronext}
+BuildRequires:  neuron
 %endif
+Requires:     %{py3_dist neuron}
+Requires:     python3-%{pypi_name}-common
 
+%description -n python3-%{pypi_name}-neuron-mpich
+%{pypi_name} files for the NEURON simulator.
+
+%{?python_provide:%python_provide python3-%{pypi_name}-neuron-mpich}
+
+%endif # mpich
+
+# openmpi
 %if %{with openmpi}
 %if %{with py2}
-%package -n python2-%{pypi_name}-openmpi
+%package -n python2-%{pypi_name}-nest-openmpi
 Summary:        %{summary}
-BuildRequires:  python2-devel
-BuildRequires:  rpm-mpi-hooks
 BuildRequires:  nest-openmpi
 BuildRequires:  nest-openmpi-headers
-Requires:       %{py2_dist mpi4py-openmpi}
-Recommends:     %{py2_dist nest-openmpi}
-Recommends:     %{py2_dist brain}
-%{?python_provide:%python_provide python2-%{pypi_name}-openmpi}
+Requires:     %{py2_dist nest-openmpi}
+Requires:     python2-%{pypi_name}-common
 
-%description -n python2-%{pypi_name}
-%{desc}
-%endif
+%description -n python2-%{pypi_name}-nest-openmpi
+%{pypi_name} files for the NEST simulator.
 
-%package -n python3-%{pypi_name}-openmpi
+%{?python_provide:%python_provide python2-%{pypi_name}-nest-openmpi}
+
+%package -n python2-%{pypi_name}-neuron-openmpi
 Summary:        %{summary}
-BuildRequires:  python3-devel
-BuildRequires:  rpm-mpi-hooks
+%if %{with neuronext}
+BuildRequires:  neuron
+%endif
+Requires:     %{py2_dist neuron}
+Requires:     python2-%{pypi_name}-common
+
+%description -n python2-%{pypi_name}-neuron-openmpi
+%{pypi_name} files for the NEURON simulator.
+
+%{?python_provide:%python_provide python2-%{pypi_name}-neuron-openmpi}
+
+%endif # py2
+
+
+%package -n python3-%{pypi_name}-nest-openmpi
+Summary:        %{summary}
 BuildRequires:  nest-openmpi
 BuildRequires:  nest-openmpi-headers
-Requires:       %{py3_dist mpi4py-openmpi}
-Recommends:     %{py3_dist nest-openmpi}
-Recommends:     %{py3_dist brain}
-%{?python_provide:%python_provide python3-%{pypi_name}-openmpi}
+Requires:     %{py3_dist nest-openmpi}
+Requires:     python3-%{pypi_name}-common
 
-%description -n python3-%{pypi_name}-openmpi
-%{desc}
+%description -n python3-%{pypi_name}-nest-openmpi
+%{pypi_name} files for the NEST simulator.
+
+%{?python_provide:%python_provide python3-%{pypi_name}-nest-openmpi}
+
+%package -n python3-%{pypi_name}-neuron-openmpi
+Summary:        %{summary}
+%if %{with neuronext}
+BuildRequires:  neuron
 %endif
+Requires:     %{py3_dist neuron}
+Requires:     python3-%{pypi_name}-common
 
+%description -n python3-%{pypi_name}-neuron-openmpi
+%{pypi_name} files for the NEURON simulator.
+
+%{?python_provide:%python_provide python3-%{pypi_name}-neuron-openmpi}
+
+%endif # openmpi
 
 %prep
 # Different copies for mpich and openmpi and serial
@@ -206,14 +363,14 @@ cp -r %{pypi_name}-%{version} %{pypi_name}-%{version}-openmpi
 pushd %{pypi_name}-%{version}$PKG_VARIANT
     %py3_build
 
-%if %{with neuron}
+%if %{with neuronext}
     pushd %{mod_name}/neuron/nmodl || exit 1
         %{set_build_flags}
         $MPI_BIN/nrnivmodl
     popd
 %endif
 
-%if %{with nest}
+%if %{with nestext}
     pushd %{mod_name}/nest/extensions || exit 1
         %{set_build_flags}
         cmake \\\
@@ -259,8 +416,6 @@ pushd %{pypi_name}-%{version}
 popd
 %endif
 
-popd
-
 %if %{with mpich}
 %{_mpich_load}
 NEST_LOC=$MPI_BIN
@@ -284,9 +439,11 @@ PKG_VARIANT="-openmpi"
 pushd %{pypi_name}-%{version}$PKG_VARIANT
     %{__python3} setup.py install --skip-build --root $RPM_BUILD_ROOT --install-lib=$MPI3_SITEARCH
 
-    pushd %{mod_name}/nest/_build
+%if %{with nestext}
+    pushd %{mod_name}/nest/extensions || exit 1
         %make_install
     popd
+%endif
 
     %if %{with py2}
         %{__python2} setup.py install --skip-build --root $RPM_BUILD_ROOT --install-lib=$MPI2_SITEARCH
@@ -295,8 +452,8 @@ popd
 }
 
 PKG_VARIANT=""
-MPI3_SITEARCH=%{python3_sitearch}
-MPI2_SITEARCH=%{python2_sitearch}
+MPI3_SITEARCH=%{python3_sitelib}
+MPI2_SITEARCH=%{python2_sitelib}
 %{install_pynn}
 
 %if %{with mpich}
@@ -336,9 +493,10 @@ popd
 pushd %{pypi_name}-%{version}-%{mpich}
     %{__python3} setup.py test
 
-%if %{with py2}
-    %{__python2} setup.py test
-%endif
+    %if %{with py2}
+        %{__python2} setup.py test
+    %endif
+
 popd
 %{_mpich_unload}
 %endif
@@ -348,28 +506,16 @@ popd
 pushd %{pypi_name}-%{version}-%{openmpi}
     %{__python3} setup.py test
 
-%if %{with py2}
-    %{__python2} setup.py test
-%endif
+    %if %{with py2}
+        %{__python2} setup.py test
+    %endif
+
 popd
 %{_openmpi_unload}
 %endif
+
 %endif
 
-
-%if %{with py2}
-%files -n python2-%{pypi_name}
-%license LICENSE
-%doc README.rst AUTHORS changelog
-# %{python2_sitearch}/%{mod_name}-%{version}-py2.?.egg-info
-# %{python2_sitearch}/%{mod_name}
-%endif
-
-%files -n python3-%{pypi_name}
-%license LICENSE
-%doc README.rst AUTHORS changelog
-# %{python3_sitearch}/%{mod_name}-%{version}-py3.?.egg-info
-# %{python3_sitearch}/%{mod_name}
 
 %files doc
 %license LICENSE
@@ -378,38 +524,128 @@ popd
 %doc %{pypi_name}-%{version}/html
 %endif
 
+%if %{with py2}
+%files -n python2-%{pypi_name}-common
+%license LICENSE
+%doc README.rst AUTHORS changelog
+%{python2_sitelib}/%{pypi_name}-%{version}-py3.?.egg-info
+%dir %{python2_sitelib}/%{mod_name}
+%{python2_sitelib}/%{mod_name}/*py
+%{python2_sitelib}/%{mod_name}/common
+%{python2_sitelib}/%{mod_name}/descriptions
+%{python2_sitelib}/%{mod_name}/utility
+%{python2_sitelib}/%{mod_name}/standardmodels
+%{python2_sitelib}/%{mod_name}/recording
+%{python2_sitelib}/%{mod_name}/mock
+%{python2_sitelib}/%{mod_name}/neuroml
+%{python2_sitelib}/%{mod_name}/__pycache__
+
+%files -n python2-%{pypi_name}-nest
+%{python2_sitelib}/%{mod_name}/nest
+%if %{with nestext}
+# extensions go here
+%endif
+
+%files -n python2-%{pypi_name}-neuron
+%{python2_sitelib}/%{mod_name}/neuron
+%if %{with neuronext}
+# nmodl bits go here
+%endif
+
+%files -n python2-%{pypi_name}-brian
+%{python2_sitelib}/%{mod_name}/brian
+
+%files -n python2-%{pypi_name}-nineml
+%{python2_sitelib}/%{mod_name}/nineml
+
+%endif #py2
+
+%files -n python3-%{pypi_name}-common
+%license LICENSE
+%doc README.rst AUTHORS changelog
+%{python3_sitelib}/%{pypi_name}-%{version}-py3.?.egg-info
+%dir %{python3_sitelib}/%{mod_name}
+%{python3_sitelib}/%{mod_name}/*py
+%{python3_sitelib}/%{mod_name}/common
+%{python3_sitelib}/%{mod_name}/descriptions
+%{python3_sitelib}/%{mod_name}/utility
+%{python3_sitelib}/%{mod_name}/standardmodels
+%{python3_sitelib}/%{mod_name}/recording
+%{python3_sitelib}/%{mod_name}/neuroml
+%{python3_sitelib}/%{mod_name}/mock
+%{python3_sitelib}/%{mod_name}/__pycache__
+
+%files -n python3-%{pypi_name}-nest
+%{python3_sitelib}/%{mod_name}/nest
+%if %{with nestext}
+# nest extensions go here
+%endif # nest
+
+%files -n python3-%{pypi_name}-neuron
+%{python3_sitelib}/%{mod_name}/neuron
+%if %{with neuronext}
+# nmodl things go here
+%endif # neuron
+
+%files -n python3-%{pypi_name}-brian
+%{python3_sitelib}/%{mod_name}/brian
+
+%files -n python3-%{pypi_name}-nineml
+%{python3_sitelib}/%{mod_name}/nineml
+
+# mpich
 %if %{with mpich}
 %if %{with py2}
-%files -n python2-%{pypi_name}-mpich
-%license LICENSE
-%doc README.rst AUTHORS changelog
-# %{python2_sitearch}/mpich/%{mod_name}-%{version}-py2.?.egg-info
-# %{python2_sitearch}/mpich/%{mod_name}
-%endif
+%files -n python2-%{pypi_name}-nest
+%if %{with nestext}
+# nest extensions go here
+%endif # nest
 
-%files -n python3-%{pypi_name}-mpich
-%license LICENSE
-%doc README.rst AUTHORS changelog
-# %{python3_sitearch}/mpich/%{mod_name}-%{version}-py3.?.egg-info
-# %{python3_sitearch}/mpich/%{mod_name}
-%endif
+%files -n python2-%{pypi_name}-neuron
+%if %{with neuronext}
+# nmodl extensions go here
+%endif # neuron
 
+%endif # py2
+
+%files -n python3-%{pypi_name}-nest
+%if %{with nestext}
+# nest extensions go here
+%endif # nest
+
+%files -n python3-%{pypi_name}-neuron
+%if %{with neuronext}
+# nmodl bits go here
+%endif # neuron
+
+%endif # mpich
+
+# openmpi
 %if %{with openmpi}
 %if %{with py2}
-%files -n python2-%{pypi_name}-openmpi
-%license LICENSE
-%doc README.rst AUTHORS changelog
-# %{python2_sitearch}/openmpi/%{mod_name}-%{version}-py2.?.egg-info
-# %{python2_sitearch}/openmpi/%{mod_name}
-%endif
+%files -n python2-%{pypi_name}-nest
+%if %{with nestext}
+# nest extensions go here
+%endif # nest
 
-%files -n python3-%{pypi_name}-openmpi
-%license LICENSE
-%doc README.rst AUTHORS changelog
-# %{python3_sitearch}/openmpi/%{mod_name}-%{version}-py3.?.egg-info
-# %{python3_sitearch}/openmpi/%{mod_name}
-%endif
+%files -n python2-%{pypi_name}-neuron
+%if %{with neuronext}
+# nmodl bits go here
+%endif # neuron
 
+%endif # py2
+
+%files -n python3-%{pypi_name}-nest
+%if %{with nestext}
+# nest extensions go here
+%endif # nest
+
+%files -n python3-%{pypi_name}-neuron
+%if %{with neuronext}
+# nmodl bits go here
+%endif # neuron
+
+%endif # openmpi
 
 %changelog
 * Sun Nov 25 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.9.2-1
