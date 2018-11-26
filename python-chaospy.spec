@@ -1,5 +1,3 @@
-# https://fedoraproject.org/wiki/Packaging:DistTag?rd=Packaging/DistTag#Conditionals
-# http://rpm.org/user_doc/conditional_builds.html
 %if 0%{?fedora} >= 30
 # disabled by default
 %bcond_with py2
@@ -7,26 +5,23 @@
 %bcond_without py2
 %endif
 
-# Enabled by default
-%bcond_without tests
+# disabled to begin with
+%bcond_with tests
 
-%global pypi_name example
+%global pypi_name chaospy
 
 %global desc %{expand: \
-Add a description here.}
+Chaospy is a numerical tool for performing uncertainty
+ quantification using polynomial.}
 
 Name:           python-%{pypi_name}
-Version:        1.2.3
+Version:        2.3.4
 Release:        1%{?dist}
-Summary:        An example python module
-
-License:
-URL:            https://pypi.python.org/pypi/%{pypi_name}
-Source0:        %pypi_source %{pypi_name}
-
+Summary:        Numerical tool for performing uncertainty quantification using polynomial
+License:        BSD
+URL:            https://github.com/jonathf/chaospy
+Source0:        %{url}/archive/v%{version}/%{pypi_name}-%{version}.tar.gz
 BuildArch:      noarch
-
-%{?python_enable_dependency_generator}
 
 %description
 %{desc}
@@ -34,7 +29,14 @@ BuildArch:      noarch
 %if %{with py2}
 %package -n python2-%{pypi_name}
 Summary:        %{summary}
+
 BuildRequires:  python2-devel
+BuildRequires:  python2-setuptools
+Requires:	python2-networkx
+Requires:	python2-numpy
+Requires:	python2-scipy
+Requires:	python2-scikit-learn
+	
 %{?python_provide:%python_provide python2-%{pypi_name}}
 
 %description -n python2-%{pypi_name}
@@ -43,9 +45,14 @@ BuildRequires:  python2-devel
 
 %package -n python3-%{pypi_name}
 Summary:        %{summary}
+
 BuildRequires:  python3-devel
-# For documentation
-BuildRequires:  %{py3_dist sphinx}
+BuildRequires:  python3-setuptools
+Requires:       python3-networkx
+Requires:       python3-numpy
+Requires:       python3-scipy
+Requires:	python3-scikit-learn
+
 %{?python_provide:%python_provide python3-%{pypi_name}}
 
 %description -n python3-%{pypi_name}
@@ -63,27 +70,14 @@ rm -rf %{pypi_name}.egg-info
 
 %build
 %py3_build
-
 %if %{with py2}
 %py2_build
 %endif
 
-pushd doc
-    make SPHINXBUILD=sphinx-build-3 html
-    rm -rf _build/html/.doctrees
-    rm -rf _build/html/.buildinfo
-popd
-
 %install
-# Must do the python2 install first because the scripts in /usr/bin are
-# overwritten with every setup.py install, and in general we want the
-# python3 version to be the default.
-# If, however, we're installing separate executables for python2 and python3,
-# the order needs to be reversed so the unversioned executable is the python2 one.
 %if %{with py2}
 %py2_install
 %endif
-
 %py3_install
 
 %check
@@ -96,20 +90,18 @@ popd
 
 %if %{with py2}
 %files -n python2-%{pypi_name}
-%license COPYING
+%license LICENSE.txt
 %doc README.rst
-%{python2_sitelib}/%{pypi_name}-%{version}-py2.?.egg-info
 %{python2_sitelib}/%{pypi_name}
-%endif
+%{python2_sitelib}/%{pypi_name}-%{version}-py?.?.egg-info
+%endif 
 
 %files -n python3-%{pypi_name}
-%license COPYING
+%license LICENSE.txt
 %doc README.rst
-%{python3_sitelib}/%{pypi_name}-%{version}-py3.?.egg-info
 %{python3_sitelib}/%{pypi_name}
-
-%files doc
-%license COPYING
-%doc doc/_build/html
+%{python3_sitelib}/%{pypi_name}-%{version}-py?.?.egg-info
 
 %changelog
+* Mon Nov 26 2018 Luis Bazan <lbazan@fedoraproject.org> - 2.3.4-1
+- New upstream
