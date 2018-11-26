@@ -6,13 +6,13 @@
 %endif
 
 # disabled to begin with
-%bcond_with tests
+%bcond_without tests
 
 %global pypi_name pynwb
 
 %global desc %{expand: \
-PyNWB is a Python package for working with NWB files. It provides a high-level /
-API for efficiently working with Neurodata stored in the NWB format. /
+PyNWB is a Python package for working with NWB files. It provides a high-level
+API for efficiently working with Neurodata stored in the NWB format.
 https://pynwb.readthedocs.io/en/latest/}
 
 Name:           python-%{pypi_name}
@@ -34,18 +34,20 @@ BuildArch:      noarch
 Summary:        %{summary}
 
 BuildRequires:  python2-devel
-BuildRequires:  python2-setuptools
-BuildRequires:  python2-certifi
-BuildRequires:  python2-chardet
-BuildRequires:  python2-h5py
-BuildRequires:  python2-idna
-BuildRequires:  python2-numpy
-BuildRequires:  python2-dateutil
-BuildRequires:  python2-requests
+BuildRequires:  %{py2_dist setuptools}
+BuildRequires:  %{py2_dist certifi}
+BuildRequires:  %{py2_dist chardet}
+BuildRequires:  %{py2_dist h5py}
+BuildRequires:  %{py2_dist idna}
+BuildRequires:  %{py2_dist numpy}
+BuildRequires:  %{py2_dist python-dateutil}
+BuildRequires:  %{py2_dist requests}
 BuildRequires:  python2-ruamel-yaml
-BuildRequires:  python2-six
-BuildRequires:  python2-urllib3
-BUildRequires:  python2-pandas
+BuildRequires:  %{py2_dist six}
+BuildRequires:  %{py2_dist urllib3}
+BuildRequires:  %{py2_dist pandas}
+BuildRequires:  %{py2_dist tox}
+BuildRequires:  %{py2_dist unittest2}
 
 %{?python_provide:%python_provide python2-%{pypi_name}}
 
@@ -57,18 +59,20 @@ BUildRequires:  python2-pandas
 Summary:        %{summary}
 
 BuildRequires:  python3-devel
-BuildRequires:  python3-setuptools
-BuildRequires:  python3-certifi
-BuildRequires:	python3-chardet
-BuildRequires:	python3-h5py
-BuildRequires:	python3-idna
-BuildRequires:	python3-numpy
-BuildRequires:	python3-dateutil
-BuildRequires:  python3-requests
-BuildRequires:	python3-ruamel-yaml
-BuildRequires:	python3-six
-BuildRequires:  python3-urllib3
-BUildRequires:  python3-pandas
+BuildRequires:  %{py3_dist setuptools}
+BuildRequires:  %{py3_dist certifi}
+BuildRequires:  %{py3_dist chardet}
+BuildRequires:  %{py3_dist h5py}
+BuildRequires:  %{py3_dist idna}
+BuildRequires:  %{py3_dist numpy}
+BuildRequires:  %{py3_dist python-dateutil}
+BuildRequires:  %{py3_dist requests}
+BuildRequires:  python3-ruamel-yaml
+BuildRequires:  %{py3_dist six}
+BuildRequires:  %{py3_dist urllib3}
+BuildRequires:  %{py3_dist pandas}
+BuildRequires:  %{py3_dist tox}
+BuildRequires:  %{py3_dist unittest2}
 
 %{?python_provide:%python_provide python3-%{pypi_name}}
 
@@ -85,6 +89,13 @@ Documentation for %{name}.
 %autosetup -n %{pypi_name}-%{version}
 rm -rf %{pypi_name}.egg-info
 
+# Multiple tests fail on this one file:
+# An issue should be filed upstream
+# get_build_manager should be get_manager
+# forms should be pynwb.forms
+# .. ?
+rm -f tests/build_fake_data.py
+
 %build
 %py3_build
 %if %{with py2}
@@ -96,14 +107,14 @@ rm -rf %{pypi_name}.egg-info
 %py2_install
 %endif
 %py3_install
- 
-#%check
-#%if %{with tests}
-#%if %{with py2}
-#%{__python2} setup.py test
-#%endif
-#%{__python3} setup.py test
-#%endif
+
+%check
+%if %{with tests}
+%if %{with py2}
+%{__python2} setup.py test
+%endif
+%{__python3} setup.py test
+%endif
 
 %if %{with py2}
 %files -n python2-%{pypi_name}
@@ -111,7 +122,7 @@ rm -rf %{pypi_name}.egg-info
 %doc README.rst
 %{python2_sitelib}/%{pypi_name}-%{version}-py2.?.egg-info
 %{python2_sitelib}/%{pypi_name}
-%endif 
+%endif
 
 %files -n python3-%{pypi_name}
 %license license.txt
