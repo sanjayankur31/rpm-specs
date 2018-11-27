@@ -119,10 +119,10 @@ popd
 %check
 %if %{with tests}
 %if %{with py2}
+export PYTHONPATH=$RPM_BUILD_ROOT/%{python2_sitelib}
 pytest-%{python2_version} tests
 %endif
 
-# Dont yet pass here, pass in a virtual env
 export PYTHONPATH=$RPM_BUILD_ROOT/%{python3_sitelib}
 pytest-%{python3_version} tests
 %endif
