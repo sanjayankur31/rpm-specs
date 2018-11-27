@@ -20,6 +20,7 @@ Version:        1.2.3
 Release:        1%{?dist}
 Summary:        An example python module
 
+# https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing#Good_Licenses
 License:
 URL:            https://pypi.python.org/pypi/%{pypi_name}
 Source0:        %pypi_source %{pypi_name}
@@ -35,6 +36,8 @@ BuildArch:      noarch
 %package -n python2-%{pypi_name}
 Summary:        %{summary}
 BuildRequires:  python2-devel
+# DELETE ME: Use standard names
+BuildRequires:  %{py2_dist ...}
 %{?python_provide:%python_provide python2-%{pypi_name}}
 
 %description -n python2-%{pypi_name}
@@ -44,6 +47,8 @@ BuildRequires:  python2-devel
 %package -n python3-%{pypi_name}
 Summary:        %{summary}
 BuildRequires:  python3-devel
+# DELETE ME: Use standard names
+BuildRequires:  %{py3_dist ...}
 # For documentation
 BuildRequires:  %{py3_dist sphinx}
 %{?python_provide:%python_provide python3-%{pypi_name}}
