@@ -10,18 +10,36 @@
 # Enabled by default
 %bcond_without tests
 
-%global pypi_name example
+%global pypi_name spiking-circus
 
 %global desc %{expand: \
-Add a description here.}
+SpyKING CIRCUS is a python code to allow fast spike sorting on multi channel
+recordings. A publication on the algorithm can be found at
+https://elifesciences.org/articles/34518
+
+It has been tested on datasets coming from in vitro retina with 252 electrodes
+MEA, from in vivo hippocampus with tetrodes, in vivo and in vitro cortex data
+with 30 and up to 4225 channels, with good results. Synthetic tests on these
+data show that cells firing at more than 0.5Hz can be detected, and their
+spikes recovered with error rates at around 1%, even resolving overlapping
+spikes and synchronous firing. It seems to be compatible with optogenetic
+stimulation, based on experimental data obtained in the retina.
+
+SpyKING CIRCUS is currently still under development. Please do not hesitate to
+report issues with the issue tracker
+
+- Documentation can be found at http://spyking-circus.rtfd.org
+- A Google group can be found at http://groups.google.com/forum/#!forum/spyking-circus-users
+- A bug tracker can be found at https://github.com/spyking-circus/spyking-circus/issues
+- Open source ground-truth datasets used in the paper https://zenodo.org/record/1205233#.WrTFtXXwaV4
+}
 
 Name:           python-%{pypi_name}
-Version:        1.2.3
+Version:        0.7.4
 Release:        1%{?dist}
-Summary:        An example python module
+Summary:        Fast and scalable spike sorting in python
 
-# https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing#Good_Licenses
-License:
+License:        CeCILL
 URL:            https://pypi.python.org/pypi/%{pypi_name}
 Source0:        %pypi_source %{pypi_name}
 
