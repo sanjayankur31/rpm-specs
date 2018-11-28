@@ -31,7 +31,8 @@ Summary:        FMRIB Software Library
 # Probably need to speak to legal@fp.o
 License:        FSL
 URL:            https://fsl.fmrib.ox.ac.uk/fsl/fslwiki
-Source0:        https://fsl.fmrib.ox.ac.uk/fsldownloads/%{name}-%{version}sources.tar.gz
+# 1.6G!
+Source0:        https://fsl.fmrib.ox.ac.uk/fsldownloads/%{name}-%{version}-sources.tar.gz
 
 # In Fedora already
 BuildRequires:  boost-devel
@@ -46,6 +47,9 @@ BuildRequires:  tk-devel
 BuildRequires:  NLopt-devel
 # Version 2 or 3? (same as gtkmm)
 BuildRequires:  glibmm-devel
+BuildRequires:  expat-devel
+BuildRequires:  libX11-devel
+BuildRequires:  mesa-devel
 
 
 # Not in fedora
@@ -66,11 +70,10 @@ BuildRequires:  newmat-devel
 BuildRequires:  iml++-devel
 
 %description
-
+%{desc}
 
 %prep
 %autosetup
-
 
 %build
 %configure
@@ -78,15 +81,12 @@ BuildRequires:  iml++-devel
 
 
 %install
-rm -rf $RPM_BUILD_ROOT
 %make_install
 
 
 %files
-%license add-license-file-here
-%doc add-docs-here
-
-
+%license LICENSE
+%doc README
 
 %changelog
 * Wed Nov 28 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 6.0.0-1
