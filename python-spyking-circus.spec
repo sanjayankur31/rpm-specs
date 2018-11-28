@@ -8,9 +8,10 @@
 %endif
 
 # Enabled by default
-%bcond_without tests
+%bcond_with tests
 
-%global pypi_name spiking-circus
+%global pypi_name spyking-circus
+%global python_name spyking_circus
 
 %global desc %{expand: \
 SpyKING CIRCUS is a python code to allow fast spike sorting on multi channel
@@ -41,9 +42,10 @@ Summary:        Fast and scalable spike sorting in python
 
 License:        CeCILL
 URL:            https://pypi.python.org/pypi/%{pypi_name}
-Source0:        %pypi_source %{pypi_name}
-
+Source0:        https://github.com/%{pypi_name}/%{pypi_name}/archive/%{version}/%{pypi_name}-%{version}.tar.gz
 BuildArch:      noarch
+
+BuildRequires:  gcc
 
 %{?python_enable_dependency_generator}
 
@@ -54,8 +56,19 @@ BuildArch:      noarch
 %package -n python2-%{pypi_name}
 Summary:        %{summary}
 BuildRequires:  python2-devel
-# DELETE ME: Use standard names
-BuildRequires:  %{py2_dist ...}
+BuildRequires:  %{py2_dist setuptools}
+BuildRequires:  %{py2_dist mpi4py}
+BuildRequires:  %{py2_dist numpy}
+BuildRequires:  %{py2_dist Cython}
+BuildRequires:  %{py2_dist scipy}
+BuildRequires:  %{py2_dist matplotlib}
+BuildRequires:  %{py2_dist h5py}
+BuildRequires:  %{py2_dist colorama}
+BuildRequires:  %{py2_dist psutil}
+BuildRequires:  %{py2_dist tqdm}
+BuildRequires:  %{py2_dist blosc}
+BuildRequires:  %{py2_dist scikit-learn}
+BuildRequires:  python2-qt5
 %{?python_provide:%python_provide python2-%{pypi_name}}
 
 %description -n python2-%{pypi_name}
@@ -65,8 +78,20 @@ BuildRequires:  %{py2_dist ...}
 %package -n python3-%{pypi_name}
 Summary:        %{summary}
 BuildRequires:  python3-devel
-# DELETE ME: Use standard names
-BuildRequires:  %{py3_dist ...}
+BuildRequires:  %{py3_dist setuptools}
+BuildRequires:  %{py3_dist mpi4py}
+BuildRequires:  %{py3_dist numpy}
+BuildRequires:  %{py3_dist Cython}
+BuildRequires:  %{py3_dist scipy}
+BuildRequires:  %{py3_dist matplotlib}
+BuildRequires:  %{py3_dist h5py}
+BuildRequires:  %{py3_dist colorama}
+BuildRequires:  %{py3_dist psutil}
+BuildRequires:  %{py3_dist tqdm}
+BuildRequires:  %{py3_dist blosc}
+BuildRequires:  %{py3_dist scikit-learn}
+BuildRequires:  python3-qt5
+
 # For documentation
 BuildRequires:  %{py3_dist sphinx}
 %{?python_provide:%python_provide python3-%{pypi_name}}
@@ -91,23 +116,24 @@ rm -rf %{pypi_name}.egg-info
 %py2_build
 %endif
 
-pushd doc
+pushd docs_sphinx
     make SPHINXBUILD=sphinx-build-3 html
-    rm -rf _build/html/.doctrees
-    rm -rf _build/html/.buildinfo
 popd
+rm -rf docs/.doctrees
+rm -rf docs/.buildinfo
 
 %install
-# Must do the python2 install first because the scripts in /usr/bin are
-# overwritten with every setup.py install, and in general we want the
-# python3 version to be the default.
-# If, however, we're installing separate executables for python2 and python3,
-# the order needs to be reversed so the unversioned executable is the python2 one.
 %if %{with py2}
 %py2_install
+rm -f $RPM_BUILD_ROOT/%{_bindir}/circus*
+rm -f $RPM_BUILD_ROOT/%{_bindir}/spyking*
+rm -rf $RPM_BUILD_ROOT/%{pypi_name}/
 %endif
 
 %py3_install
+# Manually install probe files
+install -p -m 0644 -d $RPM_BUILD_ROOT/%{_datadir}/
+mv -v $RPM_BUILD_ROOT/%{pypi_name} $RPM_BUILD_ROOT/%{_datadir}/
 
 %check
 %if %{with tests}
@@ -119,20 +145,32 @@ popd
 
 %if %{with py2}
 %files -n python2-%{pypi_name}
-%license COPYING
-%doc README.rst
-%{python2_sitelib}/%{pypi_name}-%{version}-py2.?.egg-info
-%{python2_sitelib}/%{pypi_name}
+%license LICENSE
+%doc README.rst AUTHORS changelog
+%{python2_sitelib}/%{python_name}-%{version}-py2.?.egg-info
+%{python2_sitelib}/circus
+%{_datadir}/%{pypi_name}
 %endif
 
 %files -n python3-%{pypi_name}
-%license COPYING
-%doc README.rst
-%{python3_sitelib}/%{pypi_name}-%{version}-py3.?.egg-info
-%{python3_sitelib}/%{pypi_name}
+%license LICENSE
+%doc README.rst AUTHORS changelog
+%{python3_sitelib}/%{python_name}-%{version}-py3.?.egg-info
+%{python3_sitelib}/circus
+%{_datadir}/%{pypi_name}
+%{_bindir}/circus-artefacts
+%{_bindir}/circus-folders
+%{_bindir}/circus-gui-matlab
+%{_bindir}/circus-gui-python
+%{_bindir}/circus-multi
+%{_bindir}/spyking-circus
+%{_bindir}/spyking-circus-launcher
+%{_bindir}/spyking-circus-subtask
 
 %files doc
-%license COPYING
-%doc doc/_build/html
+%license LICENSE
+%doc docs/html
 
 %changelog
+* Wed Nov 28 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.7.4-1
+- Initial build
