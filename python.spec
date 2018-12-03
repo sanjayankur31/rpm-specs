@@ -8,6 +8,10 @@
 %endif
 
 # Enabled by default
+# If the package needs to download data for the test which cannot be done in
+# koji, these can be disabled in koji by using `bcond_with` instead, but the
+# tests must be validated in mock with network enabled like so:
+# mock -r fedora-rawhide-x86_64 rebuild <srpm> --enable-network --rpmbuild-opts="--with tests"
 %bcond_without tests
 
 %global pypi_name example
@@ -65,6 +69,10 @@ Documentation for %{name}.
 %prep
 %autosetup -n %{pypi_name}-%{version}
 rm -rf %{pypi_name}.egg-info
+
+# Comment out to remove /usr/bin/env shebangs
+# Can use something similar to correct/remove /usr/bin/python shebangs also
+# find . -type f -name "*.py" -exec sed -i '/^#![  ]*\/usr\/bin\/env.*$/ d' {} 2>/dev/null ';'
 
 %build
 %py3_build
