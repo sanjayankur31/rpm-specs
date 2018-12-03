@@ -14,22 +14,36 @@
 # mock -r fedora-rawhide-x86_64 rebuild <srpm> --enable-network --rpmbuild-opts="--with tests"
 %bcond_without tests
 
-%global pypi_name example
+%global pypi_name PyDSTool
 
 %global desc %{expand: \
-Add a description here.}
+PyDSTool is a sophisticated & integrated simulation and analysis environment
+for dynamical systems models of physical systems (ODEs, DAEs, maps, and hybrid
+systems).
+
+PyDSTool is platform independent, written primarily in Python with some
+underlying C and Fortran legacy code for fast solving. It makes extensive use
+of the numpy and scipy libraries. PyDSTool supports symbolic math,
+optimization, phase plane analysis, continuation and bifurcation analysis, data
+analysis, and other tools for modeling – particularly for biological
+applications.
+
+The project is fully open source with a BSD license, and welcomes contributions
+from the community.}
 
 Name:           python-%{pypi_name}
-Version:        1.2.3
+Version:        0.90.2
 Release:        1%{?dist}
-Summary:        An example python module
+Summary:        Python dynamical systems simulation and modeling
 
 # https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing#Good_Licenses
-License:
-URL:            https://pypi.python.org/pypi/%{pypi_name}
+License:        BSD
+URL:            http://incf.github.io/nineml-spec/software/pydstool/
 Source0:        %pypi_source %{pypi_name}
 
-BuildArch:      noarch
+BuildRequires:  swig
+BuildRequires:  gcc
+BuildRequires:  gfortran
 
 %{?python_enable_dependency_generator}
 
@@ -40,8 +54,12 @@ BuildArch:      noarch
 %package -n python2-%{pypi_name}
 Summary:        %{summary}
 BuildRequires:  python2-devel
-# DELETE ME: Use standard names
-BuildRequires:  %{py2_dist ...}
+BuildRequires:  %{py2_dist numpy}
+BuildRequires:  %{py2_dist scipy}
+BuildRequires:  %{py2_dist matplotlib}
+BuildRequires:  %{py2_dist pytest}
+BuildRequires:  %{py2_dist mock}
+Recommends:     %{py2_dist ipython}
 %{?python_provide:%python_provide python2-%{pypi_name}}
 
 %description -n python2-%{pypi_name}
@@ -52,7 +70,12 @@ BuildRequires:  %{py2_dist ...}
 Summary:        %{summary}
 BuildRequires:  python3-devel
 # DELETE ME: Use standard names
-BuildRequires:  %{py3_dist ...}
+BuildRequires:  %{py3_dist numpy}
+BuildRequires:  %{py3_dist scipy}
+BuildRequires:  %{py3_dist matplotlib}
+BuildRequires:  %{py3_dist pytest}
+BuildRequires:  %{py3_dist mock}
+Recommends:     %{py3_dist ipython}
 # For documentation
 BuildRequires:  %{py3_dist sphinx}
 %{?python_provide:%python_provide python3-%{pypi_name}}
@@ -126,3 +149,5 @@ popd
 %doc doc/_build/html
 
 %changelog
+* Mon Dec 03 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.90.2-1
+- Initial build
