@@ -1,11 +1,10 @@
-# https://fedoraproject.org/wiki/Packaging:DistTag?rd=Packaging/DistTag#Conditionals
-# http://rpm.org/user_doc/conditional_builds.html
-%if 0%{?fedora} >= 30
+# Note that since it builds nest extensions, this package is NOT noarch
+
+# there does not appear to be a way of installing pynn extensions for py2 and py3 in parallel
+# https://github.com/NeuralEnsemble/PyNN/issues/615
+# Until upstream decides on how to do this, we only provide py3
 # disabled by default
 %bcond_with py2
-%else
-%bcond_without py2
-%endif
 
 # Since nest-config varies for these environments
 # Does not affect brian, which is MPI free
@@ -16,12 +15,17 @@
 # Tests
 %bcond_with tests
 
-# nest extensions don't build: issue filed upstream
-# https://github.com/NeuralEnsemble/PyNN/issues/611
-%bcond_with nestext
+# With nest extensions
+# https://github.com/NeuralEnsemble/PyNN/issues/615
+# Are nest extensions python version independent?
+%bcond_without nestext
 
-# Neuron has not yet been packaged
+# Disabled until NEURON is packaged
 %bcond_with neuronext
+
+# We packaged brian2, the newest version, but PyNN works only with brian1
+# http://neuralensemble.org/docs/PyNN/installation.html?highlight=brian#installing-brian
+%bcond_with brian
 
 %bcond_with docs
 
@@ -57,26 +61,26 @@ Mailing list: https://groups.google.com/forum/?fromgroups#!forum/neuralensemble
 This package supports the NEST and Brian simulators.}
 
 Name:           python-%{pypi_name}
-Version:        0.9.2
+Version:        0.9.3
 Release:        1%{?dist}
 Summary:        A package for simulator-independent specification of neuronal network models
 
 License:        CeCILL
 URL:            http://neuralensemble.org/%{pypi_name}/
 Source0:        %pypi_source %{pypi_name}
-Patch0:         %{pypi_name}-0.9.2-disable-extensions.patch
+# Disable pynn's way of building extensions
+# We do it ourselves
+Patch0:         %{pypi_name}-0.9.3-disable-extensions-build.patch
 
 %if %{with nestext}
 BuildRequires:  cmake
 BuildRequires:  gcc-c++
 BuildRequires:  gsl-devel
+BuildRequires:  readline-devel
+BuildRequires:  ncurses-devel
+BuildRequires:  libtool-ltdl-devel
 %endif
 
-
-# If neither nest nor neuron are being built, this is a noarch package
-%if !%{with nestext} && !%{with neuronext}
-BuildArch:      noarch
-%endif
 
 %if %{with mpich} || %{with openmpi}
 BuildRequires:  rpm-mpi-hooks
@@ -119,7 +123,8 @@ Common files for python2-%{pypi_name}.
 Summary:        %{summary}
 BuildRequires:  nest
 BuildRequires:  nest-headers
-Requires:     %{py2_dist nest}
+BuildRequires:  libneurosim-devel
+Requires:     %{py2_dist pynest}
 Requires:     python2-%{pypi_name}-common
 
 %description -n python2-%{pypi_name}-nest
@@ -140,16 +145,18 @@ Requires:     python2-%{pypi_name}-common
 
 %{?python_provide:%python_provide python2-%{pypi_name}-neuron}
 
+%if %{with brian}
 %package -n python2-%{pypi_name}-brian
 Summary:      %{summary}
 BuildArch:      noarch
-Requires:     %{py2_dist brian}
+Requires:     %{py2_dist brian2}
 Requires:     python2-%{pypi_name}-common
 
 %description -n python2-%{pypi_name}-brian
 %{pypi_name} files for the Brian simulator.
 
 %{?python_provide:%python_provide python2-%{pypi_name}-brian}
+%endif
 
 %package -n python2-%{pypi_name}-nineml
 Summary:      %{summary}
@@ -161,7 +168,7 @@ Requires:     python2-%{pypi_name}-common
 %{pypi_name} files for NineML.
 
 %{?python_provide:%python_provide python2-%{pypi_name}-nineml}
-%endif # py2
+%endif # py2 end
 
 %package -n python3-%{pypi_name}-common
 Summary:        %{summary}
@@ -177,7 +184,8 @@ Common files for python3-%{pypi_name}.
 Summary:        %{summary}
 BuildRequires:  nest
 BuildRequires:  nest-headers
-Requires:     %{py3_dist nest}
+BuildRequires:  libneurosim-devel
+Requires:     %{py3_dist pynest}
 Requires:     python3-%{pypi_name}-common
 
 %description -n python3-%{pypi_name}-nest
@@ -198,16 +206,18 @@ Requires:     python3-%{pypi_name}-common
 
 %{?python_provide:%python_provide python3-%{pypi_name}-neuron}
 
+%if %{with brian}
 %package -n python3-%{pypi_name}-brian
 Summary:      %{summary}
 BuildArch:      noarch
-Requires:     %{py3_dist brian}
+Requires:     %{py3_dist brian2}
 Requires:     python3-%{pypi_name}-common
 
 %description -n python3-%{pypi_name}-brian
 %{pypi_name} files for the Brian simulator.
 
 %{?python_provide:%python_provide python3-%{pypi_name}-brian}
+%endif
 
 %package -n python3-%{pypi_name}-nineml
 Summary:      %{summary}
@@ -227,7 +237,8 @@ Requires:     python3-%{pypi_name}-common
 Summary:        %{summary}
 BuildRequires:  nest-mpich
 BuildRequires:  nest-mpich-headers
-Requires:     %{py2_dist nest-mpich}
+BuildRequires:  libneurosim-mpich-devel
+Requires:     python2-nest-mpich
 Requires:     python2-%{pypi_name}-common
 
 %description -n python2-%{pypi_name}-nest-mpich
@@ -255,7 +266,8 @@ Requires:     python2-%{pypi_name}-common
 Summary:        %{summary}
 BuildRequires:  nest-mpich
 BuildRequires:  nest-mpich-headers
-Requires:     %{py3_dist nest-mpich}
+BuildRequires:  libneurosim-mpich-devel
+Requires:     python3-nest-mpich
 Requires:     python3-%{pypi_name}-common
 
 %description -n python3-%{pypi_name}-nest-mpich
@@ -285,7 +297,8 @@ Requires:     python3-%{pypi_name}-common
 Summary:        %{summary}
 BuildRequires:  nest-openmpi
 BuildRequires:  nest-openmpi-headers
-Requires:     %{py2_dist nest-openmpi}
+BuildRequires:  libneurosim-openmpi-devel
+Requires:     python2-nest-openmpi
 Requires:     python2-%{pypi_name}-common
 
 %description -n python2-%{pypi_name}-nest-openmpi
@@ -313,7 +326,8 @@ Requires:     python2-%{pypi_name}-common
 Summary:        %{summary}
 BuildRequires:  nest-openmpi
 BuildRequires:  nest-openmpi-headers
-Requires:     %{py3_dist nest-openmpi}
+BuildRequires:  libneurosim-openmpi-devel
+Requires:     python3-nest-openmpi
 Requires:     python3-%{pypi_name}-common
 
 %description -n python3-%{pypi_name}-nest-openmpi
@@ -339,7 +353,14 @@ Requires:     python3-%{pypi_name}-common
 %prep
 # Different copies for mpich and openmpi and serial
 %autosetup -c -n %{pypi_name}-%{version} -N
-rm -rf %{pypi_name}-%{version}/%{pypi_name}.egg-info
+rm -rfv %{pypi_name}-%{version}/%{mod_name}.egg-info
+
+# Correct brian import. Sent upstream.
+# https://github.com/NeuralEnsemble/PyNN/pull/617
+find %{pypi_name}-%{version}/%{mod_name}/brian/ -name "*.py" -exec  sed -i 's/from brian/from brian2/g' '{}' \;
+find %{pypi_name}-%{version}/%{mod_name}/brian/ -name "*.py" -exec  sed -i 's/import brian/import brian2/g' '{}' \;
+find %{pypi_name}-%{version}/test -name "*.py" -exec  sed -i 's/from brian/from brian2/g' '{}' \;
+find %{pypi_name}-%{version}/test -name "*.py" -exec  sed -i 's/import brian/import brian2/g' '{}' \;
 
 cp %{pypi_name}-%{version}/README.rst .
 cp %{pypi_name}-%{version}/LICENSE .
@@ -465,7 +486,7 @@ MPI2_SITEARCH=$MPI_PYTHON2_SITEARCH
 %{install_pynn}
 
 %{_mpich_unload}
-%endif
+%endif # mpich end
 
 %if %{with openmpi}
 %{_openmpi_load}
@@ -476,7 +497,7 @@ MPI2_SITEARCH=$MPI_PYTHON2_SITEARCH
 %{install_pynn}
 
 %{_openmpi_unload}
-%endif
+%endif # openmpi end
 
 %check
 %if %{with tests}
@@ -499,7 +520,7 @@ pushd %{pypi_name}-%{version}-%{mpich}
 
 popd
 %{_mpich_unload}
-%endif
+%endif # mpich end
 
 %if %{with openmpi}
 %{_openmpi_load}
@@ -512,9 +533,9 @@ pushd %{pypi_name}-%{version}-%{openmpi}
 
 popd
 %{_openmpi_unload}
-%endif
+%endif # openmpi start
 
-%endif
+%endif # tests end
 
 
 %files doc
@@ -543,22 +564,26 @@ popd
 %files -n python2-%{pypi_name}-nest
 %{python2_sitelib}/%{mod_name}/nest
 %if %{with nestext}
-# extensions go here
+%{_libdir}/nest/pynn_extensions.so
+%{_libdir}/nest/libpynn_extensions.so
+%{_includedir}/pynn_extensions.h
+%{_datadir}/nest/sli/pynn_extensions-init.sli
 %endif
 
 %files -n python2-%{pypi_name}-neuron
 %{python2_sitelib}/%{mod_name}/neuron
 %if %{with neuronext}
-# nmodl bits go here
 %endif
 
+%if %{with brian}
 %files -n python2-%{pypi_name}-brian
 %{python2_sitelib}/%{mod_name}/brian
+%endif
 
 %files -n python2-%{pypi_name}-nineml
 %{python2_sitelib}/%{mod_name}/nineml
 
-%endif #py2
+%endif # py2 end
 
 %files -n python3-%{pypi_name}-common
 %license LICENSE
@@ -578,7 +603,10 @@ popd
 %files -n python3-%{pypi_name}-nest
 %{python3_sitelib}/%{mod_name}/nest
 %if %{with nestext}
-# nest extensions go here
+%{_libdir}/nest/pynn_extensions.so
+%{_libdir}/nest/libpynn_extensions.so
+%{_includedir}/pynn_extensions.h
+%{_datadir}/nest/sli/pynn_extensions-init.sli
 %endif # nest
 
 %files -n python3-%{pypi_name}-neuron
@@ -587,8 +615,10 @@ popd
 # nmodl things go here
 %endif # neuron
 
+%if %{with brian}
 %files -n python3-%{pypi_name}-brian
 %{python3_sitelib}/%{mod_name}/brian
+%endif
 
 %files -n python3-%{pypi_name}-nineml
 %{python3_sitelib}/%{mod_name}/nineml
@@ -648,5 +678,5 @@ popd
 %endif # openmpi
 
 %changelog
-* Sun Nov 25 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.9.2-1
+* Thu Dec 06 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.9.3-1
 - Initial build
