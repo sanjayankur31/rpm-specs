@@ -1,7 +1,10 @@
-%global commit 4650e7c0f1dd8beb79bfa8674979b178f4d56630
+# Stop automatic removal of shebang from neuron makefiles
+%global __brp_mangle_shebangs_exclude_from ^%{_bindir}/nrn.*makefile$
+
+%global commit 56875193411d552eea7d4cbfe09458f3c4f76613
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
 
-%global desc %{expand \
+%global desc %{expand: \
 NEURON is a simulation environment for modeling individual neurons and networks
 of neurons. It provides tools for conveniently building, managing, and using
 models in a way that is numerically sound and computationally efficient. It is
@@ -10,6 +13,8 @@ data, especially those that involve cells with complex anatomical and
 biophysical properties.
 
 This is currently built without GUI (iv) support.
+
+Please install the %{name}-devel package to compile nmodl files and so on.
 }
 
 %global tarname nrn
@@ -21,6 +26,9 @@ This is currently built without GUI (iv) support.
 # fails somehow, disabled by default
 %bcond_with metis
 
+# IV uses libtiff from 1995 and threfore has not been packaged yet
+%bcond_with iv
+
 Name:       neuron
 Version:    7.5
 Release:    1.git%{shortcommit}%{?dist}
@@ -28,9 +36,14 @@ Summary:    A flexible and powerful simulator of neurons and networks
 
 License:    GPLv2+
 URL:        http://www.neuron.yale.edu/neuron/
-Source0:    https://github.com/neuronsimulator/%{tarname}/archive/%{commit}/%{tarname}-%{shortcommit}.tar.gz
+# Using brunomaga's fork which updates neuron to use the current sundials
+# Will be merged to neuron main eventually
+# https://github.com/neuronsimulator/nrn/issues/113
+Source0:    https://github.com/brunomaga/%{tarname}/archive/%{commit}/%{tarname}-%{shortcommit}.tar.gz
+# Source0:    https://github.com/neuronsimulator/%%{tarname}/archive/%%{commit}/%%{tarname}-%%{shortcommit}.tar.gz
+
 Source1:    neuron-nrnversion.h
-Patch0:     0001-Unbundle-Random123.patch
+Patch0:     0001-Unbundle-Random123-for-brunomegas-branch.patch
 
 # Random123 does not build on these, so neither can NEURON
 # https://github.com/neuronsimulator/nrn/issues/114
@@ -47,13 +60,11 @@ BuildRequires:  autoconf automake libtool
 BuildRequires:  git
 BuildRequires:  bison bison-devel
 BuildRequires:  flex-devel flex
+BuildRequires:  sundials-devel
 
-# Currently bundles sundials. WIP
-# https://github.com/neuronsimulator/nrn/issues/113
-# BuildRequires:  sundials-devel
-
-# Not building with iv yet
-# BuildRequires:  iv-static iv-devel
+%if %{with iv}
+BuildRequires:  iv-static iv-devel
+%endif
 
 %description
 %{desc}
@@ -75,11 +86,22 @@ Static libraries for %{name}
 %prep
 %autosetup -c -n %{tarname}-%{commit} -N
 
+cp %{tarname}-%{commit}/Copyright . -v
+cp %{tarname}-%{commit}/README.md . -v
+
 pushd %{tarname}-%{commit}
     %autopatch -p1
     # Install the version file so that we dont let the build script do it
     cp -v %{SOURCE1} src/nrnoc/nrnversion.h
     sed -i '/git2nrnversion_h.sh/ d' build.sh
+
+    # Use system libtool instead of a local copy that neuron tries to install
+    pushd bin
+        for f in *_makefile.in
+        do
+            sed -i 's|\(LIBTOOL.*=.*\)$(pkgdatadir)\(.*\)|\1$(bindir)\2|' $f
+        done
+    popd
 popd
 
 %if %{with mpich}
@@ -91,11 +113,17 @@ cp -a %{tarname}-%{commit} %{tarname}-%{commit}-openmpi
 %endif
 
 %build
+export SUNDIALS_SYSTEM_INSTALL="yes"
 %global do_build %{expand:
 echo "*** Building %{tarname}-%{commit}$MPI_COMPILE_TYPE ***"
 pushd %{tarname}-%{commit}$MPI_COMPILE_TYPE
 ./build.sh &&
+%if %{with iv} \
+%configure  \\\
+%else \
 %configure --without-iv \\\
+%endif \
+--with-gnu-ld \\\
 %if %{with metis} \
 --with-metis  \\\
 %endif \
@@ -104,6 +132,9 @@ pushd %{tarname}-%{commit}$MPI_COMPILE_TYPE
 --with-paranrn=dynamic \\\
 --with-mpi --with-multisend \\\
 %endif
+
+sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool &&
+sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool &&
 
 %make_build
 
@@ -128,13 +159,15 @@ export MPI_COMPILE_TYPE=""
 
 # Remove stray object files
 # Probably worth a PR
-find . $RPM_BUILD_ROOT/%{_libdir}/ -name "*.o" -exec rm -fv '{}' \;
+find . $RPM_BUILD_ROOT/%{_libdir}/ -name "*.o" -exec rm -f '{}' \;
 rm -fv $RPM_BUILD_ROOT/%{_datadir}/%{tarname}/libtool
 
 %ldconfig_scriptlets
 
+# The makefiles do not have shebangs
 %files
-%doc
+%license Copyright
+%doc README.md
 %{_bindir}/bbswork.sh
 %{_bindir}/hel2mos1.sh
 %{_bindir}/ivoc
@@ -176,17 +209,18 @@ rm -fv $RPM_BUILD_ROOT/%{_datadir}/%{tarname}/libtool
 %{_libdir}/liboc.so.0
 %{_libdir}/libocxt.so.0.0.0
 %{_libdir}/libocxt.so.0
-%{_libdir}/libscopath.so.0.0.0
-%{_libdir}/libscopath.so.0
 %{_libdir}/libsparse13.so.0.0.0
 %{_libdir}/libsparse13.so.0
-# BUNDLING!
-%{_libdir}/libsundials.so.0.0.0
-%{_libdir}/libsundials.so.0
+%{_libdir}/libscopmath.so.0
+%{_libdir}/libscopmath.so.0.0.0
+%{_libdir}/libivos.so.0
+%{_libdir}/libivos.so.0.0.0
 
-%{_datadir}/%{name}/lib
+%{_datadir}/%{tarname}/lib
 
 %files devel
+%license Copyright
+%doc README.md
 %{_includedir}/%{tarname}
 %{_libdir}/libivoc.so
 %{_libdir}/libmemacs.so
@@ -197,16 +231,17 @@ rm -fv $RPM_BUILD_ROOT/%{_datadir}/%{tarname}/libtool
 %{_libdir}/libnrnoc.so
 %{_libdir}/liboc.so
 %{_libdir}/libocxt.so
-%{_libdir}/libscopath.so
 %{_libdir}/libsparse13.so
-# BUNDLING!
-%{_libdir}/libsundials.so
+%{_libdir}/libscopmath.so
+%{_libdir}/libivos.so
 
 # should this be here?!
 %{_libdir}/nrnconf.h
 
 # Do we need the static libraries?
 %files static
+%license Copyright
+%doc README.md
 %{_libdir}/libivoc.la
 %{_libdir}/libmemacs.la
 %{_libdir}/libmeschach.la
@@ -216,16 +251,17 @@ rm -fv $RPM_BUILD_ROOT/%{_datadir}/%{tarname}/libtool
 %{_libdir}/libnrnoc.la
 %{_libdir}/liboc.la
 %{_libdir}/libocxt.la
-%{_libdir}/libscopath.la
 %{_libdir}/libsparse13.la
-# BUNDLING!
-%{_libdir}/libsundials.la
+%{_libdir}/libscopmath.la
+%{_libdir}/libivos.la
 
 
 %doc
-%{_datadir}/%{name}/examples
-%{_datadir}/%{name}/demo
+%license Copyright
+%doc README.md
+%{_datadir}/%{tarname}/examples
+%{_datadir}/%{tarname}/demo
 
 %changelog
-* Sun Nov 11 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 7.5-1.git4650e7c
-- Update to latest git snapshot
+* Sun Dec 9 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 7.5-1.git5687519
+- Update to latest git snapshot that uses current sundials
