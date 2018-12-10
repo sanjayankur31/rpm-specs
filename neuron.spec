@@ -19,8 +19,7 @@ Please install the %{name}-devel package to compile nmodl files and so on.
 
 %global tarname nrn
 
-# disabled for the moment
-%bcond_with mpich
+%bcond_without mpich
 %bcond_with openmpi
 
 # fails somehow, disabled by default
@@ -42,7 +41,6 @@ URL:        http://www.neuron.yale.edu/neuron/
 Source0:    https://github.com/brunomaga/%{tarname}/archive/%{commit}/%{tarname}-%{shortcommit}.tar.gz
 # Source0:    https://github.com/neuronsimulator/%%{tarname}/archive/%%{commit}/%%{tarname}-%%{shortcommit}.tar.gz
 
-Source1:    neuron-nrnversion.h
 Patch0:     0001-Unbundle-Random123-for-brunomegas-branch.patch
 
 # Random123 does not build on these, so neither can NEURON
@@ -83,6 +81,41 @@ Requires: %{name}%{?_isa} = %{version}-%{release}
 %description static
 Static libraries for %{name}
 
+%package doc
+Summary:    Documentation for %{name}
+BuildArch:  noarch
+
+%description doc
+Documentation for %{name}
+
+%if %{with mpich}
+%package mpich
+Summary:    %{name} build with MPICH support.
+Requires:   mpich
+BuildRequires:  rpm-mpi-hooks
+BuildRequires:  mpich-devel
+BuildRequires:  sundials-mpich-devel
+
+%description mpich
+%{desc}
+
+%package devel-mpich
+Summary:    Development files for %{name} built with MPICH
+Requires: %{name}-mpich%{?_isa} = %{version}-%{release}
+
+%description devel-mpich
+Headers and development shared libraries for the %{name} package built with
+MPICH support.
+
+%package static-mpich
+Summary:    Static libraries for %{name} built with MPICH
+Requires: %{name}-mpich%{?_isa} = %{version}-%{release}
+
+%description static-mpich
+Static libraries for %{name} built with MPICH.
+%endif
+
+
 %prep
 %autosetup -c -n %{tarname}-%{commit} -N
 
@@ -91,9 +124,22 @@ cp %{tarname}-%{commit}/README.md . -v
 
 pushd %{tarname}-%{commit}
     %autopatch -p1
-    # Install the version file so that we dont let the build script do it
-    cp -v %{SOURCE1} src/nrnoc/nrnversion.h
+
+    # Let us tell the system where to find the sundials libraries. It is hard coded.
+    sed -i 's|SUNDIALS_LIBDIRNAMES="${prefix}/lib"|SUNDIALS_LIBDIRNAMES="$MPI_LIB"|' configure.ac
+
+    # Stop build file from generating version header
     sed -i '/git2nrnversion_h.sh/ d' build.sh
+
+# Create version file ourselves
+export TIMESTAMP=$(date +%Y-%m-%d)
+export COMMIT=%{shortcommit}
+cat > src/nrnoc/nrnversion.h << EOF
+#define GIT_DATE "$TIMESTAMP"
+#define GIT_BRANCH "master"
+#define GIT_CHANGESET "$COMMIT"
+#define GIT_DESCRIBE "Neuron built for Fedora"
+EOF
 
     # Use system libtool instead of a local copy that neuron tries to install
     pushd bin
@@ -127,14 +173,17 @@ pushd %{tarname}-%{commit}$MPI_COMPILE_TYPE
 %if %{with metis} \
 --with-metis  \\\
 %endif \
---with-x \\\
-%if %{with mpich} || %{with openmpi} \
---with-paranrn=dynamic \\\
---with-mpi --with-multisend \\\
-%endif
+--with-x $MPI_OPTIONS
 
 sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool &&
 sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool &&
+
+# Generate required header for MPI builds
+%if %{with mpich} || %{with openmpi}
+pushd src/nrnmpi
+    sh mkdynam.sh
+popd
+%endif
 
 %make_build
 
@@ -143,20 +192,37 @@ popd
 
 # Serial build
 export MPI_COMPILE_TYPE=""
+export MPI_OPTIONS=""
+export MPI_LIB="%{_libdir}"
 %{do_build}
+
+# MPICH
+%if %{with mpich}
+%{_mpich_load}
+export MPI_COMPILE_TYPE="-mpich"
+export MPI_OPTIONS="--with-paranrn=dynamic --with-mpi --with-multisend"
+%{do_build}
+%{_mpich_unload}
+%endif # with mpich
 
 %install
 %global do_install %{expand:
 echo "*** Installing %{tarname}-%{commit}$MPI_COMPILE_TYPE ***"
-pushd %{tarname}-%{commit}$MPI_COMPILE_TYPE
-%make_install
-
-popd
+%make_install -C %{tarname}-%{commit}$MPI_COMPILE_TYPE
 }
 
 export MPI_COMPILE_TYPE=""
 %{do_install}
 
+# MPICH
+%if %{with mpich}
+%{_mpich_load}
+export MPI_COMPILE_TYPE="-mpich"
+%{do_install}
+%{_mpich_unload}
+%endif # with mpich
+
+# Post install clean up
 # Remove stray object files
 # Probably worth a PR
 find . $RPM_BUILD_ROOT/%{_libdir}/ -name "*.o" -exec rm -f '{}' \;
@@ -168,29 +234,7 @@ rm -fv $RPM_BUILD_ROOT/%{_datadir}/%{tarname}/libtool
 %files
 %license Copyright
 %doc README.md
-%{_bindir}/bbswork.sh
-%{_bindir}/hel2mos1.sh
-%{_bindir}/ivoc
-%{_bindir}/memacs
-%{_bindir}/mkthreadsafe
-%{_bindir}/modlunit
-%{_bindir}/mos2nrn
-%{_bindir}/mos2nrn2.sh
-%{_bindir}/neurondemo
-%{_bindir}/nocmodl
-%{_bindir}/nrndiagnose.sh
-%{_bindir}/nrngui
-%{_bindir}/nrniv
-%{_bindir}/nrniv_makefile
-%{_bindir}/nrnivmodl
-%{_bindir}/nrnmech_makefile
-%{_bindir}/nrnoc
-%{_bindir}/nrnoc_makefile
-%{_bindir}/nrnocmodl
-%{_bindir}/nrnpyenv.sh
-%{_bindir}/oc
-%{_bindir}/set_nrnpyenv.sh
-%{_bindir}/sortspike
+%{_bindir}/*
 %{_libdir}/libivoc.so.0.0.0
 %{_libdir}/libivoc.so.0
 %{_libdir}/libmemacs.so.0.0.0
@@ -255,12 +299,26 @@ rm -fv $RPM_BUILD_ROOT/%{_datadir}/%{tarname}/libtool
 %{_libdir}/libscopmath.la
 %{_libdir}/libivos.la
 
-
-%doc
+%files doc
 %license Copyright
 %doc README.md
 %{_datadir}/%{tarname}/examples
 %{_datadir}/%{tarname}/demo
+
+%if %{with mpich}
+%files mpich
+%license Copyright
+%doc README.md
+
+%files devel-mpich
+%license Copyright
+%doc README.md
+
+# Do we need the static libraries?
+%files static-mpich
+%license Copyright
+%doc README.md
+%endif # with mpich
 
 %changelog
 * Sun Dec 9 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 7.5-1.git5687519
