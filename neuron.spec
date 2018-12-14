@@ -30,7 +30,7 @@ Please install the %{name}-devel package to compile nmodl files and so on.
 
 Name:       neuron
 Version:    7.5
-Release:    1.git%{shortcommit}%{?dist}
+Release:    1.20181214git%{shortcommit}%{?dist}
 Summary:    A flexible and powerful simulator of neurons and networks
 
 License:    GPLv2+
@@ -164,10 +164,19 @@ export SUNDIALS_SYSTEM_INSTALL="yes"
 echo "*** Building %{tarname}-%{commit}$MPI_COMPILE_TYPE ***"
 pushd %{tarname}-%{commit}$MPI_COMPILE_TYPE
 ./build.sh &&
-%if %{with iv} \
-%configure  \\\
-%else \
-%configure --without-iv \\\
+%{set_build_flags}
+./configure \\\
+--disable-dependency-tracking \\\
+--prefix=$MPI_HOME \\\
+--exec-prefix=$MPI_HOME \\\
+--bindir=$MPI_BIN \\\
+--sbindir=$MPI_HOME/bin/ \\\
+--datadir=$MPI_HOME/share/ \\\
+--includedir=$MPI_INCLUDE \\\
+--libdir=$MPI_LIB \\\
+--mandir=$MPI_MAN \\\
+%if !%{with iv} \
+--without-iv \\\
 %endif \
 --with-gnu-ld \\\
 %if %{with metis} \
@@ -194,6 +203,10 @@ popd
 export MPI_COMPILE_TYPE=""
 export MPI_OPTIONS=""
 export MPI_LIB="%{_libdir}"
+export MPI_HOME="%{_prefix}"
+export MPI_BIN="%{_bindir}"
+export MPI_INCLUDE="%{_includedir}"
+export MPI_MAN="%{_mandir}"
 %{do_build}
 
 # MPICH
@@ -321,5 +334,5 @@ rm -fv $RPM_BUILD_ROOT/%{_datadir}/%{tarname}/libtool
 %endif # with mpich
 
 %changelog
-* Sun Dec 9 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 7.5-1.git5687519
+* Sun Dec 9 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 7.5-1.20181214git5687519
 - Update to latest git snapshot that uses current sundials
