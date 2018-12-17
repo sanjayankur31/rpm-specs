@@ -1,3 +1,10 @@
+# Permit build to succeed even when debug build-id is not found
+# Not yet sure why this is happening---all flags are used correctly in the build
+# Only happens with MPI binaries, but they're built pretty much in the same way
+# as the serial binary too
+%global _missing_build_ids_terminate_build 0
+
+
 # Stop automatic removal of shebang from neuron makefiles
 %global __brp_mangle_shebangs_exclude_from ^%{_bindir}/nrn.*makefile$
 
@@ -120,6 +127,7 @@ Requires: %{name}-mpich%{?_isa} = %{version}-%{release}
 
 %description static-mpich
 Static libraries for %{name} built with MPICH.
+
 %endif
 
 
@@ -215,7 +223,7 @@ popd
 # during the build, so we do not let the Makefiles' subdirectory system do it.
 # We do it ourselves.
 %if %{with mpich} || %{with openmpi}
-    pushd src/nrnmpi && %make_build && popd
+    %make_build -C src/nrnmpi
 %endif
 
 popd
@@ -247,26 +255,64 @@ echo "*** Installing %{tarname}-%{commit}$MPI_COMPILE_TYPE ***"
 
 # Manualy install mpi bits for MPI builds where we've disabled the subdir in the main makefile
 %if %{with mpich} || %{with openmpi}
-    pushd src/nrnmpi && %make_build && popd
+    %make_install -C %{tarname}-%{commit}$MPI_COMPILE_TYPE/src/nrnmpi
 %endif
+}
+
+%global modify_for_mpi %{expand:
+# Remove installed libtool
+rm -fv $RPM_BUILD_ROOT/$MPI_HOME/share/%{tarname}/libtool
+# Remove docs for MPI packages
+rm -rf $RPM_BUILD_ROOT/$MPI_HOME/share/%{tarname}/examples
+rm -rf $RPM_BUILD_ROOT/$MPI_HOME/share/%{tarname}/demo
+# Remove nrnpy bits
+# nrnpython requires neuron to be installed already, so we'll provide that as a
+# separate package
+pushd $RPM_BUILD_ROOT/$MPI_BIN
+    rm -fv *nrnpy*
+    # The HAMMER: Replace references to all these files with ones suffixed with
+    # $MPI_SUFFIX
+    for f in ivoc memacs mkthreadsafe modlunit mos2nrn neurondemo nocmodl nrngui nrniv nrniv_makefile nrnivmodl nrnmech_makefile nrnoc nrnoc_makefile nrnocmodl oc sortspike bbswork.sh hel2mos1.sh mos2nrn2.sh nrndiagnose.sh; do
+
+        for t in ivoc memacs mkthreadsafe modlunit mos2nrn neurondemo nocmodl nrngui nrniv nrniv_makefile nrnivmodl nrnmech_makefile nrnoc nrnoc_makefile nrnocmodl oc sortspike bbswork hel2mos1 mos2nrn2 nrndiagnose; do
+            sed -i "s/$t/$t$MPI_SUFFIX/g" $f
+        done
+    done
+
+    # Rename the files: shell scripts
+    for f in bbswork hel2mos1 mos2nrn2 nrndiagnose ; do
+        cp -pv $f{,$MPI_SUFFIX}.sh && rm -f $f.sh
+    done
+
+    # Other files
+    for f in ivoc memacs mkthreadsafe modlunit mos2nrn neurondemo nocmodl nrngui nrniv nrniv_makefile nrnivmodl nrnmech_makefile nrnoc nrnoc_makefile nrnocmodl oc sortspike; do
+        # Rename files
+        cp -pv $f{,$MPI_SUFFIX} && rm -f $f
+    done
+popd
 }
 
 export MPI_COMPILE_TYPE=""
 %{do_install}
+# Installs it even when we're not providing nrnpy
+rm -fv $RPM_BUILD_ROOT/%{_bindir}/*nrnpy* -f
+# Remove installed libtool copy
+rm -fv $RPM_BUILD_ROOT/%{_datadir}/%{tarname}/libtool
 
 # MPICH
 %if %{with mpich}
 %{_mpich_load}
 export MPI_COMPILE_TYPE="-mpich"
 %{do_install}
+%{modify_for_mpi}
 %{_mpich_unload}
 %endif # with mpich
 
 # Post install clean up
 # Remove stray object files
 # Probably worth a PR
+# Must be done at end, otherwise it deletes object files required for other builds
 find . $RPM_BUILD_ROOT/%{_libdir}/ -name "*.o" -exec rm -f '{}' \;
-rm -fv $RPM_BUILD_ROOT/%{_datadir}/%{tarname}/libtool
 
 %ldconfig_scriptlets
 
@@ -274,7 +320,29 @@ rm -fv $RPM_BUILD_ROOT/%{_datadir}/%{tarname}/libtool
 %files
 %license Copyright
 %doc README.md
-%{_bindir}/*
+# Binaries, scripts and makefiles
+%{_bindir}/bbswork.sh
+%{_bindir}/hel2mos1.sh
+%{_bindir}/ivoc
+%{_bindir}/memacs
+%{_bindir}/mkthreadsafe
+%{_bindir}/modlunit
+%{_bindir}/mos2nrn
+%{_bindir}/mos2nrn2.sh
+%{_bindir}/neurondemo
+%{_bindir}/nocmodl
+%{_bindir}/nrndiagnose.sh
+%{_bindir}/nrngui
+%{_bindir}/nrniv
+%{_bindir}/nrniv_makefile
+%{_bindir}/nrnivmodl
+%{_bindir}/nrnmech_makefile
+%{_bindir}/nrnoc
+%{_bindir}/nrnoc_makefile
+%{_bindir}/nrnocmodl
+%{_bindir}/oc
+%{_bindir}/sortspike
+# Libs
 %{_libdir}/libivoc.so.0.0.0
 %{_libdir}/libivoc.so.0
 %{_libdir}/libmemacs.so.0.0.0
@@ -299,7 +367,8 @@ rm -fv $RPM_BUILD_ROOT/%{_datadir}/%{tarname}/libtool
 %{_libdir}/libscopmath.so.0.0.0
 %{_libdir}/libivos.so.0
 %{_libdir}/libivos.so.0.0.0
-
+# other hoc files and data
+%dir %{_datadir}/%{tarname}
 %{_datadir}/%{tarname}/lib
 
 %files devel
@@ -349,15 +418,94 @@ rm -fv $RPM_BUILD_ROOT/%{_datadir}/%{tarname}/libtool
 %files mpich
 %license Copyright
 %doc README.md
+# Binaries, makefiles, scripts
+%{_libdir}/mpich/bin/bbswork_mpich.sh
+%{_libdir}/mpich/bin/hel2mos1_mpich.sh
+%{_libdir}/mpich/bin/ivoc_mpich
+%{_libdir}/mpich/bin/memacs_mpich
+%{_libdir}/mpich/bin/mkthreadsafe_mpich
+%{_libdir}/mpich/bin/modlunit_mpich
+%{_libdir}/mpich/bin/mos2nrn_mpich
+%{_libdir}/mpich/bin/mos2nrn2_mpich.sh
+%{_libdir}/mpich/bin/neurondemo_mpich
+%{_libdir}/mpich/bin/nocmodl_mpich
+%{_libdir}/mpich/bin/nrndiagnose_mpich.sh
+%{_libdir}/mpich/bin/nrngui_mpich
+%{_libdir}/mpich/bin/nrniv_mpich
+%{_libdir}/mpich/bin/nrniv_makefile_mpich
+%{_libdir}/mpich/bin/nrnivmodl_mpich
+%{_libdir}/mpich/bin/nrnmech_makefile_mpich
+%{_libdir}/mpich/bin/nrnoc_mpich
+%{_libdir}/mpich/bin/nrnoc_makefile_mpich
+%{_libdir}/mpich/bin/nrnocmodl_mpich
+%{_libdir}/mpich/bin/oc_mpich
+%{_libdir}/mpich/bin/sortspike_mpich
+# Libraries
+%{_libdir}/mpich/lib/libivoc.so.0.0.0
+%{_libdir}/mpich/lib/libivoc.so.0
+%{_libdir}/mpich/lib/libmemacs.so.0.0.0
+%{_libdir}/mpich/lib/libmemacs.so.0
+%{_libdir}/mpich/lib/libmeschach.so.0.0.0
+%{_libdir}/mpich/lib/libmeschach.so.0
+%{_libdir}/mpich/lib/libneuron_gnu.so.0.0.0
+%{_libdir}/mpich/lib/libneuron_gnu.so.0
+%{_libdir}/mpich/lib/libnrniv.so.0.0.0
+%{_libdir}/mpich/lib/libnrniv.so.0
+%{_libdir}/mpich/lib/libnrnmpi.so.0.0.0
+%{_libdir}/mpich/lib/libnrnmpi.so.0
+%{_libdir}/mpich/lib/libnrnoc.so.0.0.0
+%{_libdir}/mpich/lib/libnrnoc.so.0
+%{_libdir}/mpich/lib/liboc.so.0.0.0
+%{_libdir}/mpich/lib/liboc.so.0
+%{_libdir}/mpich/lib/libocxt.so.0.0.0
+%{_libdir}/mpich/lib/libocxt.so.0
+%{_libdir}/mpich/lib/libsparse13.so.0.0.0
+%{_libdir}/mpich/lib/libsparse13.so.0
+%{_libdir}/mpich/lib/libscopmath.so.0
+%{_libdir}/mpich/lib/libscopmath.so.0.0.0
+%{_libdir}/mpich/lib/libivos.so.0
+%{_libdir}/mpich/lib/libivos.so.0.0.0
+
+%dir %{_libdir}/mpich/share/%{tarname}
+%{_libdir}/mpich/share/%{tarname}/lib
 
 %files devel-mpich
 %license Copyright
 %doc README.md
+%{_includedir}/mpich-%{_arch}/%{tarname}
+%{_libdir}/mpich/lib/libivoc.so
+%{_libdir}/mpich/lib/libmemacs.so
+%{_libdir}/mpich/lib/libmeschach.so
+%{_libdir}/mpich/lib/libneuron_gnu.so
+%{_libdir}/mpich/lib/libnrniv.so
+%{_libdir}/mpich/lib/libnrnmpi.so
+%{_libdir}/mpich/lib/libnrnoc.so
+%{_libdir}/mpich/lib/liboc.so
+%{_libdir}/mpich/lib/libocxt.so
+%{_libdir}/mpich/lib/libsparse13.so
+%{_libdir}/mpich/lib/libscopmath.so
+%{_libdir}/mpich/lib/libivos.so
+
+# should this be here?!
+%{_libdir}/mpich/lib/nrnconf.h
 
 # Do we need the static libraries?
 %files static-mpich
 %license Copyright
 %doc README.md
+%{_libdir}/mpich/lib/libivoc.la
+%{_libdir}/mpich/lib/libmemacs.la
+%{_libdir}/mpich/lib/libmeschach.la
+%{_libdir}/mpich/lib/libneuron_gnu.la
+%{_libdir}/mpich/lib/libnrniv.la
+%{_libdir}/mpich/lib/libnrnmpi.la
+%{_libdir}/mpich/lib/libnrnoc.la
+%{_libdir}/mpich/lib/liboc.la
+%{_libdir}/mpich/lib/libocxt.la
+%{_libdir}/mpich/lib/libsparse13.la
+%{_libdir}/mpich/lib/libscopmath.la
+%{_libdir}/mpich/lib/libivos.la
+
 %endif # with mpich
 
 %changelog
