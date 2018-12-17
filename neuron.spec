@@ -27,7 +27,7 @@ Please install the %{name}-devel package to compile nmodl files and so on.
 %global tarname nrn
 
 %bcond_without mpich
-%bcond_with openmpi
+%bcond_without openmpi
 
 # fails somehow, disabled by default
 %bcond_with metis
