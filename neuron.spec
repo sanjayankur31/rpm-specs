@@ -1,7 +1,8 @@
 # Permit build to succeed even when debug build-id is not found
-# Not yet sure why this is happening---all flags are used correctly in the build
-# Only happens with MPI binaries, but they're built pretty much in the same way
-# as the serial binary too
+# Only happens for MPI builds. 
+# Not yet sure why this is happening---all flags are used correctly in the
+# build, but the binaries are linked statically. It probably has something to
+# do with how I make nrnmpi separately. Will need some checking
 %global _missing_build_ids_terminate_build 0
 
 
