@@ -43,6 +43,13 @@ Source0:    https://github.com/brunomaga/%{tarname}/archive/%{commit}/%{tarname}
 
 Patch0:     0001-Unbundle-Random123-for-brunomegas-branch.patch
 
+# For mpi versions nrnmpi must be built after oc and nrniv
+# Upstream does this by building nrnmpi as a post-install-hook when liboc and
+# libnrniv have already been installed in %%{_libdir}, but we want to do it
+# during the build, so we do not let the Makefiles' subdirectory system do it.
+# We do it ourselves.
+Patch1:     0001-Disable-mpi-libnrnmpi-build.patch
+
 # Random123 does not build on these, so neither can NEURON
 # https://github.com/neuronsimulator/nrn/issues/114
 ExcludeArch:    %{arm} mips64r2 mips32r2 s390 s390x
@@ -152,10 +159,14 @@ popd
 
 %if %{with mpich}
 cp -a %{tarname}-%{commit} %{tarname}-%{commit}-mpich
+# Disable subdir based build of nrnmpi
+sed -i "s/nrnmpi//" %{tarname}-%{commit}-mpich/src/Makefile.am
 %endif
 
 %if %{with openmpi}
 cp -a %{tarname}-%{commit} %{tarname}-%{commit}-openmpi
+# Disable subdir based build of nrnmpi
+sed -i "s/nrnmpi//" %{tarname}-%{commit}-openmpi/src/Makefile.am
 %endif
 
 %build
@@ -166,7 +177,9 @@ pushd %{tarname}-%{commit}$MPI_COMPILE_TYPE
 ./build.sh &&
 %{set_build_flags}
 ./configure \\\
---disable-dependency-tracking \\\
+--enable-static=no \\\
+--enable-shared=yes \\\
+--enable-dependency-tracking \\\
 --prefix=$MPI_HOME \\\
 --exec-prefix=$MPI_HOME \\\
 --bindir=$MPI_BIN \\\
@@ -174,15 +187,14 @@ pushd %{tarname}-%{commit}$MPI_COMPILE_TYPE
 --datadir=$MPI_HOME/share/ \\\
 --includedir=$MPI_INCLUDE \\\
 --libdir=$MPI_LIB \\\
---mandir=$MPI_MAN \\\
+--mandir=$MPI_MAN $MPI_OPTIONS \\\
 %if !%{with iv} \
---without-iv \\\
+--without-iv --with-x \\\
 %endif \
 --with-gnu-ld \\\
 %if %{with metis} \
 --with-metis  \\\
-%endif \
---with-x $MPI_OPTIONS
+%endif
 
 sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool &&
 sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool &&
@@ -195,6 +207,16 @@ popd
 %endif
 
 %make_build
+
+
+# For mpi versions nrnmpi must be built after oc and nrniv
+# Upstream does this by building nrnmpi as a post-install-hook when liboc and
+# libnrniv have already been installed in %%{_libdir}, but we want to do it
+# during the build, so we do not let the Makefiles' subdirectory system do it.
+# We do it ourselves.
+%if %{with mpich} || %{with openmpi}
+    pushd src/nrnmpi && %make_build && popd
+%endif
 
 popd
 }
@@ -222,6 +244,11 @@ export MPI_OPTIONS="--with-paranrn=dynamic --with-mpi --with-multisend"
 %global do_install %{expand:
 echo "*** Installing %{tarname}-%{commit}$MPI_COMPILE_TYPE ***"
 %make_install -C %{tarname}-%{commit}$MPI_COMPILE_TYPE
+
+# Manualy install mpi bits for MPI builds where we've disabled the subdir in the main makefile
+%if %{with mpich} || %{with openmpi}
+    pushd src/nrnmpi && %make_build && popd
+%endif
 }
 
 export MPI_COMPILE_TYPE=""
