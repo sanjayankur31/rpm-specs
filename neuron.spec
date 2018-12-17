@@ -113,11 +113,11 @@ BuildRequires:  sundials-mpich-devel
 %description mpich
 %{desc}
 
-%package devel-mpich
+%package mpich-devel
 Summary:    Development files for %{name} built with MPICH
 Requires: %{name}-mpich%{?_isa} = %{version}-%{release}
 
-%description devel-mpich
+%description mpich-devel
 Headers and development shared libraries for the %{name} package built with
 MPICH support.
 
@@ -128,8 +128,35 @@ Requires: %{name}-mpich%{?_isa} = %{version}-%{release}
 %description static-mpich
 Static libraries for %{name} built with MPICH.
 
-%endif
+%endif # endif mpich
 
+%if %{with openmpi}
+%package openmpi
+Summary:    %{name} build with OpenMPI support.
+Requires:   openmpi
+BuildRequires:  rpm-mpi-hooks
+BuildRequires:  openmpi-devel
+BuildRequires:  sundials-openmpi-devel
+
+%description openmpi
+%{desc}
+
+%package openmpi-devel
+Summary:    Development files for %{name} built with OpenMPI
+Requires: %{name}-openmpi%{?_isa} = %{version}-%{release}
+
+%description openmpi-devel
+Headers and development shared libraries for the %{name} package built with
+OpenMPI support.
+
+%package static-openmpi
+Summary:    Static libraries for %{name} built with OpenMPI
+Requires: %{name}-openmpi%{?_isa} = %{version}-%{release}
+
+%description static-openmpi
+Static libraries for %{name} built with OpenMPI.
+
+%endif # endif openmpi
 
 %prep
 %autosetup -c -n %{tarname}-%{commit} -N
@@ -248,6 +275,15 @@ export MPI_OPTIONS="--with-paranrn=dynamic --with-mpi --with-multisend"
 %{_mpich_unload}
 %endif # with mpich
 
+# OpenMPI
+%if %{with openmpi}
+%{_openmpi_load}
+export MPI_COMPILE_TYPE="-openmpi"
+export MPI_OPTIONS="--with-paranrn=dynamic --with-mpi --with-multisend"
+%{do_build}
+%{_openmpi_unload}
+%endif # with openmpi
+
 %install
 %global do_install %{expand:
 echo "*** Installing %{tarname}-%{commit}$MPI_COMPILE_TYPE ***"
@@ -307,6 +343,15 @@ export MPI_COMPILE_TYPE="-mpich"
 %{modify_for_mpi}
 %{_mpich_unload}
 %endif # with mpich
+
+# OpenMPI
+%if %{with openmpi}
+%{_openmpi_load}
+export MPI_COMPILE_TYPE="-openmpi"
+%{do_install}
+%{modify_for_mpi}
+%{_openmpi_unload}
+%endif # with openmpi
 
 # Post install clean up
 # Remove stray object files
@@ -469,7 +514,7 @@ find . $RPM_BUILD_ROOT/%{_libdir}/ -name "*.o" -exec rm -f '{}' \;
 %dir %{_libdir}/mpich/share/%{tarname}
 %{_libdir}/mpich/share/%{tarname}/lib
 
-%files devel-mpich
+%files mpich-devel
 %license Copyright
 %doc README.md
 %{_includedir}/mpich-%{_arch}/%{tarname}
@@ -507,6 +552,101 @@ find . $RPM_BUILD_ROOT/%{_libdir}/ -name "*.o" -exec rm -f '{}' \;
 %{_libdir}/mpich/lib/libivos.la
 
 %endif # with mpich
+
+%if %{with openmpi}
+%files openmpi
+%license Copyright
+%doc README.md
+# Binaries, makefiles, scripts
+%{_libdir}/openmpi/bin/bbswork_openmpi.sh
+%{_libdir}/openmpi/bin/hel2mos1_openmpi.sh
+%{_libdir}/openmpi/bin/ivoc_openmpi
+%{_libdir}/openmpi/bin/memacs_openmpi
+%{_libdir}/openmpi/bin/mkthreadsafe_openmpi
+%{_libdir}/openmpi/bin/modlunit_openmpi
+%{_libdir}/openmpi/bin/mos2nrn_openmpi
+%{_libdir}/openmpi/bin/mos2nrn2_openmpi.sh
+%{_libdir}/openmpi/bin/neurondemo_openmpi
+%{_libdir}/openmpi/bin/nocmodl_openmpi
+%{_libdir}/openmpi/bin/nrndiagnose_openmpi.sh
+%{_libdir}/openmpi/bin/nrngui_openmpi
+%{_libdir}/openmpi/bin/nrniv_openmpi
+%{_libdir}/openmpi/bin/nrniv_makefile_openmpi
+%{_libdir}/openmpi/bin/nrnivmodl_openmpi
+%{_libdir}/openmpi/bin/nrnmech_makefile_openmpi
+%{_libdir}/openmpi/bin/nrnoc_openmpi
+%{_libdir}/openmpi/bin/nrnoc_makefile_openmpi
+%{_libdir}/openmpi/bin/nrnocmodl_openmpi
+%{_libdir}/openmpi/bin/oc_openmpi
+%{_libdir}/openmpi/bin/sortspike_openmpi
+# Libraries
+%{_libdir}/openmpi/lib/libivoc.so.0.0.0
+%{_libdir}/openmpi/lib/libivoc.so.0
+%{_libdir}/openmpi/lib/libmemacs.so.0.0.0
+%{_libdir}/openmpi/lib/libmemacs.so.0
+%{_libdir}/openmpi/lib/libmeschach.so.0.0.0
+%{_libdir}/openmpi/lib/libmeschach.so.0
+%{_libdir}/openmpi/lib/libneuron_gnu.so.0.0.0
+%{_libdir}/openmpi/lib/libneuron_gnu.so.0
+%{_libdir}/openmpi/lib/libnrniv.so.0.0.0
+%{_libdir}/openmpi/lib/libnrniv.so.0
+%{_libdir}/openmpi/lib/libnrnmpi.so.0.0.0
+%{_libdir}/openmpi/lib/libnrnmpi.so.0
+%{_libdir}/openmpi/lib/libnrnoc.so.0.0.0
+%{_libdir}/openmpi/lib/libnrnoc.so.0
+%{_libdir}/openmpi/lib/liboc.so.0.0.0
+%{_libdir}/openmpi/lib/liboc.so.0
+%{_libdir}/openmpi/lib/libocxt.so.0.0.0
+%{_libdir}/openmpi/lib/libocxt.so.0
+%{_libdir}/openmpi/lib/libsparse13.so.0.0.0
+%{_libdir}/openmpi/lib/libsparse13.so.0
+%{_libdir}/openmpi/lib/libscopmath.so.0
+%{_libdir}/openmpi/lib/libscopmath.so.0.0.0
+%{_libdir}/openmpi/lib/libivos.so.0
+%{_libdir}/openmpi/lib/libivos.so.0.0.0
+
+%dir %{_libdir}/openmpi/share/%{tarname}
+%{_libdir}/openmpi/share/%{tarname}/lib
+
+%files openmpi-devel
+%license Copyright
+%doc README.md
+%{_includedir}/openmpi-%{_arch}/%{tarname}
+%{_libdir}/openmpi/lib/libivoc.so
+%{_libdir}/openmpi/lib/libmemacs.so
+%{_libdir}/openmpi/lib/libmeschach.so
+%{_libdir}/openmpi/lib/libneuron_gnu.so
+%{_libdir}/openmpi/lib/libnrniv.so
+%{_libdir}/openmpi/lib/libnrnmpi.so
+%{_libdir}/openmpi/lib/libnrnoc.so
+%{_libdir}/openmpi/lib/liboc.so
+%{_libdir}/openmpi/lib/libocxt.so
+%{_libdir}/openmpi/lib/libsparse13.so
+%{_libdir}/openmpi/lib/libscopmath.so
+%{_libdir}/openmpi/lib/libivos.so
+
+# should this be here?!
+%{_libdir}/openmpi/lib/nrnconf.h
+
+# Do we need the static libraries?
+%files static-openmpi
+%license Copyright
+%doc README.md
+%{_libdir}/openmpi/lib/libivoc.la
+%{_libdir}/openmpi/lib/libmemacs.la
+%{_libdir}/openmpi/lib/libmeschach.la
+%{_libdir}/openmpi/lib/libneuron_gnu.la
+%{_libdir}/openmpi/lib/libnrniv.la
+%{_libdir}/openmpi/lib/libnrnmpi.la
+%{_libdir}/openmpi/lib/libnrnoc.la
+%{_libdir}/openmpi/lib/liboc.la
+%{_libdir}/openmpi/lib/libocxt.la
+%{_libdir}/openmpi/lib/libsparse13.la
+%{_libdir}/openmpi/lib/libscopmath.la
+%{_libdir}/openmpi/lib/libivos.la
+
+%endif # with openmpi
+
 
 %changelog
 * Sun Dec 9 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 7.5-1.20181214git5687519
