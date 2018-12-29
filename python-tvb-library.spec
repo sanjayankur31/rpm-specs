@@ -7,6 +7,11 @@
 %bcond_without py2
 %endif
 
+# Latest commit
+%global commit b54346e8743b66c768fa31bdd925b94ce5fe4fc5
+%global shortcommit %(c=%{commit}; echo ${c:0:7})
+%global checkout_date  20191229
+
 # Enabled by default
 # If the package needs to download data for the test which cannot be done in
 # koji, these can be disabled in koji by using `bcond_with` instead, but the
@@ -14,20 +19,28 @@
 # mock -r fedora-rawhide-x86_64 rebuild <srpm> --enable-network --rpmbuild-opts="--with tests"
 %bcond_without tests
 
-%global pypi_name example
+%global pypi_name tvb-library
 
 %global desc %{expand: \
-Add a description here.}
+The Virtual Brain Project (TVB Project) has the purpose of offering some modern
+tools to the Neurosciences community, for computing, simulating and analyzing
+functional and structural data of human brains.
+
+"TVB Scientific Library" is the most important scientific contribution of TVB
+Project, but only a part of our code. In order to use this TVB Python Library
+(modify/run/test), you are advised to follow the steps described here:
+http://docs.thevirtualbrain.com/manuals/ContributorsManual/ContributorsManual.html#contributors-manual
+}
 
 Name:           python-%{pypi_name}
-Version:        1.2.3
-Release:        1%{?dist}
-Summary:        An example python module
+Version:        1.5.6
+Release:        1.%{checkout_date}git%{shortcommit}%{?dist}
+Summary:        The Virtual Brain scientific library
 
 # https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing#Good_Licenses
-License:
+License:        GPLv3
 URL:            https://pypi.python.org/pypi/%{pypi_name}
-Source0:        %pypi_source %{pypi_name}
+Source0:        https://github.com/the-virtual-brain/%{pypi_name}/archive/%{commit}/%{name}-%{shortcommit}.tar.gz
 
 BuildArch:      noarch
 
@@ -52,7 +65,18 @@ BuildRequires:  %{py2_dist ...}
 Summary:        %{summary}
 BuildRequires:  python3-devel
 # DELETE ME: Use standard names
-BuildRequires:  %{py3_dist ...}
+BuildRequires:  %{py3_dist networkx}
+BuildRequires:  %{py3_dist numpy}
+BuildRequires:  %{py3_dist numba}
+BuildRequires:  %{py3_dist numexpr}
+BuildRequires:  %{py3_dist matplotlib}
+BuildRequires:  %{py3_dist pytest}
+BuildRequires:  %{py3_dist scikit-learn}
+BuildRequires:  %{py3_dist scipy}
+# Not yet in Fedora
+BuildRequires:  python3-tvb-geodesic
+BuildRequires:  python3-tvb-data
+
 # For documentation
 BuildRequires:  %{py3_dist sphinx}
 %{?python_provide:%python_provide python3-%{pypi_name}}
@@ -67,7 +91,7 @@ Summary:        %{summary}
 Documentation for %{name}.
 
 %prep
-%autosetup -n %{pypi_name}-%{version}
+%autosetup -n %{pypi_name}-%{commit}
 rm -rf %{pypi_name}.egg-info
 
 # Comment out to remove /usr/bin/env shebangs
@@ -126,3 +150,6 @@ popd
 %doc doc/_build/html
 
 %changelog
+* Sat Dec 29 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 1.5.6-1.20181229gitb54346e
+- Initial build
+
