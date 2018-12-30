@@ -52,25 +52,41 @@ BuildRequires:  libX11-devel
 BuildRequires:  mesa-devel
 
 
-# Not in fedora
-# Most of them are old and only used by fsl, so we may bundle them.
-# Ones that are still maintained, we can package separately
+#### These are not yet in fedora ####
+# Most of them are old and only used by fsl, so we may bundle them.  Ones that
+# are still maintained, we can package separately
 # https://pecl.php.net/package/GDChart
-BuildRequires:  gdchart-devel
+# BuildRequires:  gdchart-devel
+
+# Only used in FSL, unmaintained now, bundling
 # http://www.robertnz.net/nr02doc.htm#files
-BuildRequires:  newran-devel
-# From cephes
+# BuildRequires:  newran-devel
+
+# Only used in FSL, unmaintained now, bundling
 # http://www.netlib.org/cephes/
-BuildRequires:  cprob-devel
+# BuildRequires:  cprob-devel
+
 # https://git.fmrib.ox.ac.uk/fsl/armawrap
 BuildRequires:  armawrap-devel
+
+# Not sure if this is needed
 # http://robertnz.net/nm_intro.htm
-BuildRequires:  newmat-devel
+# BuildRequires:  newmat-devel
+
+# Currently unavailable due to federal government shut down
 # https://math.nist.gov/iml++/
-BuildRequires:  iml++-devel
+# BuildRequires:  iml++-devel
 
 %description
 %{desc}
+
+
+%package data
+BuildArch:  noarch
+
+%description data
+Data files for %{name}.
+
 
 %prep
 %autosetup
@@ -88,6 +104,8 @@ BuildRequires:  iml++-devel
 %license LICENSE
 %doc README
 
+%files data
+
 %changelog
-* Wed Nov 28 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 6.0.0-1
+* Sun Dec 30 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 6.0.0-1
 - Initial WIP
