@@ -1,3 +1,9 @@
+# This is a serial build of NEURON without Python or other bindings.
+# Both the MPI builds and Python bindings require NEURON to be already
+# installed in the system---they are build as post-installation hooks. So, we
+# first package a serial version of NEURON and then package those separately
+# after using this package as a BR
+
 %global commit 56875193411d552eea7d4cbfe09458f3c4f76613
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
 
@@ -25,7 +31,7 @@ Please install the %{name}-devel package to compile nmodl files and so on.
 
 Name:       neuron
 Version:    7.5
-Release:    1.20181214git%{shortcommit}%{?dist}
+Release:    2.20181214git%{shortcommit}%{?dist}
 Summary:    A flexible and powerful simulator of neurons and networks
 
 License:    GPLv2+
@@ -36,28 +42,34 @@ URL:        http://www.neuron.yale.edu/neuron/
 Source0:    https://github.com/brunomaga/%{tarname}/archive/%{commit}/%{tarname}-%{shortcommit}.tar.gz
 # Source0:    https://github.com/neuronsimulator/%%{tarname}/archive/%%{commit}/%%{tarname}-%%{shortcommit}.tar.gz
 
-Patch0:     0001-Unbundle-Random123-for-brunomegas-branch.patch
+# Based on brunomega's master branch
+Patch0:     0001-Unbundle-Random123.patch
 
 # Random123 does not build on these, so neither can NEURON
 # https://github.com/neuronsimulator/nrn/issues/114
 ExcludeArch:    %{arm} mips64r2 mips32r2 s390 s390x
 
-BuildRequires:  ncurses-devel
-BuildRequires:  readline-devel
-BuildRequires:  Random123-devel
-BuildRequires:  libX11-devel
-BuildRequires:  metis-devel
+BuildRequires:  autoconf
+BuildRequires:  automake
+BuildRequires:  bison
+BuildRequires:  bison-devel
+BuildRequires:  flex
+BuildRequires:  flex-devel
 BuildRequires:  gcc
 BuildRequires:  gcc-c++
-BuildRequires:  autoconf automake libtool
 BuildRequires:  git
-BuildRequires:  bison bison-devel
-BuildRequires:  flex-devel flex
-BuildRequires:  sundials-devel
-
 %if %{with iv}
 BuildRequires:  iv-static iv-devel
 %endif
+BuildRequires:  libX11-devel
+BuildRequires:  libtool
+%if %{with metis}
+BuildRequires:  metis-devel
+%endif
+BuildRequires:  ncurses-devel
+BuildRequires:  readline-devel
+BuildRequires:  Random123-devel
+BuildRequires:  sundials-devel
 
 %description
 %{desc}
@@ -87,8 +99,7 @@ Documentation for %{name}
 %prep
 %autosetup -n %{tarname}-%{commit} -p1 -S git
 
-# Let us tell the system where to find the sundials libraries. It is hard coded.
-sed -i 's|SUNDIALS_LIBDIRNAMES="${prefix}/lib"|SUNDIALS_LIBDIRNAMES="$MPI_LIB"|' configure.ac
+rm -rf src/Random123
 
 # Stop build file from generating version header
 sed -i '/git2nrnversion_h.sh/ d' build.sh
@@ -129,8 +140,8 @@ export SUNDIALS_SYSTEM_INSTALL="yes"
 
 %configure %{iv_flags} %{metis_flags} --with-gnu-ld
 
-sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool &&
-sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool &&
+sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool && \
+sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 
 %make_build
 
@@ -148,6 +159,7 @@ rm -fv $RPM_BUILD_ROOT/%{_datadir}/%{tarname}/libtool
 # Must be done at end, otherwise it deletes object files required for other builds
 find . $RPM_BUILD_ROOT/%{_libdir}/ -name "*.o" -exec rm -f '{}' \;
 
+# Still needed on F28?
 %ldconfig_scriptlets
 
 # The makefiles do not have shebangs
@@ -249,6 +261,12 @@ find . $RPM_BUILD_ROOT/%{_libdir}/ -name "*.o" -exec rm -f '{}' \;
 %{_datadir}/%{tarname}/demo
 
 %changelog
+* Sun Jan 06 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 7.5-2.20181214git5687519
+- Put each BR on different line
+- Remove unneeded comment
+- Re-do random123 patch to only modify autotools files
+- Remove random123 in prep
+
 * Fri Dec 28 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 7.5-1.20181214git5687519
 - Update to latest git snapshot that uses current sundials
 - Build without MPI
