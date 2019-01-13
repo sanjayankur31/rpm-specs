@@ -19,6 +19,8 @@ Documentation is available at https://arbor.readthedocs.io/en/latest/
 %bcond_with mpich
 %bcond_with openmpi
 
+%bcond_with docs
+
 Name:           arbor
 Version:        0.1
 
@@ -32,8 +34,16 @@ Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 BuildRequires:  cmake
 BuildRequires:  gcc-c++
 BuildRequires:  json-devel
+BuildRequires:  libunwind-devel
 BuildRequires:  tclap-devel
+
+%if %{with docs}
 BuildRequires:  python3-sphinx
+%endif
+
+# For validation, but we don't run these
+# BuildRequires:  julia
+# BuildRequires:  sundials-devel
 
 %description
 %{_description}
@@ -76,6 +86,8 @@ pushd %{name}-%{version}
 # Do not build external libraries
 # tclap and json
 sed -i '/add_subdirectory(ext)/ d' CMakeLists.txt
+# Disable doc build
+sed -i '/add_subdirectory(doc)/ d' CMakeLists.txt
 
 popd
 
@@ -109,7 +121,7 @@ pushd %{name}-%{version}$MPI_COMPILE_TYPE  &&
         -DCMAKE_INSTALL_PREFIX:PATH=$MPI_HOME \\\
         -DBUILD_SHARED_LIBS:BOOL=ON \\\
         -DCMAKE_BUILD_TYPE:STRING="release" \\\
-        -DARB_BUILD_VALIDATION_DATA:BOOL=ON \\\
+        -DARB_BUILD_VALIDATION_DATA:BOOL=OFF \\\
         -DARB_VECTORIZE:BOOL=ON \\\
         -DARB_WITH_MPI:BOOL=$MPI_YES \\\
 %if "%{_lib}" == "lib64"
