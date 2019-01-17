@@ -28,35 +28,65 @@ filtering, and much more.
 
 %prep
 %autosetup -n %{octpkg}-r%{revision}
-make -C src distclean PLATFORM=octave
+# It needs to be set for octave. Since we want to use the macros, I cannot pass
+# this in the command as I've done above.
+sed -i '29i PLATFORM = octave' src/Makefile.var
+
+# Parallel build does not work, force make to run sequentially
+echo '.NOTPARALLEL:' >> src/Makefile
+
+make -C src distclean
+
+# Prepare for octave pkg build
+cat > DESCRIPTION <<EOF
+Name: SPM12
+Version: r%{revision}
+Date: 2019-01-17
+Author: SPM authors. See AUTHORS.txt
+Maintainer: SPM authors. See README.md
+Title: %{summary}
+Description: %{summary}
+License: GPLv2+
+
+EOF
+
+cp LICENCE.txt COPYING
 
 
 %build
 %set_build_flags
-make -C src PLATFORM=octave
-# %%octave_pkg_build
+# Build mex files
+make -C src
+# Copy mex files to main directory
+make -C src install
+# Remove make files other wise `octave pkg build`
+# uses them
+rm -f src/Makefile*
+
+%octave_pkg_build
 
 
 %install
-make -C src install PLATFORM=octave
-# %%octave_pkg_install
+# Required by the octave_pkg_install macro
+mkdir -p %{buildroot}/%{octpkgdir}/packinfo/
+%octave_pkg_install
 
 
 %post
-# %%octave_cmd pkg rebuild
+%octave_cmd pkg rebuild
 
 %preun
-# %%octave_pkg_preun
+%octave_pkg_preun
 
 %postun
-# %%octave_cmd pkg rebuild
+%octave_cmd pkg rebuild
 
 %files
-# %{octpkglibdir}
-# %dir %{octpkgdir}
-# %{octpkgdir}/*.m
-# %doc %{octpkgdir}/doc-cache
-# %{octpkgdir}/packinfo
+%{octpkglibdir}
+%dir %{octpkgdir}
+%{octpkgdir}/*.m
+%doc %{octpkgdir}/doc-cache
+%{octpkgdir}/packinfo
 
 
 %changelog
