@@ -30,6 +30,8 @@ Summary:        The Arbor multi-compartment neural network simulation library
 License:        MIT
 URL:            https://github.com/arbor-sim/%{name}
 Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
+# Update cmake/FindUnwind.cmake
+Patch0:         arbor-0.1-findunwind.patch
 
 BuildRequires:  cmake
 BuildRequires:  gcc-c++
@@ -74,7 +76,7 @@ Requires:       mpich
 %prep
 # We must create a separate top level directory and then triplicate it so that
 # we have two more copies for mpich and openmpi
-%autosetup -c -n %{name}-%{version}
+%autosetup -c -n %{name}-%{version} -N -S patch
 
 
 # Copy it here for convenience
@@ -82,12 +84,15 @@ cp %{name}-%{version}/LICENSE . -v
 
 # Tweaks in the original version before we copy it over
 pushd %{name}-%{version}
+%autopatch -p0
 
 # Do not build external libraries
 # tclap and json
 sed -i '/add_subdirectory(ext)/ d' CMakeLists.txt
 # Disable doc build
 sed -i '/add_subdirectory(doc)/ d' CMakeLists.txt
+# correct target_compile_definitions
+sed -i 's/ARB_WITH_UNWIND/INTERFACE ARB_WITH_UNWIND/' CMakeLists.txt
 
 popd
 
@@ -113,21 +118,20 @@ pushd %{name}-%{version}$MPI_COMPILE_TYPE  &&
         -DCMAKE_CXX_FLAGS_RELEASE:STRING="-DNDEBUG" \\\
         -DCMAKE_Fortran_FLAGS_RELEASE:STRING="-DNDEBUG" \\\
         -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \\\
-        -DINCLUDE_INSTALL_DIR:PATH=%{_includedir} \\\
-        -DLIB_INSTALL_DIR:PATH=%{_libdir} \\\
+        -DCMAKE_INSTALL_PREFIX:PATH=$MPI_HOME \\\
+        -DINCLUDE_INSTALL_DIR:PATH=$MPI_INCLUDE \\\
+        -DLIB_INSTALL_DIR:PATH=$MPI_LIB \\\
         -DSYSCONF_INSTALL_DIR:PATH=%{_sysconfdir} \\\
         -DSHARE_INSTALL_PREFIX:PATH=%{_datadir} \\\
         -DCMAKE_SKIP_RPATH:BOOL=ON \\\
-        -DCMAKE_INSTALL_PREFIX:PATH=$MPI_HOME \\\
         -DBUILD_SHARED_LIBS:BOOL=ON \\\
         -DCMAKE_BUILD_TYPE:STRING="release" \\\
-        -DARB_BUILD_VALIDATION_DATA:BOOL=OFF \\\
         -DARB_VECTORIZE:BOOL=ON \\\
         -DARB_WITH_MPI:BOOL=$MPI_YES \\\
 %if "%{_lib}" == "lib64"
-        -DLIB_SUFFIX=64 &&
+        -DLIB_SUFFIX=64 . &&
 %else
-        -DLIB_SUFFIX=""  &&
+        -DLIB_SUFFIX=""  . &&
 %endif
 popd || exit -1;
 }
@@ -140,7 +144,8 @@ popd || exit -1;
 export MPI_COMPILER=serial
 export MPI_SUFFIX=""
 export MPI_HOME=%{_prefix}
-export MPI_BIN=%{_bindir}
+export MPI_INCLUDE=%{_includedir}
+export MPI_LIB=%{_libdir}
 export MPI_YES=OFF
 %{do_cmake_config}
 %{do_make_build}
