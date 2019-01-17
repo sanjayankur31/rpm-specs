@@ -3,13 +3,15 @@
 # Exclude .oct files from provides
 %global __provides_exclude_from ^%{octpkglibdir}/.*\\.oct$
 
+%global revision 7487
+
 Name:           octave-%{octpkg}
 Version:        0
-Release:        1.r7487%{?dist}
+Release:        1.r%{revision}%{?dist}
 Summary:        Statistical Parametric Mapping
 License:        GPLv2+
 URL:            https://www.fil.ion.ucl.ac.uk/spm/
-Source0:        https://github.com/spm/%{octpkg}/archive/%{version}/%{octpkg}-%{version}.tar.gz
+Source0:        https://github.com/spm/%{octpkg}/archive/r%{revision}/%{octpkg}-r%{revision}.tar.gz
 
 BuildRequires:  octave-devel
 
@@ -25,7 +27,7 @@ filtering, and much more.
 
 
 %prep
-%setup -q -n %{octpkg}-%{version}
+%autosetup -n %{octpkg}-r%{revision}
 
 
 %build
