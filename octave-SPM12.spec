@@ -28,36 +28,37 @@ filtering, and much more.
 
 %prep
 %autosetup -n %{octpkg}-r%{revision}
+make -C src distclean PLATFORM=octave
 
 
 %build
-%octave_pkg_build
+%set_build_flags
+make -C src PLATFORM=octave
+# %%octave_pkg_build
 
 
 %install
-%octave_pkg_install
+make -C src install PLATFORM=octave
+# %%octave_pkg_install
 
 
 %post
-%octave_cmd pkg rebuild
+# %%octave_cmd pkg rebuild
 
 %preun
-%octave_pkg_preun
+# %%octave_pkg_preun
 
 %postun
-%octave_cmd pkg rebuild
+# %%octave_cmd pkg rebuild
 
 %files
-%{octpkglibdir}
-%dir %{octpkgdir}
-%{octpkgdir}/*.m
-%doc %{octpkgdir}/doc-cache
-%{octpkgdir}/packinfo
+# %{octpkglibdir}
+# %dir %{octpkgdir}
+# %{octpkgdir}/*.m
+# %doc %{octpkgdir}/doc-cache
+# %{octpkgdir}/packinfo
 
 
 %changelog
 * Thu Jan 17 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0-1.r7487
 - Initial build
-
-* Sat Feb 12 2011 Orion Poplawski <orion@cora.nwra.com> 1.0.13-1
-- Initial Fedora package
