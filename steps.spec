@@ -1,3 +1,5 @@
+%global upstream_name STEPS
+
 # Switch them off if you want
 # Best to start with the serial version
 %bcond_without mpich
@@ -20,6 +22,8 @@ BuildRequires:  openblas-devel
 BuildRequires:  easyloggingpp-devel
 BuildRequires:  gtest-devel
 BuildRequires:  petsc-devel
+BuildRequires:  sundials-devel
+BuildRequires:  superlu-dist-devel
 BuildRequires:  python3-devel
 BuildRequires:  %{py3_dist Cython}
 BuildRequires:  %{py3_dist numpy}
@@ -61,6 +65,8 @@ Summary:        %{name} built with openmpi
 BuildRequires:  openmpi-devel
 BuildRequires:  rpm-mpi-hooks
 BuildRequires:  petsc-openmpi-devel
+BuildRequires:  sundials-openmpi-devel
+BuildRequires:  superlu-openmpi-devel
 Requires:       openmpi
 
 %description openmpi
@@ -73,6 +79,8 @@ Summary:        %{name} built with mpich
 BuildRequires:  mpich-devel
 BuildRequires:  rpm-mpi-hooks
 BuildRequires:  petsc-mpich-devel
+BuildRequires:  sundials-mpich-devel
+BuildRequires:  superlu-mpich-devel
 Requires:       mpich
 
 %description mpich
@@ -83,22 +91,22 @@ Requires:       mpich
 %prep
 # We must create a separate top level directory and then triplicate it so that
 # we have two more copies for mpich and openmpi
-%autosetup -c -n %{name}-%{version}
+%autosetup -c -n %{upstream_name}-%{version}
 
 # Copy it here for convenience
-cp %{name}-%{version}/LICENSE . -v
+cp %{upstream_name}-%{version}/LICENSE . -v
 
 # Tweaks in the original version before we copy it over
-pushd %{name}-%{version}
+pushd %{upstream_name}-%{version}
 # Tweaks
 popd
 
 %if %{with mpich}
-    cp -a %{name}-%{version} %{name}-%{version}-mpich
+    cp -a %{upstream_name}-%{version} %{upstream_name}-%{version}-mpich
 %endif
 
 %if %{with openmpi}
-    cp -a %{name}-%{version} %{name}-%{version}-openmpi
+    cp -a %{upstream_name}-%{version} %{upstream_name}-%{version}-openmpi
 %endif
 
 %build
@@ -109,7 +117,7 @@ echo
 echo "*** BUILDING %{name}-%{version}$MPI_COMPILE_TYPE ***"
 echo
 %set_build_flags
-pushd %{name}-%{version}$MPI_COMPILE_TYPE  &&
+pushd %{upstream_name}-%{version}$MPI_COMPILE_TYPE  &&
     cmake \\\
         -DCMAKE_C_FLAGS_RELEASE:STRING="-DNDEBUG" \\\
         -DCMAKE_CXX_FLAGS_RELEASE:STRING="-DNDEBUG" \\\
@@ -133,7 +141,7 @@ popd || exit -1;
 }
 
 %global do_make_build %{expand: \
-    make %{?_smp_mflags} -C %{name}-%{version}$MPI_COMPILE_TYPE || exit -1
+    make %{?_smp_mflags} -C %{upstream_name}-%{version}$MPI_COMPILE_TYPE || exit -1
 }
 
 # Build serial version, dummy arguments
@@ -183,7 +191,7 @@ export MPI_COMPILE_TYPE="-openmpi"
 echo
 echo "*** INSTALLING %{name}-%{version}$MPI_COMPILE_TYPE ***"
 echo
-    make install DESTDIR=$RPM_BUILD_ROOT INSTALL="install -p" CPPROG="cp -p" -C %{name}-%{version}$MPI_COMPILE_TYPE || exit -1
+    make install DESTDIR=$RPM_BUILD_ROOT INSTALL="install -p" CPPROG="cp -p" -C %{upstream_name}-%{version}$MPI_COMPILE_TYPE || exit -1
 }
 
 # install serial version
