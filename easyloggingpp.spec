@@ -41,6 +41,9 @@ developing applications that use %{name}.
 %install
 %make_install
 
+%check
+make test
+
 
 %files devel
 %license LICENSE
