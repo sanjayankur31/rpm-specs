@@ -1,3 +1,6 @@
+# Tests do not pass, and the output isn't clear as to why
+%bcond_with tests
+
 Name:           easyloggingpp
 Version:        9.96.7
 Release:        1%{?dist}
@@ -19,10 +22,12 @@ Summary:        Development files for %{name}
 Requires:       %{name}%{?_isa} = %{version}-%{release}
 BuildRequires:  cmake
 BuildRequires:  gcc-c++
-# For test
+
+%if %{with tests}
 BuildRequires:  gtest-devel
 BuildRequires:  boost-devel
 BuildRequires:  qt5-qtbase-devel
+%endif
 
 %description    devel
 The %{name}-devel package contains libraries and header files for
@@ -31,19 +36,32 @@ developing applications that use %{name}.
 
 %prep
 %autosetup
+%if %{with tests}
+# Remove syslog test
+# We dont have syslog any more by default
+# https://fedoraproject.org/wiki/Changes/NoDefaultSyslog
+rm test/syslog-test.h
+sed -i '/syslog-test.h/ d' test/main.cc
+%endif
 
 
 %build
+%if %{with tests}
 %cmake -Dtest=ON .
+%else
+%cmake .
+%endif
+
 %make_build
 
 
 %install
 %make_install
 
-# %check
-# make test
-# Tries to write to /var/log/syslog in a test and fails.
+%if %{with tests}
+%check
+make test
+%endif
 
 
 %files devel
