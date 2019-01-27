@@ -31,10 +31,10 @@ Please install the %{name}-devel package to compile nmodl files and so on.
 
 Name:       neuron
 Version:    7.5
-Release:    2.20181214git%{shortcommit}%{?dist}
+Release:    3.20181214git%{shortcommit}%{?dist}
 Summary:    A flexible and powerful simulator of neurons and networks
 
-License:    GPLv2+
+License:    GPLv3+
 URL:        http://www.neuron.yale.edu/neuron/
 # Using brunomaga's fork which updates neuron to use the current sundials
 # Will be merged to neuron main eventually
@@ -44,6 +44,13 @@ Source0:    https://github.com/brunomaga/%{tarname}/archive/%{commit}/%{tarname}
 
 # Based on brunomega's master branch
 Patch0:     0001-Unbundle-Random123.patch
+# libstdc++ bundled is from 1988: seems heavily modified. Headers from there
+# are not present in the current version
+# https://github.com/neuronsimulator/nrn/issues/145
+# Upstream changes the soname etc., so this will not conflict with the packaged
+# version
+# Unbundle readline
+Patch1:     0002-Unbundle-readline.patch
 
 # Random123 does not build on these, so neither can NEURON
 # https://github.com/neuronsimulator/nrn/issues/114
@@ -99,7 +106,12 @@ Documentation for %{name}
 %prep
 %autosetup -n %{tarname}-%{commit} -p1 -S git
 
+# Remove executable perms from source files
+find src -type f -executable ! -name "*.sh" | xargs chmod -x
+
+# Remove bundled Random123
 rm -rf src/Random123
+rm -rf src/readline
 
 # Stop build file from generating version header
 sed -i '/git2nrnversion_h.sh/ d' build.sh
@@ -153,6 +165,9 @@ rm -fv $RPM_BUILD_ROOT/%{_bindir}/*nrnpy* -f
 # Remove installed libtool copy
 rm -fv $RPM_BUILD_ROOT/%{_datadir}/%{tarname}/libtool
 
+# Move to includedir
+mv $RPM_BUILD_ROOT/%{_libdir}/nrnconf.h $RPM_BUILD_ROOT/%{_includedir}/nrnconf.h
+
 # Post install clean up
 # Remove stray object files
 # Probably worth a PR
@@ -165,7 +180,6 @@ find . $RPM_BUILD_ROOT/%{_libdir}/ -name "*.o" -exec rm -f '{}' \;
 # The makefiles do not have shebangs
 %files
 %license Copyright
-%doc README.md
 # Binaries, scripts and makefiles
 %{_bindir}/bbswork.sh
 %{_bindir}/hel2mos1.sh
@@ -235,7 +249,7 @@ find . $RPM_BUILD_ROOT/%{_libdir}/ -name "*.o" -exec rm -f '{}' \;
 %{_libdir}/libivos.so
 
 # should this be here?!
-%{_libdir}/nrnconf.h
+%{_includedir}/nrnconf.h
 
 # Do we need the static libraries?
 %files static
@@ -256,11 +270,17 @@ find . $RPM_BUILD_ROOT/%{_libdir}/ -name "*.o" -exec rm -f '{}' \;
 
 %files doc
 %license Copyright
-%doc README.md
 %{_datadir}/%{tarname}/examples
 %{_datadir}/%{tarname}/demo
 
 %changelog
+* Sun Jan 27 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 7.5-3.20181214git5687519
+- Unbundle readline
+- Remove readme
+- Move header to includedir
+- Update license
+- Remove exec permissions from source files
+
 * Sun Jan 06 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 7.5-2.20181214git5687519
 - Put each BR on different line
 - Remove unneeded comment
