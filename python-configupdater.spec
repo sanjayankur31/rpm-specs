@@ -64,6 +64,11 @@ rm -rf %{srcname}.egg-info
 %build
 %py3_build
 
+pushed docs
+    SPHINXBUILD=sphinx-build-3 make html
+popd
+
+
 %install
 %py3_install
 
