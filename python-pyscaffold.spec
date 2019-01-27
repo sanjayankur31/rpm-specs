@@ -53,6 +53,11 @@ BuildRequires:  %{py3_dist wheel}
 BuildRequires:  %{py3_dist sphinx}
 %{?python_provide:%python_provide python3-%{pypi_name}}
 
+# Dep generator didn't pick them up
+Requires:  python3-setuptools
+Requires:  python3-setuptools_scm
+Requires:  %{py3_dist pytest-runner}
+
 %description -n python3-%{pypi_name}
 %{desc}
 
