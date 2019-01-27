@@ -1,12 +1,3 @@
-# https://fedoraproject.org/wiki/Packaging:DistTag?rd=Packaging/DistTag#Conditionals
-# http://rpm.org/user_doc/conditional_builds.html
-%if 0%{?fedora} >= 30
-# disabled by default
-%bcond_with py2
-%else
-%bcond_without py2
-%endif
-
 # Enabled by default
 # If the package needs to download data for the test which cannot be done in
 # koji, these can be disabled in koji by using `bcond_with` instead, but the
@@ -14,20 +5,25 @@
 # mock -r fedora-rawhide-x86_64 rebuild <srpm> --enable-network --rpmbuild-opts="--with tests"
 %bcond_without tests
 
-%global pypi_name PyScaffold
+%global pretty_name PyScaffold
+%global pypi_name pyscaffold
 
 %global desc %{expand: \
-Add a description here.}
+PyScaffold helps you setup a new Python project.
+
+PyScaffold comes with a lot of elaborated features and configuration defaults
+to make the most common tasks in developing, maintaining and distributing your
+own Python package as easy as possible.
+}
 
 Name:           python-%{pypi_name}
 Version:        3.1
 Release:        1%{?dist}
 Summary:        Template tool for putting up the scaffold of a Python project
 
-# https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing#Good_Licenses
 License:        MIT
 URL:            https://pypi.python.org/pypi/%{pypi_name}
-Source0:        %pypi_source %{pypi_name}
+Source0:        %pypi_source %{pretty_name}
 
 BuildArch:      noarch
 
@@ -39,9 +35,20 @@ BuildArch:      noarch
 %package -n python3-%{pypi_name}
 Summary:        %{summary}
 BuildRequires:  python3-devel
+# For tests
+BuildRequires:  git
+BuildRequires:  %{py3_dist coverage}
+BuildRequires:  %{py3_dist cookiecutter}
+BuildRequires:  %{py3_dist django}
+BuildRequires:  %{py3_dist flake8}
 BuildRequires:  python3-setuptools
 BuildRequires:  python3-setuptools_scm
+BuildRequires:  %{py3_dist pytest}
+BuildRequires:  %{py3_dist pytest-cov}
 BuildRequires:  %{py3_dist pytest-runner}
+BuildRequires:  %{py3_dist pytest-virtualenv}
+BuildRequires:  %{py3_dist pytest-xdist}
+BuildRequires:  %{py3_dist wheel}
 # For documentation
 BuildRequires:  %{py3_dist sphinx}
 %{?python_provide:%python_provide python3-%{pypi_name}}
@@ -56,43 +63,71 @@ Summary:        %{summary}
 Documentation for %{name}.
 
 %prep
-%autosetup -n %{pypi_name}-%{version}
+%autosetup -n %{pretty_name}-%{version}
 # Remove egg info
-rm -rf src/%{pypi_name}*.egg-info
+rm -rf src/%{pretty_name}*.egg-info
 
-# Remove bundled bits
-rm -rf src/pyscaffold/contrib
+# Remove bundled bits but leave configupdater
+# configupdater itself requires pyscaffold: cyclic dependency, so one of them
+# needs to bundle the other to begin with
+rm -rf src/pyscaffold/contrib/{__pycache__,setuptools_scm,ptr.py}
 
-# Comment out to remove /usr/bin/env shebangs
-# Can use something similar to correct/remove /usr/bin/python shebangs also
-# find . -type f -name "*.py" -exec sed -i '/^#![  ]*\/usr\/bin\/env.*$/ d' {} 2>/dev/null ';'
+# Remove mention of non configupdater bundled bits
+sed -i 's/from pyscaffold.contrib.setuptools_scm/from setuptools_scm/' setup.py
+sed -i 's/from .contrib.setuptools_scm/from setuptools_scm/' src/pyscaffold/{utils,integration}.py
+sed -i 's/from .contrib import ptr/import ptr/' src/pyscaffold/{utils,integration}.py
+sed -i 's/from pyscaffold.contrib.setuptools_scm/from setuptools_scm/' tests/test_integration.py
+sed -i '/setuptools/ d' setup.cfg
+
+# In tests, change invocations from python to python3
+find tests -name "*.py" -exec sed -i "s/'python'/'python3'/g" '{}' \;
+# Correct all shebangs in tests
+find tests -name "*.py" -exec sed -i 's|#!/usr/bin/env.*python|#!/usr/bin/python3|' '{}' \;
+
+# In templates. replace /usr/bin/env python with /usr/bin/python3
+pushd src/pyscaffold/templates || exit -1
+for i in *.template; do
+    sed -i 's|#!/usr/bin/env.*python|#!/usr/bin/python3|' $i
+done
+popd
 
 %build
-%py3_build
+# It doesn't like the --executable option that's in %%py3_build
+%set_build_flags
+%{__python3} setup.py build
 
-pushd doc
-    make SPHINXBUILD=sphinx-build-3 html
-    rm -rf _build/html/.doctrees
-    rm -rf _build/html/.buildinfo
-popd
+# Generate docs
+PYTHONPATH=src/ sphinx-build-3 docs html
+# Remove hidden files
+rm -f html/.buildinfo
+rm -rf html/.doctrees
 
 %install
 %py3_install
+# setup.py does not install the template files
+install -p -m 0644 src/pyscaffold/templates/*.template -t %{buildroot}/%{python3_sitelib}/%{pypi_name}/templates/
 
 %check
 %if %{with tests}
-%{__python3} setup.py test
+# Required for a test
+git config --global user.email "jane@doe.com"
+git config --global user.name "jane doe"
+# remove tests that use network to do things with pip and git
+rm tests/test_install.py
+rm tests/system/test_common.py
+PYTHONPATH=%{buildroot}/%{python3_sitelib} pytest-3 . -k "not test_update_version_3_0_to_3_1 and not test_pipenv_works_with_pyscaffold and not test_create_project_with_cookiecutter and not test_cli_with_cookiecutter"
 %endif
 
 %files -n python3-%{pypi_name}
 %license LICENSE.txt
 %doc README.rst AUTHORS.rst CHANGELOG.rst CONTRIBUTING.rst
-%{python3_sitelib}/%{pypi_name}-%{version}-py3.?.egg-info
+%{python3_sitelib}/%{pretty_name}-%{version}-py3.?.egg-info
 %{python3_sitelib}/%{pypi_name}
+%{_bindir}/putup
 
 %files doc
-%license COPYING
-%doc doc/_build/html
+%license LICENSE.txt
+%doc html
 
 %changelog
 * Sun Jan 27 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 3.1-1
