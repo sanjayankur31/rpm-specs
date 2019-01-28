@@ -24,6 +24,8 @@ BuildRequires:  gsl-devel
 %description
 %{desc}
 
+%{?python_enable_dependency_generator}
+
 %package -n python2-%{srcname}
 Summary:        %{summary}
 BuildRequires:  python2-devel
@@ -32,6 +34,7 @@ BuildRequires:  %{py2_dist scipy} >= 0.7.0
 BuildRequires:  %{py2_dist matplotlib} >= 0.90.1
 BuildRequires:  %{py2_dist sympy}
 BuildRequires:  %{py2_dist nose}
+Requires:  %{py2_dist sympy}
 
 Suggests:       %{py2_dist ipython}
 %{?python_provide:%python_provide python2-%{srcname}}
