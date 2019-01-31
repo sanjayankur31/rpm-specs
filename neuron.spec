@@ -31,7 +31,7 @@ Please install the %{name}-devel package to compile nmodl files and so on.
 
 Name:       neuron
 Version:    7.5
-Release:    3.20181214git%{shortcommit}%{?dist}
+Release:    4.20181214git%{shortcommit}%{?dist}
 Summary:    A flexible and powerful simulator of neurons and networks
 
 License:    GPLv3+
@@ -87,13 +87,6 @@ Requires: %{name}%{?_isa} = %{version}-%{release}
 
 %description devel
 Headers and development shared libraries for the %{name} package
-
-%package static
-Summary:    Static libraries for %{name}
-Requires: %{name}%{?_isa} = %{version}-%{release}
-
-%description static
-Static libraries for %{name}
 
 %package doc
 Summary:    Documentation for %{name}
@@ -173,6 +166,8 @@ mv $RPM_BUILD_ROOT/%{_libdir}/nrnconf.h $RPM_BUILD_ROOT/%{_includedir}/nrnconf.h
 # Probably worth a PR
 # Must be done at end, otherwise it deletes object files required for other builds
 find . $RPM_BUILD_ROOT/%{_libdir}/ -name "*.o" -exec rm -f '{}' \;
+# Remove libtool archives
+find . $RPM_BUILD_ROOT/%{_libdir}/ -name "*.la" -exec rm -f '{}' \;
 
 # Still needed on F28?
 %ldconfig_scriptlets
@@ -248,25 +243,7 @@ find . $RPM_BUILD_ROOT/%{_libdir}/ -name "*.o" -exec rm -f '{}' \;
 %{_libdir}/libscopmath.so
 %{_libdir}/libivos.so
 
-# should this be here?!
 %{_includedir}/nrnconf.h
-
-# Do we need the static libraries?
-%files static
-%license Copyright
-%doc README.md
-%{_libdir}/libivoc.la
-%{_libdir}/libmemacs.la
-%{_libdir}/libmeschach.la
-%{_libdir}/libneuron_gnu.la
-%{_libdir}/libnrniv.la
-%{_libdir}/libnrnmpi.la
-%{_libdir}/libnrnoc.la
-%{_libdir}/liboc.la
-%{_libdir}/libocxt.la
-%{_libdir}/libsparse13.la
-%{_libdir}/libscopmath.la
-%{_libdir}/libivos.la
 
 %files doc
 %license Copyright
@@ -274,9 +251,14 @@ find . $RPM_BUILD_ROOT/%{_libdir}/ -name "*.o" -exec rm -f '{}' \;
 %{_datadir}/%{tarname}/demo
 
 %changelog
+* Thu Jan 31 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 7.5-4.20181214git5687519
+- Remove libtool archives
+- Remove stray comment
+- Improve previous changelog
+
 * Sun Jan 27 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 7.5-3.20181214git5687519
 - Unbundle readline
-- Remove readme
+- Remove readme: only speaks about installation
 - Move header to includedir
 - Update license
 - Remove exec permissions from source files
