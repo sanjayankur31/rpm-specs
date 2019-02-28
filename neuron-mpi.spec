@@ -227,11 +227,6 @@ pushd %{tarname}-%{commit}$MPI_COMPILE_TYPE
 
 ./build.sh || exit -1
 
-# use rpm provided ones
-# for i in config.guess config.sub; do
-    # /usr/bin/cp -fv /usr/lib/rpm/redhat/$(basename $i) $i
-# done
-
 %{set_build_flags}
 ./configure \\\
 --enable-static=no \\\
