@@ -1,13 +1,13 @@
 # Permit build to succeed even when debug build-id is not found
-# Only happens for MPI builds. 
+# Only happens for MPI builds.
 # Not yet sure why this is happening---all flags are used correctly in the
 # build, but the binaries are linked statically. It probably has something to
 # do with how I make nrnmpi separately. Will need some checking
-%global _missing_build_ids_terminate_build 0
+# %%global _missing_build_ids_terminate_build 0
 
 
 # Stop automatic removal of shebang from neuron makefiles
-%global __brp_mangle_shebangs_exclude_from ^%{_bindir}/nrn.*makefile$
+# %%global __brp_mangle_shebangs_exclude_from ^%%{_bindir}/nrn.*makefile$
 
 %global commit 56875193411d552eea7d4cbfe09458f3c4f76613
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
@@ -22,13 +22,15 @@ biophysical properties.
 
 This is currently built without GUI (iv) support.
 
-Please install the %{name}-devel package to compile nmodl files and so on.
+This package provides NEURON built with MPI support.
+
+Please install the devel packages to compile nmodl files and so on.
 }
 
 %global tarname nrn
 
 %bcond_without mpich
-%bcond_without openmpi
+%bcond_with openmpi
 
 # fails somehow, disabled by default
 %bcond_with metis
@@ -36,12 +38,12 @@ Please install the %{name}-devel package to compile nmodl files and so on.
 # IV uses libtiff from 1995 and threfore has not been packaged yet
 %bcond_with iv
 
-Name:       neuron
+Name:       neuron-mpi
 Version:    7.5
-Release:    1.20181214git%{shortcommit}%{?dist}
+Release:    4.20181214git%{shortcommit}%{?dist}
 Summary:    A flexible and powerful simulator of neurons and networks
 
-License:    GPLv2+
+License:    GPLv3+
 URL:        http://www.neuron.yale.edu/neuron/
 # Using brunomaga's fork which updates neuron to use the current sundials
 # Will be merged to neuron main eventually
@@ -49,31 +51,44 @@ URL:        http://www.neuron.yale.edu/neuron/
 Source0:    https://github.com/brunomaga/%{tarname}/archive/%{commit}/%{tarname}-%{shortcommit}.tar.gz
 # Source0:    https://github.com/neuronsimulator/%%{tarname}/archive/%%{commit}/%%{tarname}-%%{shortcommit}.tar.gz
 
-Patch0:     0001-Unbundle-Random123-for-brunomegas-branch.patch
+# Based on brunomega's master branch
+Patch0:     0001-Unbundle-Random123.patch
+# libstdc++ bundled is from 1988: seems heavily modified. Headers from there
+# are not present in the current version
+# https://github.com/neuronsimulator/nrn/issues/145
+# Upstream changes the soname etc., so this will not conflict with the packaged
+# version
+# Unbundle readline
+Patch1:     0002-Unbundle-readline.patch
 
-# For mpi versions nrnmpi must be built after oc and nrniv
-# Upstream does this by building nrnmpi as a post-install-hook when liboc and
-# libnrniv have already been installed in %%{_libdir}, but we want to do it
-# during the build, so we do not let the Makefiles' subdirectory system do it.
-# We do it ourselves.
-Patch1:     0001-Disable-mpi-libnrnmpi-build.patch
 
 # Random123 does not build on these, so neither can NEURON
 # https://github.com/neuronsimulator/nrn/issues/114
 ExcludeArch:    %{arm} mips64r2 mips32r2 s390 s390x
 
+# Requires the neuron package, tightly linked in version
+BuildRequires:  neuron-devel%{?_isa} = %{version}-%{release}
+BuildRequires:  autoconf
+BuildRequires:  automake
+BuildRequires:  bison
+BuildRequires:  bison-devel
+BuildRequires:  flex
+BuildRequires:  flex-devel
+BuildRequires:  gcc
+BuildRequires:  gcc-c++
+BuildRequires:  git
+%if %{with iv}
+BuildRequires:  iv-static iv-devel
+%endif
+BuildRequires:  libX11-devel
+BuildRequires:  libtool
+%if %{with metis}
+BuildRequires:  metis-devel
+%endif
 BuildRequires:  ncurses-devel
 BuildRequires:  readline-devel
 BuildRequires:  Random123-devel
-BuildRequires:  libX11-devel
-BuildRequires:  metis-devel
-BuildRequires:  gcc
-BuildRequires:  gcc-c++
-BuildRequires:  autoconf automake libtool
-BuildRequires:  git
-BuildRequires:  bison bison-devel
-BuildRequires:  flex-devel flex
-BuildRequires:  sundials-devel
+
 
 %if %{with iv}
 BuildRequires:  iv-static iv-devel
@@ -81,27 +96,6 @@ BuildRequires:  iv-static iv-devel
 
 %description
 %{desc}
-
-%package devel
-Summary:    Development files for %{name}
-Requires: %{name}%{?_isa} = %{version}-%{release}
-
-%description devel
-Headers and development shared libraries for the %{name} package
-
-%package static
-Summary:    Static libraries for %{name}
-Requires: %{name}%{?_isa} = %{version}-%{release}
-
-%description static
-Static libraries for %{name}
-
-%package doc
-Summary:    Documentation for %{name}
-BuildArch:  noarch
-
-%description doc
-Documentation for %{name}
 
 %if %{with mpich}
 %package mpich
@@ -160,19 +154,29 @@ Static libraries for %{name} built with OpenMPI.
 %endif # endif openmpi
 
 %prep
+# Rather around about way?
+# 1. Create a new directory and unpack but do not apply patches (they need to
+# be applied inside the extracted source directory)
 %autosetup -c -n %{tarname}-%{commit} -N
 
-cp %{tarname}-%{commit}/Copyright . -v
-cp %{tarname}-%{commit}/README.md . -v
+# 2. Enter extracted sources and apply patches
+%autosetup -n %{tarname}-%{commit}/%{tarname}-%{commit} -D -T -S git -p1
 
+# 3. Further tweaks in the extracted source directory
+# Use -S patch to prevent it from trying to gitify the directory again
+%autosetup -T -D -n %{tarname}-%{commit} -N -S patch
+
+# General tweaks to sources before copying it over
 pushd %{tarname}-%{commit}
-    %autopatch -p1
+# Remove executable perms from source files
+find src -type f -executable ! -name "*.sh" | xargs chmod -x
 
-    # Let us tell the system where to find the sundials libraries. It is hard coded.
-    sed -i 's|SUNDIALS_LIBDIRNAMES="${prefix}/lib"|SUNDIALS_LIBDIRNAMES="$MPI_LIB"|' configure.ac
+# Remove bundled Random123
+rm -rf src/Random123
+rm -rf src/readline
 
-    # Stop build file from generating version header
-    sed -i '/git2nrnversion_h.sh/ d' build.sh
+# Stop build file from generating version header
+sed -i '/git2nrnversion_h.sh/ d' build.sh
 
 # Create version file ourselves
 export TIMESTAMP=$(date +%Y-%m-%d)
@@ -184,33 +188,50 @@ cat > src/nrnoc/nrnversion.h << EOF
 #define GIT_DESCRIBE "Neuron built for Fedora"
 EOF
 
-    # Use system libtool instead of a local copy that neuron tries to install
-    pushd bin
-        for f in *_makefile.in
-        do
-            sed -i 's|\(LIBTOOL.*=.*\)$(pkgdatadir)\(.*\)|\1$(bindir)\2|' $f
-        done
-    popd
-popd
+# Use system libtool instead of a local copy that neuron tries to install
+pushd bin
+    for f in *_makefile.in
+    do
+        sed -i 's|\(LIBTOOL.*=.*\)$(pkgdatadir)\(.*\)|\1$(bindir)\2|' $f
+    done
+popd # out of bin
+
+popd # out of extracted source
+
 
 %if %{with mpich}
 cp -a %{tarname}-%{commit} %{tarname}-%{commit}-mpich
-# Disable subdir based build of nrnmpi
-sed -i "s/nrnmpi//" %{tarname}-%{commit}-mpich/src/Makefile.am
 %endif
 
 %if %{with openmpi}
 cp -a %{tarname}-%{commit} %{tarname}-%{commit}-openmpi
-# Disable subdir based build of nrnmpi
-sed -i "s/nrnmpi//" %{tarname}-%{commit}-openmpi/src/Makefile.am
 %endif
 
 %build
 export SUNDIALS_SYSTEM_INSTALL="yes"
+%if !%{with iv}
+%global iv_flags  --without-iv --with-x
+%else
+%global iv_flags " "
+%endif
+
+%if %{with metis}
+%global metis_flags --with-metis
+%else
+%global metis_flags " "
+%endif
+
 %global do_build %{expand:
 echo "*** Building %{tarname}-%{commit}$MPI_COMPILE_TYPE ***"
 pushd %{tarname}-%{commit}$MPI_COMPILE_TYPE
-./build.sh &&
+
+./build.sh || exit -1
+
+# use rpm provided ones
+# for i in config.guess config.sub; do
+    # /usr/bin/cp -fv /usr/lib/rpm/redhat/$(basename $i) $i
+# done
+
 %{set_build_flags}
 ./configure \\\
 --enable-static=no \\\
@@ -224,16 +245,11 @@ pushd %{tarname}-%{commit}$MPI_COMPILE_TYPE
 --includedir=$MPI_INCLUDE \\\
 --libdir=$MPI_LIB \\\
 --mandir=$MPI_MAN $MPI_OPTIONS \\\
-%if !%{with iv} \
---without-iv --with-x \\\
-%endif \
---with-gnu-ld \\\
-%if %{with metis} \
---with-metis  \\\
-%endif
+--build=%{_build} --host=%{_host} \\\
+%{iv_flags} %{metis_flags} --with-gnu-ld
 
-sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool &&
-sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool &&
+sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
+sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 
 # Generate required header for MPI builds
 %if %{with mpich} || %{with openmpi}
@@ -244,28 +260,10 @@ popd
 
 %make_build
 
-
-# For mpi versions nrnmpi must be built after oc and nrniv
-# Upstream does this by building nrnmpi as a post-install-hook when liboc and
-# libnrniv have already been installed in %%{_libdir}, but we want to do it
-# during the build, so we do not let the Makefiles' subdirectory system do it.
-# We do it ourselves.
-%if %{with mpich} || %{with openmpi}
-    %make_build -C src/nrnmpi
-%endif
-
 popd
 }
 
-# Serial build
-export MPI_COMPILE_TYPE=""
-export MPI_OPTIONS=""
-export MPI_LIB="%{_libdir}"
-export MPI_HOME="%{_prefix}"
-export MPI_BIN="%{_bindir}"
-export MPI_INCLUDE="%{_includedir}"
-export MPI_MAN="%{_mandir}"
-%{do_build}
+# No serial build
 
 # MPICH
 %if %{with mpich}
@@ -289,11 +287,6 @@ export MPI_OPTIONS="--with-paranrn=dynamic --with-mpi --with-multisend"
 %global do_install %{expand:
 echo "*** Installing %{tarname}-%{commit}$MPI_COMPILE_TYPE ***"
 %make_install -C %{tarname}-%{commit}$MPI_COMPILE_TYPE
-
-# Manualy install mpi bits for MPI builds where we've disabled the subdir in the main makefile
-%if %{with mpich} || %{with openmpi}
-    %make_install -C %{tarname}-%{commit}$MPI_COMPILE_TYPE/src/nrnmpi
-%endif
 }
 
 %global modify_for_mpi %{expand:
@@ -329,12 +322,7 @@ pushd $RPM_BUILD_ROOT/$MPI_BIN
 popd
 }
 
-export MPI_COMPILE_TYPE=""
-%{do_install}
-# Installs it even when we're not providing nrnpy
-rm -fv $RPM_BUILD_ROOT/%{_bindir}/*nrnpy* -f
-# Remove installed libtool copy
-rm -fv $RPM_BUILD_ROOT/%{_datadir}/%{tarname}/libtool
+# No serial install
 
 # MPICH
 %if %{with mpich}
@@ -363,103 +351,6 @@ find . $RPM_BUILD_ROOT/%{_libdir}/ -name "*.o" -exec rm -f '{}' \;
 %ldconfig_scriptlets
 
 # The makefiles do not have shebangs
-%files
-%license Copyright
-%doc README.md
-# Binaries, scripts and makefiles
-%{_bindir}/bbswork.sh
-%{_bindir}/hel2mos1.sh
-%{_bindir}/ivoc
-%{_bindir}/memacs
-%{_bindir}/mkthreadsafe
-%{_bindir}/modlunit
-%{_bindir}/mos2nrn
-%{_bindir}/mos2nrn2.sh
-%{_bindir}/neurondemo
-%{_bindir}/nocmodl
-%{_bindir}/nrndiagnose.sh
-%{_bindir}/nrngui
-%{_bindir}/nrniv
-%{_bindir}/nrniv_makefile
-%{_bindir}/nrnivmodl
-%{_bindir}/nrnmech_makefile
-%{_bindir}/nrnoc
-%{_bindir}/nrnoc_makefile
-%{_bindir}/nrnocmodl
-%{_bindir}/oc
-%{_bindir}/sortspike
-# Libs
-%{_libdir}/libivoc.so.0.0.0
-%{_libdir}/libivoc.so.0
-%{_libdir}/libmemacs.so.0.0.0
-%{_libdir}/libmemacs.so.0
-%{_libdir}/libmeschach.so.0.0.0
-%{_libdir}/libmeschach.so.0
-%{_libdir}/libneuron_gnu.so.0.0.0
-%{_libdir}/libneuron_gnu.so.0
-%{_libdir}/libnrniv.so.0.0.0
-%{_libdir}/libnrniv.so.0
-%{_libdir}/libnrnmpi.so.0.0.0
-%{_libdir}/libnrnmpi.so.0
-%{_libdir}/libnrnoc.so.0.0.0
-%{_libdir}/libnrnoc.so.0
-%{_libdir}/liboc.so.0.0.0
-%{_libdir}/liboc.so.0
-%{_libdir}/libocxt.so.0.0.0
-%{_libdir}/libocxt.so.0
-%{_libdir}/libsparse13.so.0.0.0
-%{_libdir}/libsparse13.so.0
-%{_libdir}/libscopmath.so.0
-%{_libdir}/libscopmath.so.0.0.0
-%{_libdir}/libivos.so.0
-%{_libdir}/libivos.so.0.0.0
-# other hoc files and data
-%dir %{_datadir}/%{tarname}
-%{_datadir}/%{tarname}/lib
-
-%files devel
-%license Copyright
-%doc README.md
-%{_includedir}/%{tarname}
-%{_libdir}/libivoc.so
-%{_libdir}/libmemacs.so
-%{_libdir}/libmeschach.so
-%{_libdir}/libneuron_gnu.so
-%{_libdir}/libnrniv.so
-%{_libdir}/libnrnmpi.so
-%{_libdir}/libnrnoc.so
-%{_libdir}/liboc.so
-%{_libdir}/libocxt.so
-%{_libdir}/libsparse13.so
-%{_libdir}/libscopmath.so
-%{_libdir}/libivos.so
-
-# should this be here?!
-%{_libdir}/nrnconf.h
-
-# Do we need the static libraries?
-%files static
-%license Copyright
-%doc README.md
-%{_libdir}/libivoc.la
-%{_libdir}/libmemacs.la
-%{_libdir}/libmeschach.la
-%{_libdir}/libneuron_gnu.la
-%{_libdir}/libnrniv.la
-%{_libdir}/libnrnmpi.la
-%{_libdir}/libnrnoc.la
-%{_libdir}/liboc.la
-%{_libdir}/libocxt.la
-%{_libdir}/libsparse13.la
-%{_libdir}/libscopmath.la
-%{_libdir}/libivos.la
-
-%files doc
-%license Copyright
-%doc README.md
-%{_datadir}/%{tarname}/examples
-%{_datadir}/%{tarname}/demo
-
 %if %{with mpich}
 %files mpich
 %license Copyright
@@ -650,5 +541,5 @@ find . $RPM_BUILD_ROOT/%{_libdir}/ -name "*.o" -exec rm -f '{}' \;
 
 
 %changelog
-* Sun Dec 9 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 7.5-1.20181214git5687519
-- Update to latest git snapshot that uses current sundials
+* Thu Feb 28 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 7.5-4.20181214git5687519
+- Initial build
