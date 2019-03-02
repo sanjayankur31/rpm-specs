@@ -80,7 +80,8 @@ BuildRequires:  Random123-devel
 BuildRequires:  sundials-devel
 
 # Tightly linked to the neuron build
-BuildRequires: %{name}-devel%{?_isa} = %{version}-%{release}
+BuildRequires: %{srcname}-devel
+# BuildRequires: %{srcname}-devel%{?_isa} = %{version}-%{release}
 
 %{?python_enable_dependency_generator}
 
@@ -97,6 +98,9 @@ BuildRequires:  python3-devel
 
 %prep
 %autosetup -n %{tarname}-%{commit} -p1 -S git
+
+# Disable mswin bit
+sed -i 's/mswin//g'  src/Makefile.am
 
 # Remove executable perms from source files
 find src -type f -executable ! -name "*.sh" | xargs chmod -x
@@ -142,12 +146,12 @@ export SUNDIALS_SYSTEM_INSTALL="yes"
 %global metis_flags " "
 %endif
 
-%configure %{iv_flags} %{metis_flags} --with-gnu-ld
+%configure %{iv_flags} %{metis_flags} --with-gnu-ld --with-nrnpython-only --with-pyexe=%{__python3} --disable-cygwin
 
 sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool && \
 sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 
-%make_build -C 
+%make_build
 
 
 %install
@@ -156,9 +160,6 @@ sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 rm -fv $RPM_BUILD_ROOT/%{_bindir}/*nrnpy* -f
 # Remove installed libtool copy
 rm -fv $RPM_BUILD_ROOT/%{_datadir}/%{tarname}/libtool
-
-# Move to includedir
-mv $RPM_BUILD_ROOT/%{_libdir}/nrnconf.h $RPM_BUILD_ROOT/%{_includedir}/nrnconf.h
 
 # Post install clean up
 # Remove stray object files
@@ -172,10 +173,10 @@ find . $RPM_BUILD_ROOT/%{_libdir}/ -name "*.la" -exec rm -f '{}' \;
 %ldconfig_scriptlets
 
 %files -n python3-%{srcname}
-%license COPYING
-%doc README.rst
-%{python3_sitelib}/%{srcname}-%{version}-py3.?.egg-info
-%{python3_sitelib}/%{srcname}
+# %license COPYING
+# %doc README.rst
+# %{python3_sitelib}/%{srcname}-%{version}-py3.?.egg-info
+# %{python3_sitelib}/%{srcname}
 
 
 %changelog
