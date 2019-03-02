@@ -40,7 +40,7 @@ Please install the devel packages to compile nmodl files and so on.
 
 Name:       neuron-mpi
 Version:    7.5
-Release:    4.20181214git%{shortcommit}%{?dist}
+Release:    5.20181214git%{shortcommit}%{?dist}
 Summary:    A flexible and powerful simulator of neurons and networks
 
 License:    GPLv3+
