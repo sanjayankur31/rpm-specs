@@ -11,7 +11,10 @@ Summary:        Validator for the Brain Imaging Data Structure
 License:        MIT
 URL:            https://pypi.org/project/bids-validator/
 Source0:        %pypi_source
-Source1:        https://github.com/bids-standard/bids-validator/blob/master/LICENSE
+Source1:        https://raw.githubusercontent.com/bids-standard/bids-validator/master/LICENSE
+
+# https://github.com/bids-standard/bids-validator/issues/757: not included in pypi for some reason
+Source2:        https://raw.githubusercontent.com/bids-standard/bids-validator/master/bids-validator/versioneer.py
 
 BuildArch:      noarch
 
@@ -24,7 +27,6 @@ BuildArch:      noarch
 Summary:        %{summary}
 BuildRequires:  python3-devel
 BuildRequires:  %{py3_dist setuptools}
-BuildRequires:  %{py3_dist versioneer}
 %{?python_provide:%python_provide python3-%{srcname}}
 
 %description -n python3-%{srcname}
@@ -36,6 +38,7 @@ BuildRequires:  %{py3_dist versioneer}
 rm -rf %{srcname}.egg-info
 
 cp %{SOURCE1} .
+cp %{SOURCE2} .
 
 %build
 %py3_build
