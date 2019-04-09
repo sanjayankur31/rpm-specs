@@ -55,5 +55,5 @@ cp %{SOURCE2} .
 %{python3_sitelib}/bids_validator
 
 %changelog
-* Mon Apr 08 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 1.1.2-1
+* Mon Apr 08 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 1.2.2-1
 - Initial package
