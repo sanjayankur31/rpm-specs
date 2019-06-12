@@ -80,8 +80,11 @@ sed -i "s/version=.*/version='6.28',/" setup.py
 # All sub directories contain this file
 %license pyfim/doc/mit-license.txt
 %{python3_sitearch}/fim-%{version}-py3.?.egg-info
-%{python3_sitearch}/fim.cpython-37m-*.so
+%{python3_sitearch}/fim.cpython-%{python3_version_nodots}*.so
 
 %changelog
+* Wed Jun 12 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 6.28-1
+- Use better file entry
+
 * Mon Jun 10 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 6.28-1
 - Initial build
