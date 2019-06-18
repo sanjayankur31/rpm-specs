@@ -30,16 +30,37 @@ BuildArch:      noarch
 # Will also pull a lot of texlive, but that cannot be helpeb
 Requires:       /usr/bin/latexmk
 Requires:       /usr/bin/pdflatex
-# From `ag packages.append``
+# From `ag Package`
+Requires:       tex(alltt.sty)
+Requires:       tex(amsmath.sty)
+Requires:       tex(booktabs.sty)
+Requires:       tex(cleveref.sty)
+Requires:       tex(enumitem.sty)
 Requires:       tex(fontenc.sty)
+Requires:       tex(fancyhdr.sty)
+Requires:       tex(geometry.sty)
+Requires:       tex(graphicx.sty)
+Requires:       tex(hyperref.sty)
 Requires:       tex(inputenc.sty)
 Requires:       tex(lmodern.sty)
-Requires:       tex(textcomp.sty)
 Requires:       tex(lastpage.sty)
-Requires:       tex(parskip.sty)
+Requires:       tex(longtable.sty)
+Requires:       tex(ltablex.sty)
+Requires:       tex(mdframed.sty)
 Requires:       tex(microtype.sty)
-Requires:       tex(geometry.sty)
+Requires:       tex(multirow.sty)
+Requires:       tex(parskip.sty)
+Requires:       tex(pgfplots.sty)
+Requires:       tex(ragged2e.sty)
+Requires:       tex(subcaption.sty)
+Requires:       tex(siunitx.sty)
+Requires:       tex(tabularx.sty)
+Requires:       tex(tabu.sty)
+Requires:       tex(textcomp.sty)
+Requires:       tex(textpos.sty)
+Requires:       tex(tikz.sty)
 Requires:       tex(xcolor.sty)
+Requires:       texlive
 
 %{?python_enable_dependency_generator}
 
@@ -51,25 +72,42 @@ Summary:        %{summary}
 BuildRequires:  python3-devel
 
 %if %{with tests}
+# Explicit requirements for tests
 BuildRequires:  %{py3_dist matplotlib}
 BuildRequires:  %{py3_dist nose}
 BuildRequires:  %{py3_dist numpy}
 BuildRequires:  %{py3_dist quantities}
-BuildRequires:  tex(siunitx.sty)
-BuildRequires:  /usr/bin/pdflatex
+# https://fedoraproject.org/wiki/Features/TeXLive
+BuildRequires:  tex(alltt.sty)
+BuildRequires:  tex(amsmath.sty)
+BuildRequires:  tex(booktabs.sty)
+BuildRequires:  tex(cleveref.sty)
+BuildRequires:  tex(enumitem.sty)
 BuildRequires:  tex(fontenc.sty)
+BuildRequires:  tex(fancyhdr.sty)
+BuildRequires:  tex(geometry.sty)
+BuildRequires:  tex(graphicx.sty)
+BuildRequires:  tex(hyperref.sty)
 BuildRequires:  tex(inputenc.sty)
 BuildRequires:  tex(lmodern.sty)
-BuildRequires:  tex(textcomp.sty)
 BuildRequires:  tex(lastpage.sty)
-BuildRequires:  tex(parskip.sty)
+BuildRequires:  tex(longtable.sty)
+BuildRequires:  tex(ltablex.sty)
+BuildRequires:  tex(mdframed.sty)
 BuildRequires:  tex(microtype.sty)
-BuildRequires:  tex(geometry.sty)
+BuildRequires:  tex(multirow.sty)
+BuildRequires:  tex(parskip.sty)
+BuildRequires:  tex(pgfplots.sty)
+BuildRequires:  tex(ragged2e.sty)
+BuildRequires:  tex(subcaption.sty)
+BuildRequires:  tex(siunitx.sty)
+BuildRequires:  tex(tabularx.sty)
+BuildRequires:  tex(tabu.sty)
+BuildRequires:  tex(textcomp.sty)
+BuildRequires:  tex(textpos.sty)
+BuildRequires:  tex(tikz.sty)
 BuildRequires:  tex(xcolor.sty)
-BuildRequires:  texlive-metafont
-BuildRequires:  texlive-gsftopk
-BuildRequires:  texlive-ec
-
+BuildRequires:  texlive
 %endif
 
 %{?python_provide:%python_provide python3-%{pypi_name}}
@@ -101,8 +139,8 @@ rm -rf %{fancy_name}.egg-info
 
 pushd docs
     make SPHINXBUILD=sphinx-build-3 html
-    rm -rf _build/html/.doctrees
-    rm -rf _build/html/.buildinfo
+    rm -rf build/html/.doctrees
+    rm -rf build/html/.buildinfo
 popd
 
 %install
@@ -116,7 +154,7 @@ nosetests-3 tests/*
 # Test examples
 pushd examples
 for f in *.py; do
-    %{__python3} $f
+    PYTHONPATH=%{buildroot}/%{python3_sitelib} %{__python3} $f
 done
 popd
 %endif
@@ -130,7 +168,7 @@ popd
 %if %{with docs}
 %files doc
 %license LICENSE
-%doc docs/_build/html examples
+%doc docs/build/html examples
 %endif
 
 %changelog
