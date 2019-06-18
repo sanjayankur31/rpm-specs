@@ -140,7 +140,7 @@ rm -rf %{fancy_name}.egg-info
 %build
 %py3_build
 
-make -c docs SPHINXBUILD=sphinx-build-3 html
+make -C docs SPHINXBUILD=sphinx-build-3 html
 pushd docs/build/html
     # Remove unneeded dot files
     rm -frv .doctrees
