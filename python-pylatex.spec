@@ -13,13 +13,13 @@
 
 %global desc %{expand: \
 PyLaTeX is a Python library for creating and compiling LaTeX files or snippets.
-The goal of this library is being an easy, but extensible interface between
+The goal of this library is being an easy but extensible interface between
 Python and LaTeX.}
 
 Name:           python-%{pypi_name}
 Version:        1.3.0
 Release:        1%{?dist}
-Summary:        A Python library for creating LaTeX files and snippets
+Summary:        Library for creating LaTeX files and snippets
 
 # https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing#Good_Licenses
 License:        MIT
@@ -140,18 +140,16 @@ rm -rf %{fancy_name}.egg-info
 %build
 %py3_build
 
-pushd docs || exit -1
-    make SPHINXBUILD=sphinx-build-3 html
-    pushd build/html || exit -1
-        # Remove unneeded dot files
-        rm -frv .doctrees
-        rm -frv .buildinfo
-        # Correct end of line
-        sed -i 's/\r$//' _static/favicons/browserconfig.xml
-        # convert to utf8
-        iconv -f iso8859-1 -t utf-8 objects.inv > objects.inv.conv && mv -f objects.inv.conv objects.inv
-        sed -i 's/\r$//' objects.inv
-    popd
+make -c docs SPHINXBUILD=sphinx-build-3 html
+pushd docs/build/html
+    # Remove unneeded dot files
+    rm -frv .doctrees
+    rm -frv .buildinfo
+    # Correct end of line
+    sed -i 's/\r$//' _static/favicons/browserconfig.xml
+    # convert to utf8
+    iconv -f iso8859-1 -t utf-8 objects.inv > objects.inv.conv && mv -f objects.inv.conv objects.inv
+    sed -i 's/\r$//' objects.inv
 popd
 
 %install
@@ -184,5 +182,9 @@ popd
 %endif
 
 %changelog
+* Tue Jun 18 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 1.3.0-1
+- Minor tweaks as per review comments
+- https://bugzilla.redhat.com/show_bug.cgi?id=1721409
+
 * Mon Jun 17 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 1.3.0-1
 - Initial rpm build
