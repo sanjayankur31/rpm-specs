@@ -137,14 +137,23 @@ rm -rf %{fancy_name}.egg-info
 %build
 %py3_build
 
-pushd docs
+pushd docs || exit -1
     make SPHINXBUILD=sphinx-build-3 html
-    rm -rf build/html/.doctrees
-    rm -rf build/html/.buildinfo
+    pushd build/html || exit -1
+        # Remove unneeded dot files
+        rm -frv .doctrees
+        rm -frv .buildinfo
+        # Correct end of line
+        sed -i 's/\r$//' _static/favicons/browserconfig.xml
+        # convert to utf8
+        iconv -f iso8859-1 -t utf-8 objects.inv > objects.inv.conv && mv -f objects.inv.conv objects.inv
+        sed -i 's/\r$//' objects.inv
+    popd
 popd
 
 %install
 %py3_install
+
 
 %check
 %if %{with tests}
