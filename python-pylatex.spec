@@ -27,6 +27,10 @@ URL:            https://jeltef.github.io/PyLaTeX/
 Source0:        https://github.com/JelteF/%{fancy_name}/archive/v%{version}/%{name}-%{version}.tar.gz
 BuildArch:      noarch
 
+# Not picked up by dep generator
+Requires:       %{py3_dist matplotlib}
+Requires:       %{py3_dist quantities}
+Requires:       %{py3_dist numpy}
 # Will also pull a lot of texlive, but that cannot be helpeb
 Requires:       /usr/bin/latexmk
 Requires:       /usr/bin/pdflatex
@@ -62,10 +66,10 @@ Requires:       tex(tikz.sty)
 Requires:       tex(xcolor.sty)
 Requires:       texlive
 
-%{?python_enable_dependency_generator}
-
 %description
 %{desc}
+
+%{?python_enable_dependency_generator}
 
 %package -n python3-%{pypi_name}
 Summary:        %{summary}
