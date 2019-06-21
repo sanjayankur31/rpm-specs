@@ -1,11 +1,4 @@
-# Python bindings for NEURON
-# Are build in post-installation hooks, so they must be built after NEURON has
-# been built.
-
-%global commit 56875193411d552eea7d4cbfe09458f3c4f76613
-%global shortcommit %(c=%{commit}; echo ${c:0:7})
-
-%global desc %{expand: \
+%global _description %{expand:
 NEURON is a simulation environment for modeling individual neurons and networks
 of neurons. It provides tools for conveniently building, managing, and using
 models in a way that is numerically sound and computationally efficient. It is
@@ -13,7 +6,10 @@ particularly well-suited to problems that are closely linked to experimental
 data, especially those that involve cells with complex anatomical and
 biophysical properties.
 
-This package provides the Python bindings for NEURON.
+This package provides the python bindings for neuron.
+It does not include MPI support.
+
+Please install the %{name}-devel package to compile nmodl files and so on.
 }
 
 %global tarname nrn
@@ -24,26 +20,15 @@ This package provides the Python bindings for NEURON.
 # IV uses libtiff from 1995 and threfore has not been packaged yet
 %bcond_with iv
 
-
-%global srcname neuron
-
-%global desc %{expand: \
-Add a description here.}
-
-Name:       python-%{srcname}
-Version:    7.5
-Release:    5.20181214git%{shortcommit}%{?dist}
+Name:       python-neuron
+Version:    7.7.1
+Release:    1%{?dist}
 Summary:    A flexible and powerful simulator of neurons and networks
 
 License:    GPLv3+
 URL:        http://www.neuron.yale.edu/neuron/
-# Using brunomaga's fork which updates neuron to use the current sundials
-# Will be merged to neuron main eventually
-# https://github.com/neuronsimulator/nrn/issues/113
-Source0:    https://github.com/brunomaga/%{tarname}/archive/%{commit}/%{tarname}-%{shortcommit}.tar.gz
-# Source0:    https://github.com/neuronsimulator/%%{tarname}/archive/%%{commit}/%%{tarname}-%%{shortcommit}.tar.gz
+Source0:    https://github.com/neuronsimulator/%{tarname}/archive/%{version}/%{name}-%{version}.tar.gz
 
-# Based on brunomega's master branch
 Patch0:     0001-Unbundle-Random123.patch
 # libstdc++ bundled is from 1988: seems heavily modified. Headers from there
 # are not present in the current version
@@ -52,6 +37,11 @@ Patch0:     0001-Unbundle-Random123.patch
 # version
 # Unbundle readline
 Patch1:     0002-Unbundle-readline.patch
+# Not really needed here, but it's better to build on the neuron sources
+# exactly
+Patch2:     0003-Install-ivstream-header.patch
+# Do not let the Makefile call setup.py in post-install
+Patch3:     0004-Disable-python-bits-in-install-exec-hook.patch
 
 # Random123 does not build on these, so neither can NEURON
 # https://github.com/neuronsimulator/nrn/issues/114
@@ -65,7 +55,7 @@ BuildRequires:  flex
 BuildRequires:  flex-devel
 BuildRequires:  gcc
 BuildRequires:  gcc-c++
-BuildRequires:  git
+BuildRequires:  git-core
 %if %{with iv}
 BuildRequires:  iv-static iv-devel
 %endif
@@ -75,32 +65,20 @@ BuildRequires:  libtool
 BuildRequires:  metis-devel
 %endif
 BuildRequires:  ncurses-devel
+# Required by mk_hocusr.py
+BuildRequires:  python3
 BuildRequires:  readline-devel
 BuildRequires:  Random123-devel
-BuildRequires:  sundials-devel
 
-# Tightly linked to the neuron build
-BuildRequires: %{srcname}-devel
-# BuildRequires: %{srcname}-devel%{?_isa} = %{version}-%{release}
+# Bundles sundials. WIP
+# https://github.com/neuronsimulator/nrn/issues/113
+# BuildRequires:  sundials-devel
+# Provides: bundled(sundials) = 2.0.1
 
-%{?python_enable_dependency_generator}
-
-%description
-%{desc}
-
-%package -n python3-%{srcname}
-Summary:        %{summary}
-BuildRequires:  python3-devel
-%{?python_provide:%python_provide python3-%{srcname}}
-
-%description -n python3-%{srcname}
-%{desc}
+%description %_description
 
 %prep
-%autosetup -n %{tarname}-%{commit} -p1 -S git
-
-# Disable mswin bit
-sed -i 's/mswin//g'  src/Makefile.am
+%autosetup -n %{tarname}-%{version} -p1 -S git
 
 # Remove executable perms from source files
 find src -type f -executable ! -name "*.sh" | xargs chmod -x
@@ -131,7 +109,8 @@ pushd bin
 popd
 
 %build
-export SUNDIALS_SYSTEM_INSTALL="yes"
+# Not yet to be used
+# export SUNDIALS_SYSTEM_INSTALL="yes"
 ./build.sh
 
 %if !%{with iv}
@@ -146,39 +125,30 @@ export SUNDIALS_SYSTEM_INSTALL="yes"
 %global metis_flags " "
 %endif
 
-%configure %{iv_flags} %{metis_flags} --with-gnu-ld --with-nrnpython-only --with-pyexe=%{__python3} --disable-cygwin
+%configure %{iv_flags} %{metis_flags} \
+--with-gnu-ld --disable-rpm-rules \
+--without-paranrn --with-nrnpython-only  \
+--with-nrnpython=dynamic --with-pyexe=%{__python3}
 
 sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool && \
 sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 
-%make_build
-
+make -j1 -C src/nrnpython
+pushd src/nrnpython
+    %py3_build
+popd
 
 %install
-%make_install
-# Installs it even when we're not providing nrnpy
-rm -fv $RPM_BUILD_ROOT/%{_bindir}/*nrnpy* -f
-# Remove installed libtool copy
-rm -fv $RPM_BUILD_ROOT/%{_datadir}/%{tarname}/libtool
+%make_install -C src/nrnpython
+pushd src/nrnpython
+    %py3_install
+popd
 
-# Post install clean up
-# Remove stray object files
-# Probably worth a PR
-# Must be done at end, otherwise it deletes object files required for other builds
-find . $RPM_BUILD_ROOT/%{_libdir}/ -name "*.o" -exec rm -f '{}' \;
-# Remove libtool archives
-find . $RPM_BUILD_ROOT/%{_libdir}/ -name "*.la" -exec rm -f '{}' \;
 
-# Still needed on F28?
-%ldconfig_scriptlets
-
-%files -n python3-%{srcname}
-# %license COPYING
-# %doc README.rst
-# %{python3_sitelib}/%{srcname}-%{version}-py3.?.egg-info
-# %{python3_sitelib}/%{srcname}
-
+# The makefiles do not have shebangs
+%files
+%license Copyright
 
 %changelog
-* Sat Mar 02 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 7.5-5.20181214git5687519
-- initial build
+* Wed Jun 19 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 7.7.1-1
+- Initial build
