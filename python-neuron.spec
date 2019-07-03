@@ -41,7 +41,9 @@ Patch1:     0002-Unbundle-readline.patch
 # exactly
 Patch2:     0003-Install-ivstream-header.patch
 # Do not let the Makefile call setup.py in post-install
-Patch3:     0004-Disable-python-bits-in-install-exec-hook.patch
+Patch3:     0004-Install-all-headers.patch
+Patch4:     0005-Disable-python-bits-in-install-exec-hook.patch
+Patch5:     0006-Remove-duplicate-file-installation.patch
 
 # Random123 does not build on these, so neither can NEURON
 # https://github.com/neuronsimulator/nrn/issues/114
@@ -65,8 +67,10 @@ BuildRequires:  libtool
 BuildRequires:  metis-devel
 %endif
 BuildRequires:  ncurses-devel
+# Bound to the same version, but not necessarily release
+BuildRequires:  neuron-devel = %{version}
 # Required by mk_hocusr.py
-BuildRequires:  python3
+BuildRequires:  python3-devel
 BuildRequires:  readline-devel
 BuildRequires:  Random123-devel
 
@@ -82,6 +86,15 @@ BuildRequires:  Random123-devel
 
 # Remove executable perms from source files
 find src -type f -executable ! -name "*.sh" | xargs chmod -x
+
+# sed -i 's|parse.h|nrn/parse.h|g' "$f"
+# sed -i 's|nrnmpiuse.h|nrn/nrnmpiuse.h|g' "$f"
+pushd src/nrnpython/
+    for f in *.cpp *.h; do
+        sed -i 's|../../nrnconf.h|nrnconf.h|g' "$f"
+    done
+popd
+sed -i 's|<nrnpthread.h>|<nrn/nrnpthread.h>|g' src/ivoc/nrnmutdec.h
 
 # Remove bundled Random123
 rm -rf src/Random123
@@ -125,6 +138,10 @@ popd
 %global metis_flags " "
 %endif
 
+# Need to add the required includedirs
+# %%global optflags %%{optflags} -I%%{buildroot}/%%{_includedir}/%%{tarname}
+%global optflags %{optflags} -I%{_includedir}/%{tarname}
+
 %configure %{iv_flags} %{metis_flags} \
 --with-gnu-ld --disable-rpm-rules \
 --without-paranrn --with-nrnpython-only  \
@@ -133,10 +150,11 @@ popd
 sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool && \
 sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 
-make -j1 -C src/nrnpython
-pushd src/nrnpython
-    %py3_build
-popd
+make
+# make -j1 -C src/nrnpython
+# pushd src/nrnpython
+    # %py3_build
+# popd
 
 %install
 %make_install -C src/nrnpython
