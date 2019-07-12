@@ -1,5 +1,5 @@
 # Enabled by default
-%bcond_without tests
+%bcond_with tests
 
 %global pypi_name pytest-lazy-fixture
 
@@ -55,8 +55,11 @@ PYTHONPATH="%{buildroot}/%{python3_sitelib}/" pytest-3
 %doc README.rst
 %{python3_sitelib}/pytest_lazy_fixture-%{version}-py%{python3_version}.egg-info
 %{python3_sitelib}/pytest_lazyfixture.py
-%{python3_sitelib}/__pycache__/pytest_lazyfixture.cpython-%{python3_version_nodots}*
+%{python3_sitelib}/__pycache__
 
 %changelog
+* Fri Jul 12 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.5.2-1
+- Own pycache directory to fix permission issues #1723047
+
 * Sat Jun 22 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.5.2-1
 - Initial package
