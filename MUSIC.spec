@@ -2,78 +2,71 @@
 # built.
 # https://github.com/INCF/MUSIC/issues/55
 
+
 %global commit a77e57878158b36401c0977702c1386ba01db118
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
 
-%global with_mpich 1
-%global with_openmpi 1
-
-# https://fedoraproject.org/wiki/Packaging:DistTag?rd=Packaging/DistTag#Conditionals
-%if 0%{?fedora} < 30
-%global with_py2 1
-%else
-%global with_py2 0
-%endif
+# For debugging
+%bcond_without mpich
+%bcond_with openmpi
 
 %global lname music
 
-%global _description \
-MUSIC is an API allowing large scale neuron simulators using MPI internally to \
-exchange data during runtime.  MUSIC provides mechanisms to transfer massive \
-amounts of event information and continuous values from one parallel \
-application to another.  Special care has been taken to ensure that existing \
-simulators can be adapted to MUSIC.  In particular, MUSIC handles data transfer \
-between applications that use different time steps and different data \
-allocation strategies. \
-\
-This is the MUSIC pilot implementation. \
-\
-The two most important components built from this software distribution is the \
-music library `libmusic.a' and the music utility `music'.  A MUSIC-aware \
-simulator links against the C++ library and can be launched using mpirun \
-together with the music utility as described below.  MUSIC can also be used \
-from a C program using the API in music-c.h. \
-\
-MUSIC is distributed under the GNU General Public License v3.
+%global _description %{expand:
+MUSIC is an API allowing large scale neuron simulators using MPI internally to
+exchange data during runtime.  MUSIC provides mechanisms to transfer massive
+amounts of event information and continuous values from one parallel
+application to another.  Special care has been taken to ensure that existing
+simulators can be adapted to MUSIC.  In particular, MUSIC handles data transfer
+between applications that use different time steps and different data
+allocation strategies.
+
+This is the MUSIC pilot implementation.
+
+The two most important components built from this software distribution is the
+music library `libmusic.a' and the music utility `music'.  A MUSIC-aware
+simulator links against the C++ library and can be launched using mpirun
+together with the music utility as described below.  MUSIC can also be used
+from a C program using the API in music-c.h.
+
+MUSIC is distributed under the GNU General Public License v3.}
 
 
 Name:           MUSIC
 Version:        0
-Release:        1.20181020git%{shortcommit}%{?dist}
+Release:        2.20190717git%{shortcommit}%{?dist}
 Summary:        MUSIC, the MUltiSimulation Coordinator
 
 License:        GPLv3+
 URL:            https://github.com/INCF/%{name}/
 Source0:        https://github.com/INCF/%{name}/archive/%{commit}/%{name}-%{shortcommit}.tar.gz
-Patch0:         0001-Remove-bundled-rudeconfig.patch
+# https://github.com/INCF/MUSIC/pull/53
+Patch0:         0001-Fix-python3-syntax-error.patch
 
 BuildRequires:  automake
 BuildRequires:  autoconf
-BuildRequires:  libtool
+BuildRequires:  freeglut-devel
 BuildRequires:  gcc-c++
+BuildRequires:  git-core
+BuildRequires:  libtool
 BuildRequires:  python3-devel
 BuildRequires:  python3-Cython
-BuildRequires:  freeglut-devel
-BuildRequires:  rudeconfig-devel
+# Currently bundles a modified version of rudeconfig which cannot be unbundled
+# until MUSIC upstream sends their changes upstream to rudeconfig.
+# https://github.com/INCF/MUSIC/issues/56
+# BuildRequires:  rudeconfig-devel
 
-%if %{with_py2}
-BuildRequires:  python2-devel
-BuildRequires:  python2-Cython
-%endif
-
-%description
-%{_description}
+%description %_description
 
 
-%if %{with_openmpi}
+%if %{with openmpi}
 %package openmpi
 Summary:        %{name} built with openmpi
 BuildRequires:  openmpi-devel
 BuildRequires:  rpm-mpi-hooks
 Requires:       openmpi
 Requires:       %{name} = %{version}-%{release}
-%description openmpi
-%{_description}
+%description openmpi %_description
 
 %package openmpi-devel
 Summary:        %{name} built with openmpi
@@ -82,7 +75,7 @@ BuildRequires:  rpm-mpi-hooks
 Requires:       openmpi
 Requires:       %{name} = %{version}-%{release}
 %description openmpi-devel
-%{_description}
+Development files for %{name} built with OpenMPI.
 
 %package -n python3-%{name}-openmpi
 Summary:        Python3 support for %{name} built with openmpi
@@ -94,27 +87,11 @@ Requires:       openmpi
 Requires:       %{name} = %{version}-%{release}
 %{?python_provide:%python_provide python3-%{name}-openmpi}
 
-%description -n python3-%{name}-openmpi
-%{_description}
-
-%if %{with_py2}
-%package -n python2-%{name}-openmpi
-Summary:        Python2 support for %{name} built with openmpi
-BuildRequires:  openmpi-devel
-BuildRequires:  rpm-mpi-hooks
-BuildRequires:  python2-mpi4py-openmpi
-Requires:       python2-mpi4py-openmpi
-Requires:       openmpi
-Requires:       %{name} = %{version}-%{release}
-%{?python_provide:%python_provide python2-%{name}-openmpi}
-
-%description -n python2-%{name}-openmpi
-%{_description}
-%endif
+%description -n python3-%{name}-openmpi %_description
 %endif
 
 
-%if %{with_mpich}
+%if %{with mpich}
 %package mpich
 Summary:        %{name} built with mpich
 BuildRequires:  mpich-devel
@@ -122,8 +99,7 @@ BuildRequires:  rpm-mpi-hooks
 Requires:       mpich
 Requires:       %{name}-common = %{version}-%{release}
 
-%description mpich
-%{_description}
+%description mpich %_description
 
 %package mpich-devel
 Summary:        %{name} built with mpich
@@ -133,7 +109,7 @@ Requires:       mpich
 Requires:       %{name}-common = %{version}-%{release}
 
 %description mpich-devel
-%{_description}
+Development files for %{name} built with MPICH.
 
 %package -n python3-%{name}-mpich
 Summary:        Python3 support for %{name} built with mpich
@@ -145,52 +121,25 @@ Requires:       mpich
 Requires:       %{name}-common = %{version}-%{release}
 %{?python_provide:%python_provide python3-%{name}-mpich}
 
-%description -n python3-%{name}-mpich
-%{_description}
-
-%if %{with_py2}
-%package -n python2-%{name}-mpich
-Summary:        Python2 support for %{name} built with mpich
-BuildRequires:  mpich-devel
-BuildRequires:  rpm-mpi-hooks
-BuildRequires:  python2-mpi4py-mpich
-Requires:       python2-mpi4py-mpich
-Requires:       mpich
-Requires:       %{name}-common = %{version}-%{release}
-%{?python_provide:%python_provide python2-%{name}-mpich}
-
-%description -n python2-%{name}-mpich
-%{_description}
-%endif
+%description -n python3-%{name}-mpich %_description
 %endif
 
 %prep
-%autosetup -c -n %{name}-%{commit} -N
-
-# remove bundled rudeconfig
-pushd %{name}-%{commit}
-    rm -rfv rudeconfig
-    %autopatch -p1
-popd
+%autosetup -c -n %{name}-%{commit} -N -S git
 
 cp %{name}-%{commit}/LICENSE .
 cp %{name}-%{commit}/README .
 
-%if %{with_py2}
-    cp -a %{name}-%{commit} %{name}-%{commit}-py2
-%endif
+# Apply patches
+pushd %{name}-%{commit}
+    %autopatch
+popd
 
-%if %{with_mpich}
-    %if %{with_py2}
-        cp -a %{name}-%{commit} %{name}-%{commit}-mpich-py2
-    %endif
+%if %{with mpich}
     cp -a %{name}-%{commit} %{name}-%{commit}-mpich
 %endif
 
-%if %{with_openmpi}
-    %if %{with_py2}
-        cp -a %{name}-%{commit} %{name}-%{commit}-openmpi-py2
-    %endif
+%if %{with openmpi}
     cp -a %{name}-%{commit} %{name}-%{commit}-openmpi
 %endif
 
@@ -216,17 +165,10 @@ popd || exit -1
 
 
 # Mpich
-%if %{with_mpich}
+%if %{with mpich}
 %{_mpich_load}
 MPI_CXX="mpicxx"
 MPI_VARIANT="mpich"
-
-%if %{with_py2}
-MPI_COMPILE_TYPE="-mpich-py2"
-PYTHON_BIN="%{__python2}"
-%{do_build}
-%endif
-
 
 MPI_COMPILE_TYPE="-mpich"
 PYTHON_VERSION=3
@@ -237,18 +179,10 @@ PYTHON_BIN="%{__python3}"
 %endif
 
 # Openmpi
-%if %{with_openmpi}
+%if %{with openmpi}
 %{_openmpi_load}
-MPI_VARIANT="ompi"
 MPI_CXX="mpicxx"
-
-%if %{with_py2}
-MPI_COMPILE_TYPE="-openmpi-py2"
-PYTHON_VERSION=2
-PYTHON_BIN="%{__python2}"
-%{do_build}
-%endif
-
+MPI_VARIANT="openmpi"
 
 MPI_COMPILE_TYPE="-openmpi"
 PYTHON_VERSION=3
@@ -262,28 +196,16 @@ PYTHON_BIN="%{__python3}"
 %make_install -C %{name}-%{commit}$MPI_COMPILE_TYPE || exit -1
 
 # Mpich
-%if %{with_mpich}
+%if %{with mpich}
 %{_mpich_load}
-%if %{with_py2}
-MPI_COMPILE_TYPE="-mpich-py2"
-%{do_install}
-%endif
-
-
 MPI_COMPILE_TYPE="-mpich"
 %{do_install}
 %{_mpich_unload}
 %endif
 
 # Openmpi
-%if %{with_openmpi}
+%if %{with openmpi}
 %{_openmpi_load}
-%if %{with_py2}
-MPI_COMPILE_TYPE="-openmpi-py2"
-%{do_install}
-%endif
-
-
 MPI_COMPILE_TYPE="-openmpi"
 %{do_install}
 %{_openmpi_unload}
@@ -291,6 +213,7 @@ MPI_COMPILE_TYPE="-openmpi"
 
 find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 
+# For F28 etc?
 %ldconfig_scriptlets
 
 
@@ -298,7 +221,7 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 %license LICENSE
 %doc README
 
-%if %{with_mpich}
+%if %{with mpich}
 %files mpich
 %license LICENSE
 %{_libdir}/mpich/bin/%{lname}
@@ -317,16 +240,9 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 %files -n python3-%{name}-mpich
 %license LICENSE
 # %{_libdir}/mpich/lib/%{name}.so.*
-
-%if %{with_py2}
-%files -n python2-%{name}-mpich
-%license LICENSE
-# %{_libdir}/mpich/lib/libpy2neurosim*.so.*
-# %{_libdir}/mpich/lib/libpyneurosim*.so.*
-%endif
 %endif
 
-%if %{with_openmpi}
+%if %{with openmpi}
 %files openmpi
 %license LICENSE
 # %{_libdir}/openmpi/lib/%{name}.so.*
@@ -339,16 +255,13 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 %files -n python3-%{name}-openmpi
 %license LICENSE
 # %{_libdir}/openmpi/lib/libpy3neurosim*.so.*
-
-%if %{with_py2}
-%files -n python2-%{name}-openmpi
-%license LICENSE
-# %{_libdir}/openmpi/lib/libpy2neurosim*.so.*
-# %{_libdir}/openmpi/lib/libpyneurosim*.so.*
-%endif
 %endif
 
 %changelog
+* Wed Jul 17 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0-2.20190717gita77e5787
+- Bundle rudeconfig
+- Remove python 2 subpackage
+
 * Sat Oct 20 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0-1.20181020gita77e5787
 - Depend on packaged rudeconfig
 - Remove non MPI packages
