@@ -6,7 +6,7 @@
 
 %global srcname pingouin
 
-%global desc %{expand: \
+%global _description %{expand:
 Pingouin is an open-source statistical package written in Python 3 and based on
 Pandas and NumPy.
 
@@ -30,7 +30,7 @@ Pingouin is designed for users who want simple yet exhaustive statistical functi
 Documentation is available at https://raphaelvallat.github.io/pingouin/build/html/index.html.}
 
 Name:           python-%{srcname}
-Version:        0.2.1
+Version:        0.2.7
 Release:        1%{?dist}
 Summary:        Pingouin: statistical package for Python
 
@@ -48,19 +48,26 @@ BuildArch:      noarch
 %package -n python3-%{srcname}
 Summary:        %{summary}
 BuildRequires:  python3-devel
+BuildRequires:  %{py3_dist pandas}
+BuildRequires:  %{py3_dist numpy}
 BuildRequires:  %{py3_dist pytest}
-BuildRequires:  %{py3_dist pandas} >= 0.23
-BuildRequires:  %{py3_dist numpy} >= 1.15
-BuildRequires:  %{py3_dist scipy} >= 1.1
+BuildRequires:  %{py3_dist pytest-remotedata}
+# Need packaging
+BuildRequires:  %{py3_dist pytest-sugar}
+BuildRequires:  %{py3_dist pytest-travis-fold}
+
+BuildRequires:  %{py3_dist openpyxl}
+BuildRequires:  %{py3_dist mpmath}
+BuildRequires:  %{py3_dist scipy}
 BuildRequires:  %{py3_dist scikit-learn}
+BuildRequires:  %{py3_dist seaborn}
 BuildRequires:  %{py3_dist statsmodels}
 %if %{with docs}
 BuildRequires:  %{py3_dist sphinx}
 %endif
 %{?python_provide:%python_provide python3-%{srcname}}
 
-%description -n python3-%{srcname}
-%{desc}
+%description -n python3-%{srcname} %_description
 
 %if %{with docs}
 %package doc
@@ -93,17 +100,17 @@ pytest-%{python3_version}
 %endif
 
 %files -n python3-%{srcname}
-%license COPYING
+%license LICENSE
 %doc README.rst
-%{python3_sitelib}/%{srcname}-%{version}-py3.?.egg-info
+%{python3_sitelib}/%{srcname}-%{version}-py%{python3_version}.egg-info
 %{python3_sitelib}/%{srcname}
 
 %if %{with docs}
 %files doc
-%license COPYING
+%license LICENSE
 %doc docs/build/html
 %endif
 
 %changelog
-* Wed Nov 21 2018 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.2.1-1
+* Fri Jul 19 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.2.7-1
 - Initial build
