@@ -30,7 +30,7 @@ https://raphaelvallat.github.io/pingouin/build/html/index.html.}
 Name:           python-%{srcname}
 Version:        0.2.7
 Release:        1%{?dist}
-Summary:        Pingouin: statistical package for Python
+Summary:        Statistical package for Python
 
 License:        BSD
 URL:            https://pypi.python.org/pypi/%{srcname}
