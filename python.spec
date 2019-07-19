@@ -5,12 +5,9 @@
 # mock -r fedora-rawhide-x86_64 rebuild <srpm> --enable-network --rpmbuild-opts="--with tests"
 %bcond_without tests
 
-# Enabled by default
-%bcond_without docs
-
 %global pypi_name example
 
-%global desc %{expand: \
+%global _description %{expand:
 Add a description here.}
 
 Name:           python-%{pypi_name}
@@ -27,28 +24,24 @@ BuildArch:      noarch
 
 %{?python_enable_dependency_generator}
 
-%description
-%{desc}
+%description %_description
 
 %package -n python3-%{pypi_name}
 Summary:        %{summary}
 BuildRequires:  python3-devel
 # DELETE ME: Use standard names
 BuildRequires:  %{py3_dist ...}
-
+# For documentation
+BuildRequires:  %{py3_dist sphinx}
 %{?python_provide:%python_provide python3-%{pypi_name}}
 
-%description -n python3-%{pypi_name}
-%{desc}
+%description -n python3-%{pypi_name} %_description
 
-%if %{with docs}
 %package doc
 Summary:        %{summary}
-BuildRequires:  %{py3_dist sphinx}
 
 %description doc
 Documentation for %{name}.
-%endif
 
 %prep
 %autosetup -n %{pypi_name}-%{version}
@@ -61,11 +54,8 @@ rm -rf %{pypi_name}.egg-info
 %build
 %py3_build
 
-pushd doc
-    make SPHINXBUILD=sphinx-build-3 html
-    rm -rf _build/html/.doctrees
-    rm -rf _build/html/.buildinfo
-popd
+make -C doc SPHINXBUILD=sphinx-build-3 html
+rm -rf doc/_build/html/{.doctrees,.buildinfo} -vf
 
 %install
 %py3_install
@@ -81,10 +71,8 @@ popd
 %{python3_sitelib}/%{pypi_name}-%{version}-py3.?.egg-info
 %{python3_sitelib}/%{pypi_name}
 
-%if %{with docs}
 %files doc
 %license COPYING
 %doc doc/_build/html
-%endif
 
 %changelog
