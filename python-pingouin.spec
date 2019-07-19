@@ -1,8 +1,4 @@
-# Package is py3 only
-
-%bcond_without tests
-
-%bcond_with docs
+%bcond_with tests
 
 %global srcname pingouin
 
@@ -25,9 +21,11 @@ functions:
 - Circular statistics
 - Linear/logistic regression and mediation analysis
 
-Pingouin is designed for users who want simple yet exhaustive statistical functions.
+Pingouin is designed for users who want simple yet exhaustive statistical
+functions.
 
-Documentation is available at https://raphaelvallat.github.io/pingouin/build/html/index.html.}
+Documentation is available at
+https://raphaelvallat.github.io/pingouin/build/html/index.html.}
 
 Name:           python-%{srcname}
 Version:        0.2.7
@@ -42,40 +40,40 @@ BuildArch:      noarch
 
 %{?python_enable_dependency_generator}
 
-%description
-%{desc}
+%description %_description
 
 %package -n python3-%{srcname}
 Summary:        %{summary}
 BuildRequires:  python3-devel
-BuildRequires:  %{py3_dist pandas}
+
 BuildRequires:  %{py3_dist numpy}
+BuildRequires:  %{py3_dist pandas}
+BuildRequires:  %{py3_dist seaborn}
+
+%if %{with tests}
 BuildRequires:  %{py3_dist pytest}
 BuildRequires:  %{py3_dist pytest-remotedata}
 # Need packaging
 BuildRequires:  %{py3_dist pytest-sugar}
-BuildRequires:  %{py3_dist pytest-travis-fold}
-
 BuildRequires:  %{py3_dist openpyxl}
 BuildRequires:  %{py3_dist mpmath}
-BuildRequires:  %{py3_dist scipy}
 BuildRequires:  %{py3_dist scikit-learn}
-BuildRequires:  %{py3_dist seaborn}
-BuildRequires:  %{py3_dist statsmodels}
-%if %{with docs}
-BuildRequires:  %{py3_dist sphinx}
+# Only required and works in TRAVIS, so not needed here
+# BuildRequires:  python3-pytest-travis-fold}
 %endif
+
 %{?python_provide:%python_provide python3-%{srcname}}
 
 %description -n python3-%{srcname} %_description
 
-%if %{with docs}
 %package doc
 Summary:        %{summary}
+BuildRequires:  %{py3_dist numpydoc}
+BuildRequires:  %{py3_dist sphinx}
+BuildRequires:  %{py3_dist sphinx-bootstrap-theme}
 
 %description doc
 Documentation for %{name}.
-%endif
 
 %prep
 %autosetup -n %{srcname}-%{version}
@@ -84,11 +82,10 @@ rm -rf %{srcname}.egg-info
 %build
 %py3_build
 
-%if %{with docs}
-sphinx-build-%{python3_version} -b html docs html
-# rm -rf build/html/.doctrees
-# rm -rf build/html/.buildinfo
-%endif
+PYTHONPATH=. sphinx-build-%{python3_version} -b html docs html
+rm -rf html/.doctrees
+rm -rf html/.buildinfo
+rm -rf html/.nojekyll
 
 %install
 %py3_install
@@ -105,11 +102,9 @@ pytest-%{python3_version}
 %{python3_sitelib}/%{srcname}-%{version}-py%{python3_version}.egg-info
 %{python3_sitelib}/%{srcname}
 
-%if %{with docs}
 %files doc
 %license LICENSE
-%doc docs/build/html
-%endif
+%doc html
 
 %changelog
 * Fri Jul 19 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.2.7-1
