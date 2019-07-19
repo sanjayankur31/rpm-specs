@@ -41,6 +41,8 @@ License:        GPLv3+
 URL:            https://github.com/INCF/%{name}/
 Source0:        https://github.com/INCF/%{name}/archive/%{commit}/%{name}-%{shortcommit}.tar.gz
 Patch0:         0001-Enable-testsuite-and-extras-for-mpich2.patch
+Patch1:         0002-Make-python-bits-ourselves.patch
+Patch2:         0003-Make-bundled-rudeconfig-also-follow-all-flags.patch
 
 BuildRequires:  automake
 BuildRequires:  autoconf
@@ -63,7 +65,6 @@ Summary:        %{name} built with mpich
 BuildRequires:  mpich-devel
 BuildRequires:  rpm-mpi-hooks
 Requires:       mpich
-Requires:       %{name}%{?_isa} = %{version}-%{release}
 
 %description mpich %_description
 
@@ -96,7 +97,6 @@ Summary:        %{name} built with openmpi
 BuildRequires:  openmpi-devel
 BuildRequires:  rpm-mpi-hooks
 Requires:       openmpi
-Requires:       %{name}%{?_isa} = %{version}-%{release}
 
 %description openmpi %_description
 
@@ -129,7 +129,7 @@ Requires:       %{name}-openmpi%{?_isa} = %{version}-%{release}
 # in here now
 # Apply patches
 pushd %{name}-%{commit}
-%patch -p1 -P 0
+%patch -p1 -P 0 1 2
 # on Fedora, we have mpichversion, not mpich2version
 sed -i 's|mpich2version|mpichversion|' configure.ac
 popd
@@ -161,8 +161,15 @@ MPI_LDFLAGS="$LDFLAGS $(pkg-config --libs $MPI_VARIANT)"
 --libdir=$MPI_LIB \\\
 --includedir=$MPI_INCLUDE \\\
 --bindir=$MPI_BIN \\\
---mandir=$MPI_MAN &&
-%make_build &&
+--mandir=$MPI_MAN
+
+%make_build
+
+# Make python bits ourselves
+pushd pymusic
+%{py3_build}
+popd
+
 popd
 }
 
@@ -205,8 +212,25 @@ do
         mv "$RPM_BUILD_ROOT/$MPI_BIN/$f" "$RPM_BUILD_ROOT/$MPI_BIN/$f$MPI_SUFFIX" -v
     fi
 done
-# One separately
-mv "$RPM_BUILD_ROOT/$MPI_BIN/music_tests.sh" "$RPM_BUILD_ROOT/$MPI_BIN/music_tests$MPI_SUFFIX.sh" -v
+# Delete script for tests
+rm -f "$RPM_BUILD_ROOT/$MPI_BIN/music_tests.sh"
+
+# Install python bits
+pushd %{name}-%{commit}$MPI_COMPILE_TYPE/pymusic
+%{__python3} setup.py install --skip-build --root $RPM_BUILD_ROOT --install-lib=$MPI_PYTHON3_SITEARCH
+popd
+
+# Move other files to correct location also
+mv -v "$RPM_BUILD_ROOT/$MPI_HOME/lib/python%{python3_version}/site-packages/music/config" "$RPM_BUILD_ROOT/$MPI_PYTHON3_SITEARCH/%{lname}/"
+mv -v "$RPM_BUILD_ROOT/$MPI_HOME/%{_lib}/python%{python3_version}/site-packages/music/pymusic.so" "$RPM_BUILD_ROOT/$MPI_PYTHON3_SITEARCH/%{lname}"
+mv -v "$RPM_BUILD_ROOT/$MPI_HOME/%{_lib}/python%{python3_version}/site-packages/music/pybuffer.so" "$RPM_BUILD_ROOT/$MPI_PYTHON3_SITEARCH/%{lname}"
+
+# Delete the folders
+rm -vrf "$RPM_BUILD_ROOT/$MPI_HOME/lib/python%{python3_version}/site-packages/music"
+# If 64 bit, then we also need to delete this folder
+%if %{_lib} == "lib64"
+    rm -vrf "$RPM_BUILD_ROOT/$MPI_HOME/%{_lib}/python%{python3_version}/site-packages/music"
+%endif
 }
 
 
@@ -231,12 +255,10 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 # For F28 etc?
 %ldconfig_scriptlets
 
-%files
-%license LICENSE
-%doc README
-
 %if %{with mpich}
 %files mpich
+%license LICENSE
+%doc README
 %{_libdir}/mpich/bin/contsink_mpich
 %{_libdir}/mpich/bin/eventcounter_mpich
 %{_libdir}/mpich/bin/eventgenerator_mpich
@@ -255,7 +277,6 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 %{_libdir}/mpich/bin/eventdelay_mpich
 %{_libdir}/mpich/bin/launchtest_mpich
 %{_libdir}/mpich/bin/multiport_mpich
-%{_libdir}/mpich/bin/music_tests_mpich.sh
 %{_libdir}/mpich/bin/musicrun_mpich
 %{_libdir}/mpich/bin/test_ag_mpich
 %{_libdir}/mpich/lib/libmusic.so.1
@@ -266,6 +287,8 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 %{_mandir}/mpich-%{_arch}/man1/*
 
 %files mpich-devel
+%license LICENSE
+%doc README
 %{_includedir}/mpich*/%{lname}
 %{_includedir}/mpich*/%{lname}*.*
 %{_includedir}/mpich*/predict_rank-c.h
@@ -273,13 +296,16 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 %{_libdir}/mpich/lib/libmusic-c.so
 
 %files -n python3-%{name}-mpich
-%{_libdir}/mpich/lib/python%{python3_version}/site-packages/%{lname}
-%{_libdir}/mpich/%{_lib}/python%{python3_version}/site-packages/%{lname}
-%{_libdir}/mpich/%{_lib}/python%{python3_version}/site-packages/%{lname}-%{version}-py%{python3_version}.egg-info
+%license LICENSE
+%doc README
+%{_libdir}/python%{python3_version}/site-packages/mpich/%{lname}
+%{_libdir}/python%{python3_version}/site-packages/mpich/%{lname}-%{version}-py%{python3_version}.egg-info
 %endif
 
 %if %{with openmpi}
 %files openmpi
+%license LICENSE
+%doc README
 %{_libdir}/openmpi/bin/contsink_openmpi
 %{_libdir}/openmpi/bin/eventcounter_openmpi
 %{_libdir}/openmpi/bin/eventgenerator_openmpi
@@ -298,7 +324,6 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 %{_libdir}/openmpi/bin/eventdelay_openmpi
 %{_libdir}/openmpi/bin/launchtest_openmpi
 %{_libdir}/openmpi/bin/multiport_openmpi
-%{_libdir}/openmpi/bin/music_tests_openmpi.sh
 %{_libdir}/openmpi/bin/musicrun_openmpi
 %{_libdir}/openmpi/bin/test_ag_openmpi
 %{_libdir}/openmpi/lib/libmusic.so.1
@@ -309,6 +334,8 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 %{_mandir}/openmpi-%{_arch}/man1/*
 
 %files openmpi-devel
+%license LICENSE
+%doc README
 %{_includedir}/openmpi*/%{lname}
 %{_includedir}/openmpi*/%{lname}*.*
 %{_includedir}/openmpi*/predict_rank-c.h
@@ -316,13 +343,15 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 %{_libdir}/openmpi/lib/libmusic-c.so
 
 %files -n python3-%{name}-openmpi
-%{_libdir}/openmpi/lib/python%{python3_version}/site-packages/%{lname}
-%{_libdir}/openmpi/%{_lib}/python%{python3_version}/site-packages/%{lname}
-%{_libdir}/openmpi/%{_lib}/python%{python3_version}/site-packages/%{lname}-%{version}-py%{python3_version}.egg-info
+%license LICENSE
+%doc README
+%{_libdir}/python%{python3_version}/site-packages/openmpi/%{lname}
+%{_libdir}/python%{python3_version}/site-packages/openmpi/%{lname}-%{version}-py%{python3_version}.egg-info
 %endif
 
 %changelog
-* Wed Jul 17 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 1.1.15-2.20190717gita78a8e2
+* Fri Jul 19 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 1.1.15-2.20190717gita78a8e2
+- Build python ourselves
 - Bundle rudeconfig
 - Remove python 2 subpackage
 
