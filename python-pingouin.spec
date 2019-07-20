@@ -32,12 +32,15 @@ Version:        0.2.7
 Release:        1%{?dist}
 Summary:        Statistical package for Python
 
-License:        BSD
+# Documentation pulls in bootstrap, bootswatch, jquery which are MIT
+License:        GPLv3 and MIT
 URL:            https://pypi.python.org/pypi/%{srcname}
+# Pypi tar does not contain docs and tests
 Source0:        https://github.com/raphaelvallat/%{srcname}/archive/v%{version}/%{srcname}-%{version}.tar.gz
 
 BuildArch:      noarch
 
+# For F29
 %{?python_enable_dependency_generator}
 
 %description %_description
@@ -52,6 +55,7 @@ BuildRequires:  %{py3_dist seaborn}
 
 %if %{with tests}
 BuildRequires:  %{py3_dist pytest}
+BuildRequires:  %{py3_dist pytest-cov}
 BuildRequires:  %{py3_dist pytest-remotedata}
 # Need packaging
 BuildRequires:  %{py3_dist pytest-sugar}
@@ -59,7 +63,7 @@ BuildRequires:  %{py3_dist openpyxl}
 BuildRequires:  %{py3_dist mpmath}
 BuildRequires:  %{py3_dist scikit-learn}
 # Only required and works in TRAVIS, so not needed here
-# BuildRequires:  python3-pytest-travis-fold}
+# BuildRequires:  python3-pytest-travis-fold
 %endif
 
 %{?python_provide:%python_provide python3-%{srcname}}
@@ -104,8 +108,13 @@ pytest-%{python3_version}
 
 %files doc
 %license LICENSE
-%doc html
+%doc html notebooks
 
 %changelog
+* Sat Jul 20 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.2.7-1
+- Correct license
+- Add missing BR
+- Add notebooks to documentation
+
 * Fri Jul 19 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.2.7-1
 - Initial build
