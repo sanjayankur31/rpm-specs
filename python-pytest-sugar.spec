@@ -15,7 +15,7 @@ Release:        1%{?dist}
 Summary:        Change the default look and feel of pytest
 
 License:        BSD
-URL:            https://pypi.org/pypi/%{pypi_name}
+URL:            https://pypi.org/project/%{pypi_name}
 Source0:        %pypi_source
 
 BuildArch:      noarch
@@ -70,6 +70,7 @@ PYTHONPATH=. pytest-%{python3_version}
 %changelog
 * Sat Jul 20 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.9.2-1
 - Correct macro usage
+- Temporarily disable tests
 
 * Fri Jul 19 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.9.2-1
 - Initial build
