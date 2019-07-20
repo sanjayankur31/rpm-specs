@@ -8,6 +8,7 @@ Summary:    The Calcium Calculator
 License:    GPLv3+
 URL:        https://web.njit.edu/~matveev/calc.html
 Source0:    https://web.njit.edu/~matveev/calc/versions/calc_unix_%{version}.tgz
+# Sent upstream
 Patch0:     0002-Fix-invalid-conversion-from-char-to-char.patch
 Patch1:     0003-Include-build-flags.patch
 Patch2:     0004-Fix-format-security-issues.patch
