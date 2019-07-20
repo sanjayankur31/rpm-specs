@@ -1,7 +1,7 @@
 %global pypi_name matplotlib-scalebar
 
 %global _description %{expand:
-Provides a new artist for matplotlib to display a scale bar, aka micron bar. It
+Provides a new artist for Matplotlib to display a scale bar, aka micron bar. It
 is particularly useful when displaying calibrated images plotted using
 plt.imshow(…).  The artist supports customization either directly from the
 ScaleBar object or from the matplotlibrc.}
@@ -14,8 +14,8 @@ Release:        1%{?dist}
 Summary:        Artist for matplotlib to display a scale bar
 
 License:        BSD
-URL:            https://pypi.python.org/pypi/%{pypi_name}
-Source0:        %pypi_source %{pypi_name}
+URL:            https://pypi.org/project/%{pypi_name}
+Source0:        %pypi_source
 
 BuildArch:      noarch
 
@@ -55,5 +55,8 @@ sed -i '/^#![  ]*\/usr\/bin\/env.*$/ d' matplotlib_scalebar/test*py
 %{python3_sitelib}/matplotlib_scalebar
 
 %changelog
+* Sat Jul 20 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.6.0-1
+- Update URL
+
 * Fri Jul 19 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.6.0-1
 - Initial build
