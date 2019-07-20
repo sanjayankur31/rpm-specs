@@ -1,4 +1,7 @@
-%bcond_without tests
+# Tests do not work with pytest 5
+# Already reported upstream
+# https://github.com/Frozenball/pytest-sugar/issues/180
+%bcond_with tests
 
 %global pypi_name pytest-sugar
 
@@ -12,8 +15,8 @@ Release:        1%{?dist}
 Summary:        Change the default look and feel of pytest
 
 License:        BSD
-URL:            https://pypi.python.org/pypi/%{pypi_name}
-Source0:        %pypi_source %{pypi_name}
+URL:            https://pypi.org/pypi/%{pypi_name}
+Source0:        %pypi_source
 
 BuildArch:      noarch
 
@@ -53,7 +56,7 @@ rm -rf %{pypi_name}.egg-info
 
 %check
 %if %{with tests}
-%{__python3} setup.py test
+PYTHONPATH=. pytest-%{python3_version}
 %endif
 
 %files -n python3-%{pypi_name}
@@ -65,5 +68,8 @@ rm -rf %{pypi_name}.egg-info
 %{python3_sitelib}/__pycache__/pytest_sugar*
 
 %changelog
+* Sat Jul 20 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.9.2-1
+- Correct macro usage
+
 * Fri Jul 19 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.9.2-1
 - Initial build
