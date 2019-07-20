@@ -17,8 +17,8 @@ Summary:        An example python module
 
 # https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing#Good_Licenses
 License:
-URL:            https://pypi.python.org/pypi/%{pypi_name}
-Source0:        %pypi_source %{pypi_name}
+URL:            https://pypi.org/pypi/%{pypi_name}
+Source0:        %pypi_source
 
 BuildArch:      noarch
 
@@ -68,7 +68,7 @@ rm -rf doc/_build/html/{.doctrees,.buildinfo} -vf
 %files -n python3-%{pypi_name}
 %license COPYING
 %doc README.rst
-%{python3_sitelib}/%{pypi_name}-%{version}-py3.?.egg-info
+%{python3_sitelib}/%{pypi_name}-%{version}-py%{python3_version}.egg-info
 %{python3_sitelib}/%{pypi_name}
 
 %files doc
