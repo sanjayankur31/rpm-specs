@@ -5,7 +5,7 @@
 # mock -r fedora-rawhide-x86_64 rebuild <srpm> --enable-network --rpmbuild-opts="--with tests"
 %bcond_without tests
 
-%global pypi_name example
+%global pypi_name pype9
 
 %global _description %{expand:
 Add a description here.}
@@ -15,10 +15,8 @@ Version:        1.2.3
 Release:        1%{?dist}
 Summary:        An example python module
 
-# https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing#Good_Licenses
-License:
-URL:            https://pypi.org/pypi/%{pypi_name}
-Source0:        %pypi_source
+License:        MIT
+URL:            https://github.com/NeuralEnsemble/pype9
 
 BuildArch:      noarch
 
