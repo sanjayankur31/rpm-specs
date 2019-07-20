@@ -20,9 +20,9 @@ Version:        0.9.2
 Release:        1%{?dist}
 Summary:        Develop, simulate and analyse biological neuronal networks in NEURON
 
-# https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing#Good_Licenses
-License:        MIT
-URL:            https://pypi.python.org/pypi/%{pypi_name}
+# stackedBarGraph.py is GPLv3+, but others are all MIT
+License:        MIT and GPLv3+
+URL:            https://pypi.org/project/%{pypi_name}
 Source0:        https://github.com/Neurosim-lab/%{pypi_name}/archive/v%{version}/%{pypi_name}-%{version}.tar.gz
 
 BuildArch:      noarch
@@ -61,6 +61,9 @@ Documentation for %{name}.
 %autosetup -n %{pypi_name}-%{version}
 rm -rf %{pypi_name}.egg-info
 
+# Remove hidden files that are used by the OSB build service tests
+rm -f examples/NeuroMLImport/test/.test*
+
 # wrong end of line encoding
 find examples -type f -exec sed -i 's/\r$//' '{}' \;
 find examples -type f -exec chmod -x '{}' \;
@@ -94,5 +97,9 @@ find html -type f -exec sed -i 's/\r$//' '{}' \;
 %doc html examples
 
 %changelog
+* Sat Jul 20 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.9.2-1
+- Update license
+- Remove hidden files
+
 * Fri Jul 19 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.9.2-1
 - Initial build
