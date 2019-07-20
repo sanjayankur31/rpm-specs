@@ -22,10 +22,7 @@ functions:
 - Linear/logistic regression and mediation analysis
 
 Pingouin is designed for users who want simple yet exhaustive statistical
-functions.
-
-Documentation is available at
-https://raphaelvallat.github.io/pingouin/build/html/index.html.}
+functions.}
 
 Name:           python-%{srcname}
 Version:        0.2.7
