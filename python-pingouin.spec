@@ -1,4 +1,4 @@
-%bcond_with tests
+%bcond_without tests
 
 %global srcname pingouin
 
@@ -25,7 +25,7 @@ Pingouin is designed for users who want simple yet exhaustive statistical
 functions.}
 
 Name:           python-%{srcname}
-Version:        0.2.7
+Version:        0.2.8
 Release:        1%{?dist}
 Summary:        Statistical package for Python
 
@@ -54,11 +54,11 @@ BuildRequires:  %{py3_dist seaborn}
 BuildRequires:  %{py3_dist pytest}
 BuildRequires:  %{py3_dist pytest-cov}
 BuildRequires:  %{py3_dist pytest-remotedata}
-# Need packaging
 BuildRequires:  %{py3_dist pytest-sugar}
 BuildRequires:  %{py3_dist openpyxl}
 BuildRequires:  %{py3_dist mpmath}
 BuildRequires:  %{py3_dist scikit-learn}
+BuildRequires:  %{py3_dist statsmodels}
 # Only required and works in TRAVIS, so not needed here
 # BuildRequires:  python3-pytest-travis-fold
 %endif
@@ -108,6 +108,10 @@ pytest-%{python3_version}
 %doc html notebooks
 
 %changelog
+* Tue Jul 23 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.2.8-1
+- Update to newest version
+- Enable test since pytest-sugar is built
+
 * Sat Jul 20 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 0.2.7-1
 - Correct license
 - Add missing BR
