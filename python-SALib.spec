@@ -1,9 +1,8 @@
-# disabled to begin with
-%bcond_with tests
+%bcond_without tests
 
 %global srcname SALib
 
-%global desc %{expand: \
+%global _description %{expand:
 Python implementations of commonly used sensitivity analysis methods. Useful in
 systems modeling to calculate the effects of model inputs or exogenous factors
 on outputs of interest.
@@ -24,7 +23,7 @@ Methods included:
 - Fractional Factorial Sensitivity Analysis (Saltelli et al. 2008)}
 
 Name:           python-%{srcname}
-Version:        1.1.3
+Version:        1.3.7
 Release:        1%{?dist}
 Summary:        Sensitivity Analysis Library in Python
 
@@ -36,44 +35,75 @@ BuildArch:      noarch
 
 %{?python_enable_dependency_generator}
 
-%description
-%{desc}
+%description %_description
 
 %package -n python3-%{srcname}
 Summary:        %{summary}
 BuildRequires:  python3-devel
+
+# Not mentioned in setup.py, so won't be picked up by the generator
+Requires:  %{py3_dist pandas}
+Requires:  %{py3_dist numpy} >= 1.9.0
+Requires:  %{py3_dist scipy}
+Requires:  %{py3_dist matplotlib} >= 1.4.3
+
+%if %{with tests}
+BuildRequires:  %{py3_dist pytest}
+BuildRequires:  %{py3_dist pytest-cov}
+BuildRequires:  %{py3_dist pandas}
 BuildRequires:  %{py3_dist numpy} >= 1.9.0
 BuildRequires:  %{py3_dist scipy}
 BuildRequires:  %{py3_dist matplotlib} >= 1.4.3
-BuildRequires:  %{py3_dist nose}
-BuildRequires:  %{py3_dist pytest}
 BuildRequires:  %{py3_dist pyscaffold}
+%endif
+
 %{?python_provide:%python_provide python3-%{srcname}}
 
-%description -n python3-%{srcname}
-%{desc}
+%description -n python3-%{srcname} %_description
+
+%package doc
+Summary:        %{summary}
+BuildRequires:  %{py3_dist sphinx}
+BuildRequires:  %{py3_dist recommonmark}
+
+%description doc
+Documentation for %{name}.
 
 %prep
 %autosetup -n %{srcname}-%{version}
 rm -rf %{srcname}.egg-info
+# Remove uneeded version lock on pyscaffold
+sed -i "s/pyscaffold.*']/pyscaffold']/" setup.py
 
 %build
 %py3_build
+
+make -C docs SPHINXBUILD=sphinx-build-3 html
+rm -rf docs/_build/html/{.doctrees,.buildinfo} -vf
 
 %install
 %py3_install
 
 %check
 %if %{with tests}
-%{__python3} setup.py test
+PYTHONPATH=$RPM_BUILD_ROOT%{python3_sitelib} pytest-%{python3_version}
 %endif
 
 %files -n python3-%{srcname}
-%license LICENSE.md
-%doc README.md README-advanced.md CHANGES.rst CITATIONS.rst AUTHORS.rst
-# %{python3_sitelib}/*
-# %{_bindir}/sample-exec
+%license LICENSE.txt
+%doc README.rst README-advanced.md CHANGELOG.rst CITATIONS.rst AUTHORS.rst
+%{python3_sitelib}/%{srcname}
+%{python3_sitelib}/%{srcname}-%{version}-py%{python3_version}.egg-info
+%{_bindir}/salib
+%{_bindir}/salib.py
+
+%files doc
+%license LICENSE.txt
+%doc docs/_build/html
 
 %changelog
+* Mon Aug 05 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 1.3.7-1
+- Update to new release
+
 * Tue Jan 29 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 1.1.3-1
 - Initial build
