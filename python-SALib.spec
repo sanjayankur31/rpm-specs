@@ -1,3 +1,4 @@
+# Tests are enabled
 %bcond_without tests
 
 %global srcname SALib
@@ -25,7 +26,7 @@ Methods included:
 Name:           python-%{srcname}
 Version:        1.3.7
 Release:        1%{?dist}
-Summary:        Sensitivity Analysis Library in Python
+Summary:        Sensitivity Analysis Library
 
 License:        MIT
 URL:            http://salib.github.io/SALib/
@@ -71,9 +72,25 @@ Documentation for %{name}.
 
 %prep
 %autosetup -n %{srcname}-%{version}
-rm -rf %{srcname}.egg-info
+# Remove egg info
+rm -rf src/%{srcname}.egg-info
 # Remove uneeded version lock on pyscaffold
 sed -i "s/pyscaffold.*']/pyscaffold']/" setup.py
+
+# python3, not python in tests
+sed -i 's/python {cli}/python3 {cli}/' tests/test_cli_sample.py
+sed -i 's/python {cli}/python3 {cli}/' tests/test_cli_analyze.py
+
+# Correct permission
+chmod -x LICENSE.txt
+
+# Remove /usr/bin/env python shebang
+find . -type f -name "*.py" -exec sed -i '/^#![  ]*\/usr\/bin\/env.*$/ d' {} 2>/dev/null ';'
+
+# Correct end of line encoding
+sed -i 's/\r$//' LICENSE.txt
+sed -i 's/\r$//' src/SALib/analyze/rbd_fast.py
+
 
 %build
 %py3_build
@@ -83,6 +100,9 @@ rm -rf docs/_build/html/{.doctrees,.buildinfo} -vf
 
 %install
 %py3_install
+
+# Add a shebang to missing script
+sed -i "1 i \#\!%{__python3}" $RPM_BUILD_ROOT/%{_bindir}/salib.py
 
 %check
 %if %{with tests}
