@@ -6,12 +6,11 @@ Summary:        Script for taking notes and open urls with taskwarrior
 License:        GPLv2+
 URL:            https://github.com/ValiValpas/taskopen
 Source0:        https://github.com/ValiValpas/taskopen/archive/v%{version}/%{name}-%{version}.tar.gz
-
-BuildRequires:  perl
-Requires:       task
-Requires:       perl(JSON)
-
 BuildArch:      noarch
+
+BuildRequires: perl-generators
+
+Requires:       task
 
 %description
 taskopen allows you to link almost any file, webpage or command to a
@@ -39,7 +38,6 @@ rm -vf doc/html/*.orig
 
 
 %install
-rm -rf $RPM_BUILD_ROOT
 %make_install PREFIX=%{_prefix}
 
 # Wrong location, we'll intall it ourselves
@@ -49,10 +47,11 @@ rm -rfv $RPM_BUILD_ROOT/%{_datadir}/taskopen/doc
 %files
 %doc examples doc/html/
 %{_bindir}/%{name}
-%{_mandir}/man1/taskopen.1.gz
-%{_mandir}/man5/taskopenrc.5.gz
-%{_datadir}/%{name}
+%{_mandir}/man1/taskopen.1*
+%{_mandir}/man5/taskopenrc.5*
+%{_datadir}/%{name}/
 
 %changelog
 * Tue Aug 20 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 1.1.4-1
 - Initial build
+- Update as per review comments: https://bugzilla.redhat.com/show_bug.cgi?id=1743802
