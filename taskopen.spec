@@ -7,6 +7,7 @@ License:        GPLv2+
 URL:            https://github.com/ValiValpas/taskopen
 Source0:        https://github.com/ValiValpas/taskopen/archive/v%{version}/%{name}-%{version}.tar.gz
 
+BuildRequires:  perl
 Requires:       task
 Requires:       perl(JSON)
 
