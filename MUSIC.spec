@@ -50,6 +50,7 @@ BuildRequires:  freeglut-devel
 BuildRequires:  gcc-c++
 BuildRequires:  libtool
 BuildRequires:  patch
+BuildRequires:  hwloc-devel
 BuildRequires:  python3-devel
 BuildRequires:  python3-Cython
 # Currently bundles a modified version of rudeconfig which cannot be unbundled
@@ -350,6 +351,9 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 %endif
 
 %changelog
+* Mon Sep 09 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 1.1.15-2.20190717git78a8e2
+- Add hwloc dep
+
 * Fri Jul 19 2019 Ankur Sinha <ankursinha AT fedoraproject DOT org> - 1.1.15-2.20190717gita78a8e2
 - Build python ourselves
 - Bundle rudeconfig
